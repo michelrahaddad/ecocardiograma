@@ -3,8 +3,8 @@ Sistema de Ecocardiograma - Grupo Vidah
 Entrada principal para deploy no Render
 """
 
-# Import the corrected app
-from app_render_corrigido import app
+# Import from the standard app.py file
+from app import app
 
 if __name__ == "__main__":
     # This is used for development only
