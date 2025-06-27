@@ -985,14 +985,6 @@ def criar_backup_route():
         tipo_backup = request.form.get('tipo_backup', 'COMPLETO')
         nome_arquivo = criar_backup(tipo_backup)
         
-        backup = BackupSistema()
-        backup.nome_arquivo = nome_arquivo
-        backup.tipo_backup = tipo_backup
-        backup.tamanho_arquivo = os.path.getsize(nome_arquivo) if os.path.exists(nome_arquivo) else 0
-        
-        db.session.add(backup)
-        db.session.commit()
-        
         flash('Backup criado com sucesso!', 'success')
     except Exception as e:
         logging.error(f"Erro ao criar backup: {str(e)}")
