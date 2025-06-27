@@ -19,4 +19,4 @@ databases:
   - name: ecocardiograma-db
     databaseName: ecocardiograma
     user: admin
-    plan: free
+    plan: free 
