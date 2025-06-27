@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from functools import wraps
 from app import app, db
-from models import Exame, ParametrosEcocardiograma, LaudoEcocardiograma, Medico, LogSistema, BackupSistema, PatologiaLaudo, TemplateLaudo, LaudoTemplate, datetime_brasilia
+from models import Exame, ParametrosEcocardiograma, LaudoEcocardiograma, Medico, LogSistema, PatologiaLaudo, TemplateLaudo, LaudoTemplate, datetime_brasilia
 from auth.models import AuthUser
 from utils.pdf_generator_compacto import generate_pdf_report
 from utils.calculations import calcular_parametros_derivados
