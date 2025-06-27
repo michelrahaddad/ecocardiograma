@@ -1,26 +1,21 @@
 services:
   - type: web
     name: sistema-ecocardiograma
-    env: python
+    runtime: python3
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 main:app
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: sistema-ecocardiograma-db
-          property: connectionString
       - key: SESSION_SECRET
-        generateValue: true
+        value: vidah-echo-system-secret-key-2025
       - key: FLASK_ENV
         value: production
-      - key: FLASK_DEBUG
-        value: "False"
-      - key: PYTHON_VERSION
-        value: "3.11.9"
+    scaling:
+      minInstances: 1
+      maxInstances: 3
 
 databases:
   - name: sistema-ecocardiograma-db
-    plan: free
-    databaseName: sistema_ecocardiograma
+    databaseName: ecocardiograma
     user: postgres
+    plan: free
