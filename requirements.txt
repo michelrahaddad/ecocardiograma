@@ -1,28 +1,54 @@
+# Core Framework
 Flask==2.3.3
+Werkzeug==2.3.7
+
+# Database
+SQLAlchemy==1.4.53
 Flask-SQLAlchemy==3.0.5
-Flask-Login==0.6.2
+psycopg2-binary==2.9.7
+
+# Authentication
+Flask-Login==0.6.3
+
+# Date/Time
+pytz==2023.3
+python-dateutil==2.8.2
+
+# PDF Generation
+reportlab==4.0.4
+Pillow==10.0.1
+
+# Data Processing
+openpyxl==3.1.2
+matplotlib==3.7.2
+seaborn==0.12.2
+numpy==1.24.4
+
+# QR Codes
+qrcode==7.4.2
+
+# HTTP
+requests==2.31.0
+
+# Email Validation
+email-validator==2.0.0
+
+# Forms
 Flask-WTF==1.1.1
 WTForms==3.0.1
-Werkzeug==2.3.7
-SQLAlchemy==1.4.53
-psycopg2-binary==2.9.9
-gunicorn==21.2.0
-ReportLab==4.0.4
-Pillow==11.2.1
-python-dateutil==2.8.2
-email-validator==2.0.0
-requests==2.31.0
-matplotlib==3.8.2
-numpy==1.25.2
-seaborn==0.13.0
-openpyxl==3.1.2
-qrcode==7.4.2
-beautifulsoup4==4.12.2
-pytz==2023.3
+
+# JWT
 PyJWT==2.8.0
+
+# Security
+cryptography==41.0.4
+
+# Web Scraping
+beautifulsoup4==4.12.2
+
+# OAuth
 oauthlib==3.2.2
-Jinja2==3.1.6
-MarkupSafe==3.0.2
-itsdangerous==2.2.0
-click==8.2.1
-blinker==1.9.0
+Flask-Dance==7.0.0
+
+# Production Server
+gunicorn==21.2.0
