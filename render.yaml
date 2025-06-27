@@ -1,25 +1,22 @@
-# Configuração do Render para Sistema de Ecocardiograma
 services:
   - type: web
-    name: ecocardiograma-vidah
+    name: sistema-ecocardiograma
     env: python
-    buildCommand: pip install -r deploy_requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --preload main:app
+    plan: free
+    healthCheckPath: /
     envVars:
-      - key: FLASK_ENV
-        value: production
-      - key: FLASK_DEBUG
-        value: false
       - key: SESSION_SECRET
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: ecocardiograma-db
           property: connectionString
-    
-  - type: pserv
-    name: ecocardiograma-db
-    env: postgresql
-    plan: starter
-    databaseName: ecocardiograma_vidah
-    user: vidah_admin
+    autoDeploy: true
+
+databases:
+  - name: ecocardiograma-db
+    databaseName: ecocardiograma
+    user: admin
+    plan: free
