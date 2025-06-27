@@ -1,44 +1,18 @@
-# Sistema de Ecocardiograma - Grupo Vidah
-# Dependências para deploy no Render
-
-# Framework principal
 Flask==3.0.0
 gunicorn==21.2.0
-
-# Banco de dados
 Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.9
 SQLAlchemy==2.0.23
-
-# Autenticação e segurança
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
 WTForms==3.1.0
 Werkzeug==3.0.1
-
-# Validação e formulários
 email-validator==2.1.0
 python-dateutil==2.8.2
-
-# Geração de PDF e relatórios
 reportlab==4.0.7
-Pillow==10.1.0
-
-# Manipulação de dados
 openpyxl==3.1.2
-numpy==1.25.2
-
-# Gráficos e visualização
-matplotlib==3.8.2
-seaborn==0.13.0
-
-# QR Code
 qrcode==7.4.2
-
-# Processamento web
 requests==2.31.0
 beautifulsoup4==4.12.2
-
-# Autenticação OAuth
 oauthlib==3.2.2
 PyJWT==2.8.0
