@@ -1,0 +1,145 @@
+/* Estilos para o logo do Grupo Vidah */
+.vidah-logo {
+    width: 150px;
+    height: auto;
+    margin-right: 10px;
+}
+
+/* Ajustes para o cabeçalho do PDF */
+.pdf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.pdf-header-info {
+    text-align: right;
+}
+
+/* Estilos para o rodapé do PDF */
+.pdf-footer {
+    margin-top: 30px;
+    text-align: center;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+/* Estilos para a assinatura digital */
+.digital-signature {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.digital-signature img {
+    max-width: 200px;
+    margin-bottom: 10px;
+}
+
+/* Estilos para o cabeçalho da aplicação */
+.app-header {
+    background-color: var(--primary-color);
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-header .container {
+    display: flex;
+    align-items: center;
+}
+
+.app-title {
+    color: white;
+    margin-left: 15px;
+}
+
+/* Estilos para o dashboard */
+.dashboard-card {
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.dashboard-card-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+}
+
+.dashboard-card-body {
+    padding: 20px;
+}
+
+.dashboard-stat {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .vidah-logo {
+        width: 100px;
+    }
+    
+    .app-title {
+        font-size: 18px;
+    }
+    
+    .dashboard-stat {
+        font-size: 18px;
+    }
+}
+
+/* Animações para feedback visual */
+.save-success {
+    animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    25% { opacity: 1; }
+    75% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Estilos para o modo de impressão */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        margin: 0;
+        padding: 15px;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .card-header {
+        background-color: #f5f5f5 !important;
+        color: #333 !important;
+    }
+    
+    .table th {
+        background-color: #f5f5f5 !important;
+        color: #333 !important;
+    }
+}

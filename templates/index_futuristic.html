@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Sistema Futurista de Ecocardiograma - Grupo Vidah{% endblock %}
+
+{% block content %}
+<!-- Navigation Futurista -->
+<nav class="futuristic-nav">
+    <div class="nav-container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div>
+                <div class="logo-text">Grupo Vidah</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: -0.25rem;">
+                    Sistema de Ecocardiograma
+                </div>
+            </div>
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('index') }}" class="nav-link active">
+                    <i class="fas fa-home me-1"></i>Início
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('novo_exame') }}" class="nav-link">
+                    <i class="fas fa-plus-circle me-1"></i>Novo Exame
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('cadastro_medico') }}" class="nav-link">
+                    <i class="fas fa-user-md me-1"></i>Médicos
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('manutencao_index') }}" class="nav-link">
+                    <i class="fas fa-cogs me-1"></i>Manutenção
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Sistema Avançado de Ecocardiograma</h1>
+        <p class="hero-subtitle">
+            Tecnologia de ponta para diagnósticos cardiovasculares precisos e relatórios profissionais
+        </p>
+        
+        <div class="hero-actions">
+            <a href="{{ url_for('novo_exame') }}" class="btn-futuristic btn-primary-futuristic">
+                <i class="fas fa-plus-circle"></i>
+                Iniciar Novo Exame
+            </a>
+            <a href="{{ url_for('cadastro_medico') }}" class="btn-futuristic btn-secondary-futuristic">
+                <i class="fas fa-user-md"></i>
+                Gerenciar Médicos
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section style="padding: 4rem 2rem; max-width: 1200px; margin: 0 auto;">
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_exames or 0 }}</div>
+            <div class="stat-label">Exames Realizados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.exames_mes or 0 }}</div>
+            <div class="stat-label">Este Mês</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.medicos_ativos or 0 }}</div>
+            <div class="stat-label">Médicos Ativos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.pacientes_unicos or 0 }}</div>
+            <div class="stat-label">Pacientes</div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Actions Grid -->
+<section style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+    <div class="grid-futuristic">
+        <!-- Novo Exame Card -->
+        <div class="card-futuristic">
+            <div class="card-icon">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <h3 class="card-title">Novo Exame</h3>
+            <p class="card-description">
+                Inicie uma nova avaliação ecocardiográfica com formulários inteligentes e cálculos automáticos
+            </p>
+            <a href="{{ url_for('novo_exame') }}" class="btn-futuristic btn-primary-futuristic" style="width: 100%;">
+                <i class="fas fa-arrow-right"></i>
+                Começar Exame
+            </a>
+        </div>
+
+        <!-- Médicos Card -->
+        <div class="card-futuristic">
+            <div class="card-icon" style="background: var(--gradient-secondary);">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <h3 class="card-title">Gestão de Médicos</h3>
+            <p class="card-description">
+                Cadastre médicos, gerencie assinaturas digitais e configure perfis profissionais
+            </p>
+            <a href="{{ url_for('cadastro_medico') }}" class="btn-futuristic btn-secondary-futuristic" style="width: 100%;">
+                <i class="fas fa-arrow-right"></i>
+                Gerenciar
+            </a>
+        </div>
+
+        <!-- Manutenção Card -->
+        <div class="card-futuristic">
+            <div class="card-icon" style="background: var(--gradient-tertiary);">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h3 class="card-title">Manutenção do Sistema</h3>
+            <p class="card-description">
+                Backup automático, logs de sistema, diagnósticos e ferramentas de manutenção
+            </p>
+            <a href="{{ url_for('manutencao_index') }}" class="btn-futuristic btn-secondary-futuristic" style="width: 100%;">
+                <i class="fas fa-arrow-right"></i>
+                Acessar
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Exams Section -->
+{% if exames %}
+<section style="padding: 4rem 2rem; max-width: 1200px; margin: 0 auto;">
+    <h2 style="text-align: center; margin-bottom: 3rem; font-size: 2.5rem;" class="text-gradient">
+        Exames Recentes
+    </h2>
+    
+    <div class="table-futuristic">
+        <thead>
+            <tr>
+                <th>Paciente</th>
+                <th>Data do Exame</th>
+                <th>Idade</th>
+                <th>Médico</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exame in exames[:10] %}
+            <tr>
+                <td>
+                    <strong>{{ exame.nome_paciente }}</strong>
+                </td>
+                <td>{{ exame.data_exame }}</td>
+                <td>{{ exame.idade }} anos</td>
+                <td>{{ exame.medico_usuario or 'Não definido' }}</td>
+                <td>
+                    <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" 
+                       class="btn-futuristic btn-secondary-futuristic" 
+                       style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                        <i class="fas fa-eye"></i>
+                        Ver
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </div>
+</section>
+{% else %}
+<!-- Empty State -->
+<section style="padding: 4rem 2rem; max-width: 800px; margin: 0 auto; text-align: center;">
+    <div class="card-futuristic" style="padding: 4rem 2rem;">
+        <div style="font-size: 4rem; color: var(--accent-cyan); margin-bottom: 2rem;">
+            <i class="fas fa-heartbeat"></i>
+        </div>
+        <h3 class="card-title" style="font-size: 2rem; margin-bottom: 1rem;">
+            Bem-vindo ao Sistema de Ecocardiograma
+        </h3>
+        <p class="card-description" style="font-size: 1.1rem; margin-bottom: 2rem;">
+            Comece criando seu primeiro exame ou cadastrando médicos no sistema
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('novo_exame') }}" class="btn-futuristic btn-primary-futuristic">
+                <i class="fas fa-plus-circle"></i>
+                Primeiro Exame
+            </a>
+            <a href="{{ url_for('cadastro_medico') }}" class="btn-futuristic btn-secondary-futuristic">
+                <i class="fas fa-user-md"></i>
+                Cadastrar Médico
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Footer -->
+<footer style="margin-top: 6rem; padding: 3rem 2rem; background: var(--bg-secondary); border-top: 1px solid rgba(255,255,255,0.1);">
+    <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+            <div class="logo-icon" style="width: 30px; height: 30px; font-size: 1rem;">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <span class="logo-text" style="font-size: 1.2rem;">Grupo Vidah</span>
+        </div>
+        <p style="color: var(--text-muted); margin: 0;">
+            Sistema avançado de gestão de ecocardiogramas - Tecnologia moderna para cuidados cardiovasculares
+        </p>
+        <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+            © 2025 Grupo Vidah. Desenvolvido com tecnologia de ponta.
+        </p>
+    </div>
+</footer>
+
+<!-- JavaScript para animações -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animação de entrada para cards
+    const cards = document.querySelectorAll('.card-futuristic');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+
+    // Animação de entrada para estatísticas
+    const stats = document.querySelectorAll('.stat-card');
+    stats.forEach((stat, index) => {
+        stat.style.opacity = '0';
+        stat.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            stat.style.transition = 'all 0.4s ease';
+            stat.style.opacity = '1';
+            stat.style.transform = 'translateY(0)';
+        }, index * 100 + 300);
+    });
+
+    // Efeito de parallax suave no hero
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero-section');
+        if (hero) {
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    });
+});
+</script>
+{% endblock %}

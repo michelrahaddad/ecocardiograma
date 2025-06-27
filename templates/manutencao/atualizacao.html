@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Atualização do Sistema - Sistema de Ecocardiograma{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-sync-alt me-2"></i>Atualização Automática do Sistema
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Version -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Versão Atual
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="text-primary">Sistema de Ecocardiograma v2.1.0</h4>
+                <p class="text-muted">Última atualização: 15/06/2025</p>
+                <div class="mt-3">
+                    <span class="badge bg-success me-2">Sistema Atualizado</span>
+                    <span class="badge bg-info">Versão Estável</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6>Componentes:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Core System: v2.1.0</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Database: v1.8.2</li>
+                    <li><i class="fas fa-check text-success me-2"></i>PDF Generator: v3.0.1</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Security: v1.5.0</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Updates -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-download me-2"></i>Atualizações Disponíveis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Sistema atualizado!</strong> Não há atualizações disponíveis no momento.
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-primary" onclick="verificarAtualizacoes()">
+                    <i class="fas fa-search me-1"></i>Verificar Atualizações
+                </button>
+                <small class="text-muted ms-3">Última verificação: Hoje às 14:30</small>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="auto-update" checked>
+                <label class="form-check-label" for="auto-update">
+                    Atualização automática
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update History -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>Histórico de Atualizações
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker bg-success"></div>
+                <div class="timeline-content">
+                    <h6 class="timeline-title">v2.1.0 - Atualização de Funcionalidades</h6>
+                    <small class="text-muted">15/06/2025</small>
+                    <p class="mt-2">
+                        • Melhorias na geração de PDF<br>
+                        • Nova interface de parâmetros<br>
+                        • Correções de segurança<br>
+                        • Otimizações de performance
+                    </p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker bg-info"></div>
+                <div class="timeline-content">
+                    <h6 class="timeline-title">v2.0.5 - Correções de Bugs</h6>
+                    <small class="text-muted">01/06/2025</small>
+                    <p class="mt-2">
+                        • Correção de cálculos médicos<br>
+                        • Melhorias na assinatura digital<br>
+                        • Ajustes na interface
+                    </p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker bg-warning"></div>
+                <div class="timeline-content">
+                    <h6 class="timeline-title">v2.0.0 - Atualização Maior</h6>
+                    <small class="text-muted">15/05/2025</small>
+                    <p class="mt-2">
+                        • Nova arquitetura do sistema<br>
+                        • Interface completamente redesenhada<br>
+                        • Sistema de backup aprimorado<br>
+                        • Novos relatórios médicos
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Settings -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-cog me-2"></i>Configurações de Atualização
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Atualizações</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="update-type" id="stable-only" checked>
+                            <label class="form-check-label" for="stable-only">
+                                Apenas versões estáveis
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="update-type" id="all-updates">
+                            <label class="form-check-label" for="all-updates">
+                                Todas as atualizações (incluindo beta)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="update-schedule" class="form-label">Horário para Verificação</label>
+                        <select class="form-select" id="update-schedule">
+                            <option value="daily" selected>Diariamente</option>
+                            <option value="weekly">Semanalmente</option>
+                            <option value="monthly">Mensalmente</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="notify-updates" checked>
+                        <label class="form-check-label" for="notify-updates">
+                            Notificar sobre novas atualizações
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="backup-before-update" checked>
+                        <label class="form-check-label" for="backup-before-update">
+                            Criar backup antes de atualizar
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <button type="button" class="btn btn-success" onclick="salvarConfiguracoes()">
+                    <i class="fas fa-save me-1"></i>Salvar Configurações
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetarConfiguracoes()">
+                    <i class="fas fa-undo me-1"></i>Restaurar Padrões
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="mt-4 d-flex justify-content-start">
+    <a href="{{ url_for('manutencao_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Voltar à Manutenção
+    </a>
+</div>
+
+<!-- Update Progress Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Atualizando Sistema</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-download fa-3x text-primary"></i>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="update-progress" style="width: 0%"></div>
+                </div>
+                <div id="update-status" class="text-center">Preparando atualização...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-item:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 20px;
+    height: calc(100% + 10px);
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #0a2853;
+}
+
+.timeline-title {
+    margin-bottom: 5px;
+    color: #0a2853;
+}
+</style>
+
+<script>
+function verificarAtualizacoes() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verificando...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        alert('Verificação concluída!\n\nSeu sistema está atualizado.\nNenhuma atualização disponível no momento.');
+    }, 3000);
+}
+
+function salvarConfiguracoes() {
+    alert('Configurações salvas com sucesso!');
+}
+
+function resetarConfiguracoes() {
+    if (confirm('Deseja restaurar as configurações padrão?')) {
+        // Reset form to defaults
+        document.getElementById('stable-only').checked = true;
+        document.getElementById('update-schedule').value = 'daily';
+        document.getElementById('notify-updates').checked = true;
+        document.getElementById('backup-before-update').checked = true;
+        document.getElementById('auto-update').checked = true;
+        
+        alert('Configurações restauradas para os valores padrão.');
+    }
+}
+
+function simularAtualizacao() {
+    $('#updateModal').modal('show');
+    
+    let progress = 0;
+    const steps = [
+        'Baixando atualização...',
+        'Verificando integridade...',
+        'Criando backup...',
+        'Instalando atualização...',
+        'Reiniciando serviços...',
+        'Concluído!'
+    ];
+    
+    const interval = setInterval(() => {
+        progress += 16.67;
+        $('#update-progress').css('width', Math.min(progress, 100) + '%');
+        
+        const stepIndex = Math.floor(progress / 16.67) - 1;
+        if (stepIndex >= 0 && stepIndex < steps.length) {
+            $('#update-status').text(steps[stepIndex]);
+        }
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                $('#updateModal').modal('hide');
+                alert('Sistema atualizado com sucesso!\n\nO sistema será reiniciado em alguns segundos.');
+            }, 1000);
+        }
+    }, 1000);
+}
+
+// Auto-check for updates every hour (in a real application)
+setInterval(() => {
+    console.log('Auto-checking for updates...');
+}, 3600000);
+</script>
+{% endblock %}

@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Sistema de Logs - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+.log-entry {
+    border-left: 4px solid #dee2e6;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+}
+
+.log-entry.info { border-left-color: #0dcaf0; }
+.log-entry.warning { border-left-color: #ffc107; }
+.log-entry.error { border-left-color: #dc3545; }
+.log-entry.debug { border-left-color: #6c757d; }
+
+.log-filters {
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.log-search {
+    position: relative;
+}
+
+.log-search .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.log-search input {
+    padding-left: 35px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Sistema de Logs
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="log-filters">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-floating">
+                <select class="form-select" id="filtro_nivel">
+                    <option value="">Todos os níveis</option>
+                    <option value="INFO">Informação</option>
+                    <option value="WARNING">Aviso</option>
+                    <option value="ERROR">Erro</option>
+                    <option value="DEBUG">Debug</option>
+                </select>
+                <label for="filtro_nivel">Nível</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating">
+                <input type="date" class="form-control" id="filtro_data">
+                <label for="filtro_data">Data</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="log-search">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="form-control" id="filtro_busca" placeholder="Buscar nos logs...">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary h-100 w-100" onclick="aplicarFiltros()">
+                <i class="fas fa-filter me-1"></i>Filtrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-info-circle fa-2x text-info mb-2"></i>
+                <h4 class="text-info" id="count-info">0</h4>
+                <small>Informações</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <h4 class="text-warning" id="count-warning">0</h4>
+                <small>Avisos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                <h4 class="text-danger" id="count-error">0</h4>
+                <small>Erros</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-bug fa-2x text-secondary mb-2"></i>
+                <h4 class="text-secondary" id="count-debug">0</h4>
+                <small>Debug</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-tools me-2"></i>Ações
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="btn-group" role="group">
+            <button class="btn btn-outline-primary" onclick="atualizarLogs()">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+            <button class="btn btn-outline-success" onclick="exportarLogs()">
+                <i class="fas fa-download me-1"></i>Exportar
+            </button>
+            <button class="btn btn-outline-warning" onclick="limparLogs()">
+                <i class="fas fa-trash me-1"></i>Limpar Logs Antigos
+            </button>
+            <button class="btn btn-outline-info" onclick="configurarLogs()">
+                <i class="fas fa-cog me-1"></i>Configurações
+            </button>
+            <button class="btn btn-outline-primary" onclick="gerarLogsTeste()">
+                <i class="fas fa-flask me-1"></i>Gerar Logs de Teste
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Logs -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>Logs Recentes
+            <span class="badge bg-primary ms-2" id="total-logs">{{ logs|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div id="logs-container">
+            {% if logs %}
+                {% for log in logs %}
+                <div class="log-entry {{ log.nivel.lower() }}" data-nivel="{{ log.nivel }}" data-data="{{ log.created_at.strftime('%Y-%m-%d') }}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-{% if log.nivel == 'INFO' %}info{% elif log.nivel == 'WARNING' %}warning{% elif log.nivel == 'ERROR' %}danger{% else %}secondary{% endif %} me-2">
+                                    {{ log.nivel }}
+                                </span>
+                                {% if log.modulo %}
+                                <small class="text-muted me-2">{{ log.modulo }}</small>
+                                {% endif %}
+                                <small class="text-muted">{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</small>
+                            </div>
+                            <div class="log-message">
+                                {{ log.mensagem }}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="expandirLog(this)">
+                                <i class="fas fa-expand-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum log encontrado</h5>
+                    <p class="text-muted">Os logs do sistema aparecerão aqui conforme as atividades forem realizadas.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Paginação -->
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="carregarPagina(1)">1</a></li>
+                    <li class="page-item active"><a class="page-link" href="javascript:void(0)" onclick="carregarPagina(2)">2</a></li>
+                    <li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="carregarPagina(3)">3</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="mt-4 d-flex justify-content-start">
+    <a href="{{ url_for('manutencao_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Voltar à Manutenção
+    </a>
+</div>
+
+<!-- Modal de Detalhes do Log -->
+<div class="modal fade" id="logModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Log</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="logModalBody">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Contar logs por nível
+    contarLogsPorNivel();
+    
+    // Auto-refresh a cada 30 segundos
+    setInterval(atualizarLogs, 30000);
+});
+
+function contarLogsPorNivel() {
+    const levels = ['info', 'warning', 'error', 'debug'];
+    
+    levels.forEach(level => {
+        const count = $('.log-entry.' + level).length;
+        $('#count-' + level).text(count);
+    });
+}
+
+function aplicarFiltros() {
+    const nivel = $('#filtro_nivel').val();
+    const data = $('#filtro_data').val();
+    const busca = $('#filtro_busca').val().toLowerCase();
+    
+    $('.log-entry').each(function() {
+        let mostrar = true;
+        
+        // Filtro por nível
+        if (nivel && $(this).data('nivel') !== nivel) {
+            mostrar = false;
+        }
+        
+        // Filtro por data
+        if (data && $(this).data('data') !== data) {
+            mostrar = false;
+        }
+        
+        // Filtro por busca
+        if (busca && !$(this).text().toLowerCase().includes(busca)) {
+            mostrar = false;
+        }
+        
+        $(this).toggle(mostrar);
+    });
+    
+    // Atualizar contador
+    const visibleLogs = $('.log-entry:visible').length;
+    $('#total-logs').text(visibleLogs);
+}
+
+function expandirLog(button) {
+    const logEntry = $(button).closest('.log-entry');
+    const mensagem = logEntry.find('.log-message').text();
+    const nivel = logEntry.data('nivel');
+    const data = logEntry.data('data');
+    
+    $('#logModalBody').html(`
+        <div class="mb-3">
+            <strong>Nível:</strong> <span class="badge bg-${nivel.toLowerCase() === 'info' ? 'info' : nivel.toLowerCase() === 'warning' ? 'warning' : nivel.toLowerCase() === 'error' ? 'danger' : 'secondary'}">${nivel}</span>
+        </div>
+        <div class="mb-3">
+            <strong>Data:</strong> ${data}
+        </div>
+        <div class="mb-3">
+            <strong>Mensagem:</strong>
+            <pre class="bg-light p-3 mt-2">${mensagem}</pre>
+        </div>
+    `);
+    
+    $('#logModal').modal('show');
+}
+
+function atualizarLogs() {
+    location.reload();
+}
+
+function exportarLogs() {
+    const nivel = $('#filtro_nivel').val();
+    const data = $('#filtro_data').val();
+    
+    let url = '/manutencao/exportar_logs?';
+    if (nivel) url += 'nivel=' + nivel + '&';
+    if (data) url += 'data=' + data + '&';
+    
+    window.location.href = url;
+}
+
+function limparLogs() {
+    if (confirm('Deseja realmente limpar os logs antigos? Esta ação não pode ser desfeita.')) {
+        $.ajax({
+            url: '/manutencao/limpar_logs',
+            method: 'POST',
+            success: function(response) {
+                alert('Logs antigos removidos com sucesso!');
+                location.reload();
+            },
+            error: function() {
+                alert('Erro ao limpar logs.');
+            }
+        });
+    }
+}
+
+function configurarLogs() {
+    alert('Funcionalidade de configuração em desenvolvimento.');
+}
+
+function gerarLogsTeste() {
+    if (confirm('Deseja gerar logs de teste para demonstrar o sistema?')) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Gerando...';
+        btn.disabled = true;
+        
+        $.ajax({
+            url: '/gerar_logs_teste',
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    alert('Logs de teste criados com sucesso! Atualizando página...');
+                    location.reload();
+                } else {
+                    alert('Erro ao gerar logs de teste: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Erro na comunicação com o servidor.');
+            },
+            complete: function() {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+}
+
+function carregarPagina(pagina) {
+    // Implementar paginação
+    console.log('Carregar página:', pagina);
+}
+
+// Filtro em tempo real na busca
+$('#filtro_busca').on('input', function() {
+    aplicarFiltros();
+});
+</script>
+{% endblock %}

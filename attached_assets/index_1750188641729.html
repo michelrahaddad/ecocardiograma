@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Manutenção</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        .card {
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            font-weight: bold;
+        }
+        .maintenance-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Painel de Manutenção do Sistema</h1>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Atualização Automática
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <p>Verifique e instale atualizações do sistema</p>
+                        <a href="{{ url_for('pagina_atualizacao') }}" class="btn btn-outline-primary">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        Backup e Restauração
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <p>Gerencie backups e restaure dados</p>
+                        <a href="{{ url_for('pagina_backup') }}" class="btn btn-outline-success">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        Sistema de Logs
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <p>Visualize e analise logs do sistema</p>
+                        <a href="{{ url_for('pagina_logs') }}" class="btn btn-outline-info">Acessar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        Diagnóstico e Desempenho
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <p>Analise o desempenho do sistema</p>
+                        <a href="{{ url_for('pagina_diagnostico') }}" class="btn btn-outline-warning">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        Verificação de Integridade
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <p>Verifique a integridade dos arquivos</p>
+                        <a href="{{ url_for('pagina_integridade') }}" class="btn btn-outline-danger">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        Limpeza de Temporários
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-broom"></i>
+                        </div>
+                        <p>Limpe arquivos temporários</p>
+                        <a href="{{ url_for('pagina_limpeza') }}" class="btn btn-outline-secondary">Acessar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        Gerenciamento de Usuários
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <p>Gerencie usuários e permissões</p>
+                        <a href="{{ url_for('listar_usuarios') }}" class="btn btn-outline-dark">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Instalador/Desinstalador
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <p>Crie pacotes de instalação</p>
+                        <a href="{{ url_for('pagina_instalador') }}" class="btn btn-outline-primary">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        Executar Testes
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="maintenance-icon">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <p>Execute testes de manutenção</p>
+                        <a href="#" class="btn btn-outline-success" id="btn-executar-testes">Executar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Resultados de Testes -->
+    <div class="modal fade" id="modal-resultados-testes" tabindex="-1" role="dialog" aria-labelledby="modal-resultados-testes-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-resultados-testes-label">Resultados dos Testes</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="resultados-testes">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Carregando...</span>
+                        </div>
+                        <p>Executando testes...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#btn-executar-testes').click(function() {
+                $('#modal-resultados-testes').modal('show');
+                
+                // Fazer requisição AJAX para executar testes
+                $.ajax({
+                    url: '/manutencao/executar_testes',
+                    method: 'POST',
+                    success: function(data) {
+                        let html = '<div class="card">';
+                        html += '<div class="card-header ' + (data.sucesso ? 'bg-success' : 'bg-danger') + ' text-white">';
+                        html += '<h5>Resultado: ' + (data.sucesso ? 'Sucesso' : 'Falha') + '</h5>';
+                        html += '</div>';
+                        html += '<div class="card-body">';
+                        html += '<p><strong>Total de testes:</strong> ' + data.total + '</p>';
+                        html += '<p><strong>Falhas:</strong> ' + data.falhas + '</p>';
+                        html += '<p><strong>Erros:</strong> ' + data.erros + '</p>';
+                        html += '</div></div>';
+                        
+                        $('#resultados-testes').html(html);
+                    },
+                    error: function() {
+                        $('#resultados-testes').html('<div class="alert alert-danger">Erro ao executar testes</div>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

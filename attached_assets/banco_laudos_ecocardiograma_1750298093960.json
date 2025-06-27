@@ -1,0 +1,308 @@
+[
+    {
+        "ID":1,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Ecocardiograma Normal",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com ecocardiograma normal.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de ecocardiograma normal.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com ecocardiograma normal, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com ecocardiograma normal. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":2,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Hipertrofia Ventricular Esquerda",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com hipertrofia ventricular esquerda.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de hipertrofia ventricular esquerda.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com hipertrofia ventricular esquerda, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com hipertrofia ventricular esquerda. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":3,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Insuficiência Mitral Moderada",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com insuficiência mitral moderada.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de insuficiência mitral moderada.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com insuficiência mitral moderada, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com insuficiência mitral moderada. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":4,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Estenose Aórtica Moderada",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com estenose aórtica moderada.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de estenose aórtica moderada.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com estenose aórtica moderada, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com estenose aórtica moderada. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":5,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Cardiomiopatia Dilatada",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com cardiomiopatia dilatada.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de cardiomiopatia dilatada.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com cardiomiopatia dilatada, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com cardiomiopatia dilatada. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":6,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Cardiomiopatia Hipertrófica Obstrutiva",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com cardiomiopatia hipertrófica obstrutiva.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de cardiomiopatia hipertrófica obstrutiva.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com cardiomiopatia hipertrófica obstrutiva, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com cardiomiopatia hipertrófica obstrutiva. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":7,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Cardiomiopatia Hipertrófica Não Obstrutiva",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com cardiomiopatia hipertrófica não obstrutiva.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de cardiomiopatia hipertrófica não obstrutiva.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com cardiomiopatia hipertrófica não obstrutiva, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com cardiomiopatia hipertrófica não obstrutiva. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":8,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Dilatação de Átrio Esquerdo",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com dilatação de átrio esquerdo.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de dilatação de átrio esquerdo.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com dilatação de átrio esquerdo, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com dilatação de átrio esquerdo. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":9,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Defeito do Septo Ventricular",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com defeito do septo ventricular.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de defeito do septo ventricular.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com defeito do septo ventricular, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com defeito do septo ventricular. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":10,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Acinésia Anterior",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com acinésia anterior.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de acinésia anterior.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com acinésia anterior, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com acinésia anterior. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":11,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Acinésia Inferior",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com acinésia inferior.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de acinésia inferior.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com acinésia inferior, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com acinésia inferior. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":12,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Acinésia Lateral",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com acinésia lateral.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de acinésia lateral.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com acinésia lateral, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com acinésia lateral. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":13,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Acinésia Septal",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com acinésia septal.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de acinésia septal.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com acinésia septal, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com acinésia septal. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":14,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Acinésia Apical",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com acinésia apical.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de akinésia apical.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com acinésia apical, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com acinésia apical. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":15,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Infarto Extenso Anteroapical",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com infarto extenso anteroapical.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de infarto extenso anteroapical.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com infarto extenso anteroapical, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com infarto extenso anteroapical. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":16,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Síndrome de Tako-Tsubo",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com síndrome de tako-tsubo.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de síndrome de tako-tsubo.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com síndrome de tako-tsubo, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com síndrome de tako-tsubo. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":17,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Amiloidose Cardíaca",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com amiloidose cardíaca.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de amiloidose cardíaca.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com amiloidose cardíaca, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com amiloidose cardíaca. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":18,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Derrame Pericárdico",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com derrame pericárdico.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de derrame pericárdico.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com derrame pericárdico, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com derrame pericárdico. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":19,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Insuficiência Aórtica",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com insuficiência aórtica.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de insuficiência aórtica.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com insuficiência aórtica, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com insuficiência aórtica. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":20,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Prolapso de Valva Mitral",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com prolapso de valva mitral.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de prolapso de valva mitral.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com prolapso de valva mitral, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com prolapso de valva mitral. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":21,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Estenose Mitral",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com estenose mitral.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de estenose mitral.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com estenose mitral, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com estenose mitral. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":22,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Regurgitação Tricúspide",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com regurgitação tricúspide.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de regurgitação tricúspide.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com regurgitação tricúspide, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com regurgitação tricúspide. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":23,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Valva Aórtica Bicúspide",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com valva aórtica bicúspide.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de valva aórtica bicúspide.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com valva aórtica bicúspide, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com valva aórtica bicúspide. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":24,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"CIA (Comunicação Interatrial)",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com cia (comunicação interatrial).",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de cia (comunicação interatrial).",
+        "Doppler_Tecidual":"Doppler tecidual compatível com cia (comunicação interatrial), função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com cia (comunicação interatrial). Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":25,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"CIV (Comunicação Interventricular)",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com civ (comunicação interventricular).",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de civ (comunicação interventricular).",
+        "Doppler_Tecidual":"Doppler tecidual compatível com civ (comunicação interventricular), função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com civ (comunicação interventricular). Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":26,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"PCA (Canal Arterial Patente)",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com pca (canal arterial patente).",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de pca (canal arterial patente).",
+        "Doppler_Tecidual":"Doppler tecidual compatível com pca (canal arterial patente), função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com pca (canal arterial patente). Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":27,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"Estenose Pulmonar",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com estenose pulmonar.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de estenose pulmonar.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com estenose pulmonar, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com estenose pulmonar. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":28,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"Estenose Aórtica Congênita",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com estenose aórtica congênita.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de estenose aórtica congênita.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com estenose aórtica congênita, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com estenose aórtica congênita. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":29,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"Coarctação da Aorta",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com coarctação da aorta.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de coarctação da aorta.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com coarctação da aorta, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com coarctação da aorta. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":30,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"Tetralogia de Fallot (pós-operatório)",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com tetralogia de fallot (pós-operatório).",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de tetralogia de fallot (pós-operatório).",
+        "Doppler_Tecidual":"Doppler tecidual compatível com tetralogia de fallot (pós-operatório), função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com tetralogia de fallot (pós-operatório). Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":31,
+        "Categoria":"Pediátrico",
+        "Diagnóstico":"Ecocardiograma Pediátrico Normal",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com ecocardiograma pediátrico normal.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de ecocardiograma pediátrico normal.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com ecocardiograma pediátrico normal, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com ecocardiograma pediátrico normal. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":32,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Infarto Anterior",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com infarto anterior.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de infarto anterior.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com infarto anterior, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com infarto anterior. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":33,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Infarto Inferior",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com infarto inferior.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de infarto inferior.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com infarto inferior, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com infarto inferior. Seguir conduta conforme evolução clínica."
+    },
+    {
+        "ID":34,
+        "Categoria":"Adulto",
+        "Diagnóstico":"Infarto Lateral",
+        "Modo_M_Bidimensional":"Avaliação bidimensional compatível com infarto lateral.",
+        "Doppler_Convencional":"Estudo Doppler com achados característicos de infarto lateral.",
+        "Doppler_Tecidual":"Doppler tecidual compatível com infarto lateral, função biventricular preservada ou levemente alterada.",
+        "Conclusão":"Laudo compatível com infarto lateral. Seguir conduta conforme evolução clínica."
+    }
+]

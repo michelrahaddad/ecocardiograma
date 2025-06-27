@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Backup e Restauração - Sistema de Ecocardiograma{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-database me-2"></i>Backup e Restauração
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Criar Novo Backup -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">
+            <i class="fas fa-plus-circle me-2"></i>Criar Novo Backup
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('criar_backup_route') }}" method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="tipo_backup" name="tipo_backup">
+                            <option value="COMPLETO">Backup Completo</option>
+                            <option value="INCREMENTAL">Backup Incremental</option>
+                            <option value="DADOS">Apenas Dados</option>
+                            <option value="CONFIGURACAO">Apenas Configurações</option>
+                        </select>
+                        <label for="tipo_backup">Tipo de Backup</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center h-100">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Criar Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Tipos de Backup:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Completo:</strong> Inclui todos os dados, configurações e arquivos</li>
+                            <li><strong>Incremental:</strong> Apenas alterações desde o último backup</li>
+                            <li><strong>Dados:</strong> Somente dados dos exames e pacientes</li>
+                            <li><strong>Configurações:</strong> Apenas configurações do sistema</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Backup Automático -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Backup Automático
+        </h4>
+        <span id="status-backup" class="badge bg-success">ATIVO</span>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('configurar_backup_automatico') }}" method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="backup_automatico" name="backup_automatico" checked>
+                        <label class="form-check-label" for="backup_automatico">
+                            <strong>Ativar backup automático diário</strong>
+                        </label>
+                    </div>
+                    <small class="text-muted">O backup automático será executado todos os dias no horário selecionado</small>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="horario_backup" name="horario_backup">
+                            <option value="01:00">01:00</option>
+                            <option value="02:00" selected>02:00</option>
+                            <option value="03:00">03:00</option>
+                            <option value="04:00">04:00</option>
+                            <option value="05:00">05:00</option>
+                        </select>
+                        <label for="horario_backup">Horário</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status e próximo backup -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="alert alert-info" id="info-backup">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Status:</strong> <span id="backup-status-text">Carregando...</span><br>
+                                <strong>Próximo backup:</strong> <span id="proximo-backup">--</span>
+                            </div>
+                            <div>
+                                <form action="{{ url_for('executar_backup_agora') }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-play me-1"></i>Executar Agora
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Histórico de Backups -->
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">
+            <i class="fas fa-history me-2"></i>Histórico de Backups
+            <span class="badge bg-primary ms-2">{{ backups|length }}</span>
+        </h4>
+    </div>
+    <div class="card-body">
+        {% if backups %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Tipo</th>
+                            <th>Arquivo</th>
+                            <th>Tamanho</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for backup in backups %}
+                        <tr>
+                            <td>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ backup.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if backup.tipo_backup == 'COMPLETO' %}success{% elif backup.tipo_backup == 'INCREMENTAL' %}info{% else %}secondary{% endif %}">
+                                    {{ backup.tipo_backup }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ backup.nome_arquivo }}</small>
+                            </td>
+                            <td>
+                                {% if backup.tamanho_arquivo %}
+                                    {{ "%.2f"|format(backup.tamanho_arquivo / 1024 / 1024) }} MB
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if backup.status == 'CONCLUIDO' %}success{% elif backup.status == 'PROCESSANDO' %}warning{% else %}danger{% endif %}">
+                                    <i class="fas fa-{% if backup.status == 'CONCLUIDO' %}check{% elif backup.status == 'PROCESSANDO' %}clock{% else %}times{% endif %} me-1"></i>
+                                    {{ backup.status }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="downloadBackup('{{ backup.id }}')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="restaurarBackup('{{ backup.id }}')">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="excluirBackup('{{ backup.id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum backup encontrado</h5>
+                <p class="text-muted">Crie seu primeiro backup usando o formulário acima.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="mt-4 d-flex justify-content-start">
+    <a href="{{ url_for('manutencao_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Voltar à Manutenção
+    </a>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirmar Ação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function downloadBackup(backupId) {
+    window.location.href = '/manutencao/download_backup/' + backupId;
+}
+
+function restaurarBackup(backupId) {
+    $('#confirmModalTitle').text('Restaurar Backup');
+    $('#confirmModalBody').html(`
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Atenção:</strong> Esta ação irá substituir todos os dados atuais pelos dados do backup selecionado.
+        </div>
+        <p>Tem certeza que deseja restaurar este backup?</p>
+    `);
+    
+    $('#confirmButton')
+        .removeClass('btn-danger')
+        .addClass('btn-warning')
+        .text('Restaurar')
+        .off('click')
+        .on('click', function() {
+            // Implementar restauração
+            $.ajax({
+                url: '/manutencao/restaurar_backup/' + backupId,
+                method: 'POST',
+                success: function(response) {
+                    alert('Backup restaurado com sucesso!');
+                    location.reload();
+                },
+                error: function() {
+                    alert('Erro ao restaurar backup.');
+                }
+            });
+            $('#confirmModal').modal('hide');
+        });
+    
+    $('#confirmModal').modal('show');
+}
+
+function excluirBackup(backupId) {
+    $('#confirmModalTitle').text('Excluir Backup');
+    $('#confirmModalBody').html(`
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+        </div>
+        <p>Tem certeza que deseja excluir este backup?</p>
+    `);
+    
+    $('#confirmButton')
+        .removeClass('btn-warning')
+        .addClass('btn-danger')
+        .text('Excluir')
+        .off('click')
+        .on('click', function() {
+            // Implementar exclusão
+            $.ajax({
+                url: '/manutencao/excluir_backup/' + backupId,
+                method: 'DELETE',
+                success: function(response) {
+                    alert('Backup excluído com sucesso!');
+                    location.reload();
+                },
+                error: function() {
+                    alert('Erro ao excluir backup.');
+                }
+            });
+            $('#confirmModal').modal('hide');
+        });
+    
+    $('#confirmModal').modal('show');
+}
+
+$(document).ready(function() {
+    // Atualizar status do backup automático
+    function atualizarStatusBackup() {
+        fetch('/api/backup_status')
+            .then(response => response.json())
+            .then(data => {
+                const statusBadge = document.getElementById('status-backup');
+                const statusText = document.getElementById('backup-status-text');
+                const proximoBackup = document.getElementById('proximo-backup');
+                
+                if (data.status === 'running') {
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.textContent = 'ATIVO';
+                    statusText.textContent = data.message;
+                    proximoBackup.textContent = data.next_backup || '--';
+                } else if (data.status === 'disabled') {
+                    statusBadge.className = 'badge bg-warning';
+                    statusBadge.textContent = 'DESATIVADO';
+                    statusText.textContent = data.message;
+                    proximoBackup.textContent = '--';
+                } else {
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'PARADO';
+                    statusText.textContent = data.message || 'Sistema parado';
+                    proximoBackup.textContent = '--';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao obter status do backup:', error);
+                document.getElementById('backup-status-text').textContent = 'Erro ao carregar status';
+            });
+    }
+    
+    // Atualizar status inicialmente
+    atualizarStatusBackup();
+    
+    // Atualizar status a cada 30 segundos
+    setInterval(atualizarStatusBackup, 30000);
+    
+    // Salvar configurações de backup automático
+    $('#backup_automatico, #horario_backup').on('change', function() {
+        console.log('Configurações de backup atualizadas');
+    });
+});
+</script>
+{% endblock %}

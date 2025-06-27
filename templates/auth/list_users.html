@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários - Sistema Vidah{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-primary fw-bold">
+                    <i class="fas fa-users me-2"></i>Gerenciar Usuários
+                </h2>
+                <a href="{{ url_for('auth.create_user') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Novo Usuário
+                </a>
+            </div>
+
+            <!-- Filtros de Busca -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3" method="POST">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Nome, email ou usuário">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="role" class="form-label">Função</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">Todas</option>
+                                <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrador</option>
+                                <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Usuário</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <a href="{{ url_for('auth.list_users') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="card">
+                <div class="card-body">
+                    {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuário</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Função</th>
+                                    <th>Status</th>
+                                    <th>Criado em</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.is_verified %}
+                                            <i class="fas fa-check-circle text-success ms-1" title="Verificado"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.display_name or '-' }}</td>
+                                    <td>{{ user.email or '-' }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                            <span class="badge bg-danger">Administrador</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Usuário</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at if user.created_at else '-' }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" 
+                                               class="btn btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if user.id != current_user.id %}
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="confirmDelete({{ user.id }}, '{{ user.username }}')" 
+                                                    title="Deletar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if pagination %}
+                    <nav aria-label="Paginação de usuários">
+                        <ul class="pagination justify-content-center mt-4">
+                            {% if pagination.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('auth.list_users', page=pagination.prev_num, search=search, role=role_filter) }}">
+                                        <i class="fas fa-chevron-left"></i> Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('auth.list_users', page=page_num, search=search, role=role_filter) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if pagination.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('auth.list_users', page=pagination.next_num, search=search, role=role_filter) }}">
+                                        Próximo <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Nenhum usuário encontrado</h4>
+                        <p class="text-muted">
+                            {% if search or role_filter %}
+                                Nenhum usuário corresponde aos filtros aplicados.
+                            {% else %}
+                                Não há usuários cadastrados no sistema.
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('auth.create_user') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Criar Primeiro Usuário
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja deletar o usuário <strong id="deleteUsername"></strong>?</p>
+                <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;" method="POST">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Deletar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(userId, username) {
+    document.getElementById('deleteUsername').textContent = username;
+    document.getElementById('deleteForm').action = `{{ url_for('auth.delete_user', user_id=0) }}`.replace('0', userId);
+    
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
+{% endblock %}

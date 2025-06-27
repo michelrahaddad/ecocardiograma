@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Exame - Sistema de Ecocardiograma{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Novo Exame de Ecocardiograma
+                </h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nome_paciente" class="form-label">Nome do Paciente *</label>
+                                <input type="text" class="form-control" id="nome_paciente" name="nome_paciente" value="{{ dados_clonados.nome_paciente if dados_clonados else '' }}" required>
+                                <div class="invalid-feedback">
+                                    Por favor, informe o nome do paciente.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
+                                <input type="text" class="form-control date-mask" id="data_nascimento" 
+                                       name="data_nascimento" value="{{ dados_clonados.data_nascimento if dados_clonados else '' }}" placeholder="DD/MM/AAAA" required>
+                                <div class="invalid-feedback">
+                                    Por favor, informe a data de nascimento.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="idade" class="form-label">Idade *</label>
+                                <input type="number" class="form-control" id="idade" name="idade" value="{{ dados_clonados.idade if dados_clonados else '' }}" min="0" max="150" required>
+                                <div class="invalid-feedback">
+                                    Por favor, informe a idade.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="sexo" class="form-label">Sexo *</label>
+                                <select class="form-select" id="sexo" name="sexo" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Masculino" {{ 'selected' if dados_clonados and dados_clonados.sexo == 'Masculino' else '' }}>Masculino</option>
+                                    <option value="Feminino" {{ 'selected' if dados_clonados and dados_clonados.sexo == 'Feminino' else '' }}>Feminino</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor, selecione o sexo.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="data_exame" class="form-label">Data do Exame *</label>
+                                <input type="text" class="form-control date-mask" id="data_exame" 
+                                       name="data_exame" value="{{ dados_clonados.data_exame if dados_clonados else '' }}" placeholder="DD/MM/AAAA" required>
+                                <div class="invalid-feedback">
+                                    Por favor, informe a data do exame.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_atendimento" class="form-label">
+                                    <i class="fas fa-hospital-user me-2"></i>Convênio
+                                </label>
+                                <select class="form-select" id="tipo_atendimento" name="tipo_atendimento">
+                                    <option value="">Selecione o convênio</option>
+                                    <option value="Dr Amor" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == 'Dr Amor' else '' }}>Dr Amor</option>
+                                    <option value="+Vidah" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == '+Vidah' else '' }}>+Vidah</option>
+                                    <option value="DRS" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == 'DRS' else '' }}>DRS</option>
+                                    <option value="Particular" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == 'Particular' else '' }}>Particular</option>
+                                    <option value="SUS" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == 'SUS' else '' }}>SUS</option>
+                                    <option value="Outros" {{ 'selected' if dados_clonados and dados_clonados.tipo_atendimento == 'Outros' else '' }}>Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="medico_usuario" class="form-label">Médico Responsável</label>
+                                <input type="text" class="form-control" id="medico_usuario" name="medico_usuario" 
+                                       value="{{ dados_clonados.medico_usuario if dados_clonados else 'Michel Raineri Haddad CRM:183299' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="medico_solicitante" class="form-label">Médico Solicitante</label>
+                                <input type="text" class="form-control" id="medico_solicitante" name="medico_solicitante" value="{{ dados_clonados.medico_solicitante if dados_clonados else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="indicacao" class="form-label">Indicação do Exame</label>
+                                <textarea class="form-control" id="indicacao" name="indicacao" rows="3"
+                                          placeholder="Descreva a indicação clínica para o exame...">{{ dados_clonados.indicacao if dados_clonados else '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Salvar e Continuar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="{{ url_for('static', filename='js/medico_auto_preenchimento.js') }}"></script>
+<script>
+$(document).ready(function() {
+    // Máscaras para campos de data
+    $('.date-mask').mask('00/00/0000');
+    
+    // Auto-preenchimento via prontuário
+    const urlParams = new URLSearchParams(window.location.search);
+    const pacienteNome = urlParams.get('paciente');
+    if (pacienteNome) {
+        $('#nome_paciente').val(decodeURIComponent(pacienteNome));
+    }
+    
+    // Calcular idade automaticamente
+    $('#data_nascimento').on('blur', function() {
+        const dataNasc = $(this).val();
+        if (dataNasc && dataNasc.length === 10) {
+            const partes = dataNasc.split('/');
+            if (partes.length === 3) {
+                const dataNascimento = new Date(partes[2], partes[1] - 1, partes[0]);
+                const hoje = new Date();
+                let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+                const m = hoje.getMonth() - dataNascimento.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < dataNascimento.getDate())) {
+                    idade--;
+                }
+                if (idade >= 0 && idade <= 150) {
+                    $('#idade').val(idade);
+                }
+            }
+        }
+    });
+    
+    // Preencher data do exame com hoje
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    $('#data_exame').val(`${dia}/${mes}/${ano}`);
+    
+    // Validação do formulário
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            const forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+});
+</script>
+{% endblock %}

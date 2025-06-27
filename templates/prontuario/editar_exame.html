@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Exame - {{ exame.nome_paciente }} - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilo moderno para edição de exame */
+.edit-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid #bfdbfe;
+}
+
+.edit-title {
+    color: #1e40af;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.edit-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn-modern {
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-voltar {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.btn-voltar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+    color: white;
+}
+
+.btn-salvar {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-salvar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    color: white;
+}
+
+.btn-pdf {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.btn-pdf:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+    color: white;
+}
+
+.section-edit {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1f5f9;
+}
+
+.section-edit-header {
+    color: #1e40af;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e0f2fe;
+}
+
+.form-field {
+    margin-bottom: 1.5rem;
+}
+
+.form-field label {
+    color: #4338ca;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    outline: none;
+    border-color: #4338ca;
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+}
+
+.form-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.calculated-field {
+    background: #f8f9fa !important;
+    color: #6c757d;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.spinner {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.alert-custom {
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: none;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="edit-header">
+        <div class="edit-title">
+            <i class="fas fa-edit me-2"></i>Editar Exame Ecocardiográfico
+        </div>
+        <div class="edit-subtitle">
+            Paciente: {{ exame.nome_paciente }} • Data: {{ exame.data_exame }}
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('prontuario_paciente', nome_paciente=exame.nome_paciente) }}" class="btn-modern btn-voltar">
+                <i class="fas fa-arrow-left"></i>Voltar ao Prontuário
+            </a>
+            <button onclick="salvarExame()" class="btn-modern btn-salvar">
+                <i class="fas fa-save"></i>Salvar Alterações
+            </button>
+            <button onclick="gerarPDF()" class="btn-modern btn-pdf">
+                <i class="fas fa-file-pdf"></i>Gerar PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertContainer"></div>
+
+    <!-- Dados Básicos -->
+    <div class="section-edit">
+        <div class="section-edit-header">
+            <i class="fas fa-user me-2"></i>Dados Básicos do Paciente
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-field">
+                    <label>Nome do Paciente</label>
+                    <input type="text" id="nome_paciente" value="{{ exame.nome_paciente }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-field">
+                    <label>Data do Exame</label>
+                    <input type="text" id="data_exame" value="{{ exame.data_exame }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Idade</label>
+                    <input type="number" id="idade" value="{{ exame.idade }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Sexo</label>
+                    <select id="sexo">
+                        <option value="M" {{ 'selected' if exame.sexo == 'M' else '' }}>Masculino</option>
+                        <option value="F" {{ 'selected' if exame.sexo == 'F' else '' }}>Feminino</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Data de Nascimento</label>
+                    <input type="text" id="data_nascimento" value="{{ exame.data_nascimento }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-field">
+                    <label>Tipo de Atendimento</label>
+                    <input type="text" id="tipo_atendimento" value="{{ exame.tipo_atendimento or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-field">
+                    <label>Médico Solicitante</label>
+                    <input type="text" id="medico_solicitante" value="{{ exame.medico_solicitante or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-field">
+            <label>Indicação</label>
+            <textarea id="indicacao">{{ exame.indicacao or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- Parâmetros Ecocardiográficos -->
+    {% if exame.parametros %}
+    <div class="section-edit">
+        <div class="section-edit-header">
+            <i class="fas fa-heart me-2"></i>Parâmetros Ecocardiográficos
+        </div>
+        
+        <!-- Dados Antropométricos -->
+        <h6 class="text-primary mb-3">Dados Antropométricos</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Peso (kg)</label>
+                    <input type="number" step="0.1" id="peso" value="{{ exame.parametros.peso or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Altura (m)</label>
+                    <input type="number" step="0.01" id="altura" value="{{ exame.parametros.altura or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-field">
+                    <label>Superfície Corporal (m²)</label>
+                    <input type="number" step="0.01" id="superficie_corporal" class="calculated-field" value="{{ exame.parametros.superficie_corporal or '' }}" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medidas Básicas -->
+        <h6 class="text-primary mb-3 mt-4">Medidas Básicas</h6>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Átrio Esquerdo (mm)</label>
+                    <input type="number" step="0.1" id="atrio_esquerdo" value="{{ exame.parametros.atrio_esquerdo or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Raiz da Aorta (mm)</label>
+                    <input type="number" step="0.1" id="raiz_aorta" value="{{ exame.parametros.raiz_aorta or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Aorta Ascendente (mm)</label>
+                    <input type="number" step="0.1" id="aorta_ascendente" value="{{ exame.parametros.aorta_ascendente or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Frequência Cardíaca (bpm)</label>
+                    <input type="number" id="frequencia_cardiaca" value="{{ exame.parametros.frequencia_cardiaca or '' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ventrículo Esquerdo -->
+        <h6 class="text-primary mb-3 mt-4">Ventrículo Esquerdo</h6>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>DDVE (mm)</label>
+                    <input type="number" step="0.1" id="diametro_diastolico_final_ve" value="{{ exame.parametros.diametro_diastolico_final_ve or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>DSVE (mm)</label>
+                    <input type="number" step="0.1" id="diametro_sistolico_final" value="{{ exame.parametros.diametro_sistolico_final or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Septo (mm)</label>
+                    <input type="number" step="0.1" id="espessura_diastolica_septo" value="{{ exame.parametros.espessura_diastolica_septo or '' }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Parede Posterior (mm)</label>
+                    <input type="number" step="0.1" id="espessura_diastolica_ppve" value="{{ exame.parametros.espessura_diastolica_ppve or '' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Volumes e Função -->
+        <h6 class="text-primary mb-3 mt-4">Volumes e Função Sistólica</h6>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>VDF (mL)</label>
+                    <input type="number" step="0.1" id="volume_diastolico_final" class="calculated-field" value="{{ exame.parametros.volume_diastolico_final or '' }}" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>VSF (mL)</label>
+                    <input type="number" step="0.1" id="volume_sistolico_final" class="calculated-field" value="{{ exame.parametros.volume_sistolico_final or '' }}" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Volume Ejeção (mL)</label>
+                    <input type="number" step="0.1" id="volume_ejecao" class="calculated-field" value="{{ exame.parametros.volume_ejecao or '' }}" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-field">
+                    <label>Fração de Ejeção (%)</label>
+                    <input type="number" step="0.1" id="fracao_ejecao" value="{{ exame.parametros.fracao_ejecao or '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Laudo Médico -->
+    {% if exame.laudos %}
+    <div class="section-edit">
+        <div class="section-edit-header">
+            <i class="fas fa-file-medical me-2"></i>Laudo Médico
+        </div>
+        
+        <div class="form-field">
+            <label>Modo M e Bidimensional</label>
+            <textarea id="modo_m_bidimensional">{{ exame.laudos[0].modo_m_bidimensional or '' }}</textarea>
+        </div>
+        
+        <div class="form-field">
+            <label>Doppler Convencional</label>
+            <textarea id="doppler_convencional">{{ exame.laudos[0].doppler_convencional or '' }}</textarea>
+        </div>
+        
+        <div class="form-field">
+            <label>Doppler Tecidual</label>
+            <textarea id="doppler_tecidual">{{ exame.laudos[0].doppler_tecidual or '' }}</textarea>
+        </div>
+        
+        <div class="form-field">
+            <label>Conclusão</label>
+            <textarea id="conclusao">{{ exame.laudos[0].conclusao or '' }}</textarea>
+        </div>
+        
+        <div class="form-field">
+            <label>Recomendações</label>
+            <textarea id="recomendacoes">{{ exame.laudos[0].recomendacoes or '' }}</textarea>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div>Processando...</div>
+    </div>
+</div>
+
+<script>
+// Variáveis globais
+const exameId = {{ exame.id }};
+
+// Função para mostrar alerts
+function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    
+    const alertHtml = `
+        <div class="alert-custom ${alertClass}">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    alertContainer.innerHTML = alertHtml;
+    
+    // Remover alert após 5 segundos
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
+
+// Função para mostrar/ocultar loading
+function showLoading(show = true) {
+    document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+// Cálculos automáticos
+function calcularSuperficieCorporal() {
+    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const altura = parseFloat(document.getElementById('altura').value) || 0;
+    
+    if (peso > 0 && altura > 0) {
+        // Fórmula de Dubois
+        const sc = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura * 100, 0.725);
+        document.getElementById('superficie_corporal').value = sc.toFixed(2);
+    }
+}
+
+function calcularVolumes() {
+    const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve').value) || 0;
+    const dsve = parseFloat(document.getElementById('diametro_sistolico_final').value) || 0;
+    
+    if (ddve > 0) {
+        // Método de Teichholz
+        const vdf = (7.0 / (2.4 + ddve/10)) * Math.pow(ddve/10, 3);
+        document.getElementById('volume_diastolico_final').value = vdf.toFixed(1);
+    }
+    
+    if (dsve > 0) {
+        const vsf = (7.0 / (2.4 + dsve/10)) * Math.pow(dsve/10, 3);
+        document.getElementById('volume_sistolico_final').value = vsf.toFixed(1);
+    }
+    
+    const vdf = parseFloat(document.getElementById('volume_diastolico_final').value) || 0;
+    const vsf = parseFloat(document.getElementById('volume_sistolico_final').value) || 0;
+    
+    if (vdf > 0 && vsf > 0) {
+        const ve = vdf - vsf;
+        document.getElementById('volume_ejecao').value = ve.toFixed(1);
+    }
+}
+
+// Event listeners para cálculos automáticos
+document.getElementById('peso').addEventListener('input', calcularSuperficieCorporal);
+document.getElementById('altura').addEventListener('input', calcularSuperficieCorporal);
+document.getElementById('diametro_diastolico_final_ve').addEventListener('input', calcularVolumes);
+document.getElementById('diametro_sistolico_final').addEventListener('input', calcularVolumes);
+
+// Função para coletar todos os dados
+function coletarDados() {
+    return {
+        dados_basicos: {
+            nome_paciente: document.getElementById('nome_paciente').value,
+            data_exame: document.getElementById('data_exame').value,
+            idade: parseInt(document.getElementById('idade').value) || 0,
+            sexo: document.getElementById('sexo').value,
+            data_nascimento: document.getElementById('data_nascimento').value,
+            tipo_atendimento: document.getElementById('tipo_atendimento').value,
+            medico_solicitante: document.getElementById('medico_solicitante').value,
+            indicacao: document.getElementById('indicacao').value
+        },
+        parametros: {
+            peso: parseFloat(document.getElementById('peso').value) || null,
+            altura: parseFloat(document.getElementById('altura').value) || null,
+            superficie_corporal: parseFloat(document.getElementById('superficie_corporal').value) || null,
+            frequencia_cardiaca: parseInt(document.getElementById('frequencia_cardiaca').value) || null,
+            atrio_esquerdo: parseFloat(document.getElementById('atrio_esquerdo').value) || null,
+            raiz_aorta: parseFloat(document.getElementById('raiz_aorta').value) || null,
+            aorta_ascendente: parseFloat(document.getElementById('aorta_ascendente').value) || null,
+            diametro_diastolico_final_ve: parseFloat(document.getElementById('diametro_diastolico_final_ve').value) || null,
+            diametro_sistolico_final: parseFloat(document.getElementById('diametro_sistolico_final').value) || null,
+            espessura_diastolica_septo: parseFloat(document.getElementById('espessura_diastolica_septo').value) || null,
+            espessura_diastolica_ppve: parseFloat(document.getElementById('espessura_diastolica_ppve').value) || null,
+            volume_diastolico_final: parseFloat(document.getElementById('volume_diastolico_final').value) || null,
+            volume_sistolico_final: parseFloat(document.getElementById('volume_sistolico_final').value) || null,
+            volume_ejecao: parseFloat(document.getElementById('volume_ejecao').value) || null,
+            fracao_ejecao: parseFloat(document.getElementById('fracao_ejecao').value) || null
+        },
+        laudo: {
+            modo_m_bidimensional: document.getElementById('modo_m_bidimensional').value,
+            doppler_convencional: document.getElementById('doppler_convencional').value,
+            doppler_tecidual: document.getElementById('doppler_tecidual').value,
+            conclusao: document.getElementById('conclusao').value,
+            recomendacoes: document.getElementById('recomendacoes').value
+        }
+    };
+}
+
+// Função para salvar exame
+async function salvarExame() {
+    try {
+        showLoading(true);
+        
+        const dados = coletarDados();
+        
+        const response = await fetch(`/api/salvar-exame-editado/${exameId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (result.sucesso) {
+            showAlert('Exame salvo com sucesso!', 'success');
+        } else {
+            showAlert(result.erro || 'Erro ao salvar exame', 'error');
+        }
+        
+    } catch (error) {
+        showAlert('Erro de conexão: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Função para gerar PDF
+async function gerarPDF() {
+    try {
+        showLoading(true);
+        
+        // Primeiro salvar as alterações
+        await salvarExame();
+        
+        // Aguardar um pouco e então gerar PDF
+        setTimeout(() => {
+            window.open(`/gerar_pdf/${exameId}`, '_blank');
+            showLoading(false);
+        }, 1000);
+        
+    } catch (error) {
+        showAlert('Erro ao gerar PDF: ' + error.message, 'error');
+        showLoading(false);
+    }
+}
+
+// Inicializar cálculos quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    calcularSuperficieCorporal();
+    calcularVolumes();
+});
+</script>
+{% endblock %}

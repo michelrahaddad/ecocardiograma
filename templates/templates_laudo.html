@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Templates de Laudo{% endblock %}
+
+{% block extra_css %}
+<style>
+.template-card {
+    border: 1px solid #e3f2fd;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.template-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.template-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-bottom: 1px solid #e3f2fd;
+    padding: 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.template-body {
+    padding: 1rem;
+}
+
+.template-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.badge-favorito {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+}
+
+.badge-publico {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.search-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-novo-template {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-novo-template:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 3rem;
+}
+
+.dropdown-menu {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Cabeçalho -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0 text-primary">
+            <i class="fas fa-file-medical me-2"></i>
+            Gerenciar Templates de Laudo
+        </h1>
+        <p class="text-muted mb-0">Crie, edite e organize templates de laudos médicos</p>
+    </div>
+    <button class="btn btn-novo-template" onclick="abrirModalNovoTemplate()">
+        <i class="fas fa-plus me-2"></i>Novo Template
+    </button>
+</div>
+
+<!-- Seção de Busca e Filtros -->
+<div class="search-section">
+    <div class="row g-3">
+        <!-- Busca por texto -->
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-search me-1"></i>Buscar Templates
+            </label>
+            <input type="text" class="form-control" id="busca-texto" placeholder="Nome, conteúdo ou diagnóstico...">
+        </div>
+        
+        <!-- Filtro por categoria -->
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-tags me-1"></i>Categoria
+            </label>
+            <select class="form-select" id="filtro-categoria">
+                <option value="">Todas as categorias</option>
+                <option value="Normal">Normal</option>
+                <option value="Cardiomiopatias">Cardiomiopatias</option>
+                <option value="Valvopatias">Valvopatias</option>
+                <option value="Alterações Estruturais">Alterações Estruturais</option>
+                <option value="Alterações Hemodinâmicas">Alterações Hemodinâmicas</option>
+                <option value="Personalizado">Personalizado</option>
+            </select>
+        </div>
+        
+        <!-- Filtro por médico -->
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-user-md me-1"></i>Médico
+            </label>
+            <select class="form-select" id="filtro-medico">
+                <option value="">Todos os médicos</option>
+                <option value="global">Templates Globais</option>
+                {% for medico in medicos %}
+                <option value="{{ medico.id }}">{{ medico.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Filtros especiais -->
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-filter me-1"></i>Filtros
+            </label>
+            <div class="d-flex flex-column">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filtro-favoritos">
+                    <label class="form-check-label" for="filtro-favoritos">
+                        <i class="fas fa-star text-warning me-1"></i>Favoritos
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filtro-publicos">
+                    <label class="form-check-label" for="filtro-publicos">
+                        <i class="fas fa-globe text-success me-1"></i>Públicos
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <button class="btn btn-primary me-2" id="btn-buscar">
+                <i class="fas fa-search me-1"></i>Buscar
+            </button>
+            <button class="btn btn-outline-secondary" onclick="limparFiltros()">
+                <i class="fas fa-eraser me-1"></i>Limpar Filtros
+            </button>
+            <div class="float-end">
+                <small class="text-muted">
+                    <span id="contador-templates">0</span> templates encontrados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-spinner" id="loading-templates">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando templates...</p>
+</div>
+
+<!-- Lista de Templates -->
+<div id="templates-container">
+    <!-- Templates serão carregados aqui via JavaScript -->
+</div>
+
+</div>
+
+<!-- Modal Novo Template -->
+<div class="modal fade" id="modalNovoTemplate" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Novo Template de Laudo
+                </h5>
+                <button type="button" class="btn-close" onclick="fecharModal('modalNovoTemplate')"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-novo-template" action="/salvar_laudo/{{ exame_id }}" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="novo-nome" class="form-label">Nome do Template *</label>
+                                <input type="text" class="form-control" id="novo-nome" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="novo-categoria" class="form-label">Categoria</label>
+                                <select class="form-select" id="novo-categoria">
+                                    <option value="Personalizado">Personalizado</option>
+                                    <option value="Normal">Normal</option>
+                                    <option value="Cardiomiopatias">Cardiomiopatias</option>
+                                    <option value="Valvopatias">Valvopatias</option>
+                                    <option value="Alterações Estruturais">Alterações Estruturais</option>
+                                    <option value="Alterações Hemodinâmicas">Alterações Hemodinâmicas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="novo-modo-m" class="form-label">Modo M e Bidimensional</label>
+                        <textarea class="form-control" id="novo-modo-m" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="novo-doppler" class="form-label">Doppler Convencional</label>
+                        <textarea class="form-control" id="novo-doppler" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="novo-tecidual" class="form-label">Doppler Tecidual</label>
+                        <textarea class="form-control" id="novo-tecidual" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="novo-conclusao" class="form-label">Conclusão</label>
+                        <textarea class="form-control" id="novo-conclusao" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalNovoTemplate')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="criarNovoTemplate()">
+                    <i class="fas fa-save me-1"></i>Criar Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" id="modal-backdrop" style="display: none;"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/templates_manager.js"></script>
+{% endblock %}

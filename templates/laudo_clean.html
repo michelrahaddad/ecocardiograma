@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block title %}Laudo de Ecocardiograma - {{ exame.nome_paciente }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-heartbeat me-2"></i>
+                            Laudo de Ecocardiograma - {{ exame.nome_paciente }}
+                        </h5>
+                        <div id="auto-save-indicator" class="badge bg-success" style="display: none;">
+                            <i class="fas fa-save"></i> Salvo automaticamente
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="laudo-form" method="POST" action="/salvar_laudo/{{ exame_id }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Modo M e Bidimensional -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="modo_m_bidimensional" class="form-label fw-bold">
+                                    Modo M e Bidimensional
+                                </label>
+                                <div class="template-buttons">
+                                    <button type="button" class="btn btn-sm btn-outline-primary template-btn" 
+                                            data-field="modo_m_bidimensional" data-template="modo_m">
+                                        <i class="fas fa-clipboard"></i> Templates
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="modo_m_bidimensional" name="modo_m_bidimensional" 
+                                    class="form-control auto-expand" rows="4" maxlength="2000"
+                                    placeholder="Descreva os achados do modo M e bidimensional...">{{ laudo.modo_m_bidimensional or '' }}</textarea>
+                            <div class="text-end">
+                                <small id="modo_m_count" class="text-muted">0/2000</small>
+                            </div>
+                        </div>
+
+                        <!-- Doppler Convencional -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="doppler_convencional" class="form-label fw-bold">
+                                    Doppler Convencional
+                                </label>
+                                <div class="template-buttons">
+                                    <button type="button" class="btn btn-sm btn-outline-primary template-btn" 
+                                            data-field="doppler_convencional" data-template="doppler_conv">
+                                        <i class="fas fa-clipboard"></i> Templates
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="doppler_convencional" name="doppler_convencional" 
+                                    class="form-control auto-expand" rows="4" maxlength="2000"
+                                    placeholder="Descreva os achados do Doppler convencional...">{{ laudo.doppler_convencional or '' }}</textarea>
+                            <div class="text-end">
+                                <small id="doppler_count" class="text-muted">0/2000</small>
+                            </div>
+                        </div>
+
+                        <!-- Doppler Tecidual -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="doppler_tecidual" class="form-label fw-bold">
+                                    Doppler Tecidual
+                                </label>
+                                <div class="template-buttons">
+                                    <button type="button" class="btn btn-sm btn-outline-primary template-btn" 
+                                            data-field="doppler_tecidual" data-template="doppler_tec">
+                                        <i class="fas fa-clipboard"></i> Templates
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="doppler_tecidual" name="doppler_tecidual" 
+                                    class="form-control auto-expand" rows="4" maxlength="2000"
+                                    placeholder="Descreva os achados do Doppler tecidual...">{{ laudo.doppler_tecidual or '' }}</textarea>
+                            <div class="text-end">
+                                <small id="tecidual_count" class="text-muted">0/2000</small>
+                            </div>
+                        </div>
+
+                        <!-- Conclusão -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="conclusao" class="form-label fw-bold text-success">
+                                    Conclusão
+                                </label>
+                                <div class="template-buttons">
+                                    <button type="button" class="btn btn-sm btn-outline-success template-btn" 
+                                            data-field="conclusao" data-template="conclusao">
+                                        <i class="fas fa-clipboard"></i> Templates
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="conclusao" name="conclusao" 
+                                    class="form-control auto-expand" rows="3" maxlength="1500"
+                                    placeholder="Digite a conclusão do exame...">{{ laudo.conclusao or '' }}</textarea>
+                            <div class="text-end">
+                                <small id="conclusao_count" class="text-muted">0/1500</small>
+                            </div>
+                        </div>
+
+                        <!-- Recomendações -->
+                        <div class="mb-4">
+                            <label for="recomendacoes" class="form-label fw-bold text-info">
+                                Recomendações
+                            </label>
+                            <textarea id="recomendacoes" name="recomendacoes" 
+                                    class="form-control auto-expand" rows="2" maxlength="1000"
+                                    placeholder="Digite as recomendações médicas...">{{ laudo.recomendacoes or '' }}</textarea>
+                            <div class="text-end">
+                                <small id="recomendacoes_count" class="text-muted">0/1000</small>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-save"></i> Salvar Laudo
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" class="btn btn-success w-100">
+                                    <i class="fas fa-eye"></i> Visualizar Completo
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Preview Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        Prévia do Laudo
+                    </h6>
+                </div>
+                <div class="card-body" id="laudo-preview">
+                    <p class="text-muted text-center">A prévia será exibida conforme você preenche os campos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Modal -->
+<div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalLabel">Selecionar Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="templateSearch" class="form-control" placeholder="Buscar por diagnóstico...">
+                </div>
+                <div id="templateList" class="row">
+                    <!-- Templates will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/template_buttons.js') }}"></script>
+<script>
+// Native JavaScript Template System
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Sistema de templates inicializado com JavaScript nativo');
+    
+    let currentField = null;
+    const templateModal = new bootstrap.Modal(document.getElementById('templateModal'));
+    
+    // Initialize character counters
+    function updateCharCounter(fieldId, counterId) {
+        const field = document.getElementById(fieldId);
+        const counter = document.getElementById(counterId);
+        if (field && counter) {
+            const length = field.value.length;
+            const maxLength = field.getAttribute('maxlength');
+            counter.textContent = `${length}/${maxLength}`;
+            
+            // Update color based on length
+            if (length > maxLength * 0.9) {
+                counter.className = 'text-warning';
+            } else if (length >= maxLength) {
+                counter.className = 'text-danger';
+            } else {
+                counter.className = 'text-muted';
+            }
+        }
+    }
+    
+    // Initialize all character counters
+    ['modo_m_bidimensional', 'doppler_convencional', 'doppler_tecidual', 'conclusao', 'recomendacoes'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        const counterId = fieldId.replace('_bidimensional', '') + '_count';
+        
+        if (field) {
+            // Initial count
+            updateCharCounter(fieldId, counterId);
+            
+            // Update on input
+            field.addEventListener('input', function() {
+                updateCharCounter(fieldId, counterId);
+                updatePreview();
+            });
+            
+            // Auto-expand textarea
+            field.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        }
+    });
+    
+    // Template button handlers
+    document.querySelectorAll('.template-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentField = this.getAttribute('data-field');
+            const templateType = this.getAttribute('data-template');
+            loadTemplates(templateType);
+            templateModal.show();
+        });
+    });
+    
+    // Load templates function
+    function loadTemplates(templateType) {
+        const templateList = document.getElementById('templateList');
+        templateList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"></div></div>';
+        
+        fetch('/api/templates-laudo')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.templates) {
+                    displayTemplates(data.templates, templateType);
+                } else {
+                    templateList.innerHTML = '<div class="col-12"><p class="text-muted text-center">Nenhum template encontrado.</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar templates:', error);
+                templateList.innerHTML = '<div class="col-12"><p class="text-danger text-center">Erro ao carregar templates.</p></div>';
+            });
+    }
+    
+    // Display templates function
+    function displayTemplates(templates, templateType) {
+        const templateList = document.getElementById('templateList');
+        templateList.innerHTML = '';
+        
+        templates.forEach(template => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 mb-3';
+            
+            const card = document.createElement('div');
+            card.className = 'card template-card cursor-pointer';
+            card.innerHTML = `
+                <div class="card-body">
+                    <h6 class="card-title">${template.diagnostico}</h6>
+                    <p class="card-text text-muted small">${template.categoria}</p>
+                    <button class="btn btn-sm btn-primary w-100 apply-template-btn" 
+                            data-template-id="${template.id}">
+                        Aplicar Template
+                    </button>
+                </div>
+            `;
+            
+            col.appendChild(card);
+            templateList.appendChild(col);
+        });
+        
+        // Add click handlers for apply buttons
+        document.querySelectorAll('.apply-template-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const templateId = this.getAttribute('data-template-id');
+                applyTemplate(templateId);
+            });
+        });
+    }
+    
+    // Apply template function
+    function applyTemplate(templateId) {
+        fetch(`/api/templates-laudo/${templateId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.template && currentField) {
+                    const field = document.getElementById(currentField);
+                    const fieldMap = {
+                        'modo_m_bidimensional': 'modo_m_bidimensional',
+                        'doppler_convencional': 'doppler_convencional', 
+                        'doppler_tecidual': 'doppler_tecidual',
+                        'conclusao': 'conclusao'
+                    };
+                    
+                    const templateField = fieldMap[currentField];
+                    if (templateField && data.template[templateField]) {
+                        const currentText = field.value.trim();
+                        if (currentText === '' || confirm('Substituir o texto atual pelo template?')) {
+                            field.value = data.template[templateField];
+                            field.dispatchEvent(new Event('input'));
+                            templateModal.hide();
+                            showNotification('Template aplicado com sucesso!', 'success');
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao aplicar template:', error);
+                showNotification('Erro ao aplicar template', 'error');
+            });
+    }
+    
+    // Update preview function
+    function updatePreview() {
+        const preview = document.getElementById('laudo-preview');
+        if (!preview) return;
+        
+        let content = '';
+        
+        const fields = {
+            'modo_m_bidimensional': 'Modo M e Bidimensional',
+            'doppler_convencional': 'Doppler Convencional',
+            'doppler_tecidual': 'Doppler Tecidual',
+            'conclusao': 'Conclusão',
+            'recomendacoes': 'Recomendações'
+        };
+        
+        Object.entries(fields).forEach(([fieldId, title]) => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value.trim()) {
+                const colorClass = fieldId === 'conclusao' ? 'text-success' : 
+                                 fieldId === 'recomendacoes' ? 'text-info' : 'text-primary';
+                content += `<h6 class="${colorClass}">${title}:</h6><p>${field.value.trim()}</p>`;
+            }
+        });
+        
+        preview.innerHTML = content || '<p class="text-muted text-center">A prévia será exibida conforme você preenche os campos.</p>';
+    }
+    
+    // Show notification function
+    function showNotification(message, type = 'info') {
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 'alert-info';
+        
+        const alert = document.createElement('div');
+        alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.parentNode.removeChild(alert);
+            }
+        }, 3000);
+    }
+    
+    // Template search functionality
+    const templateSearch = document.getElementById('templateSearch');
+    if (templateSearch) {
+        templateSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('.template-card').forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const category = card.querySelector('.card-text').textContent.toLowerCase();
+                const show = title.includes(searchTerm) || category.includes(searchTerm);
+                card.closest('.col-md-6').style.display = show ? 'block' : 'none';
+            });
+        });
+    }
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}

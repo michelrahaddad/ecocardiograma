@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Prontuário de Pacientes - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-box {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 2px solid #bfdbfe;
+}
+
+.patient-card {
+    transition: all 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08);
+    margin-bottom: 1rem;
+}
+
+.patient-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.patient-stats {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.stat-badge {
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.search-results {
+    display: none;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="fas fa-folder-medical me-2"></i>Prontuário de Pacientes
+                    </h2>
+                    <p class="mb-0 mt-2 text-muted">Busque e visualize o histórico completo de exames dos pacientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-box">
+        <div class="row">
+            <div class="col-12">
+                <h4 class="mb-3">
+                    <i class="fas fa-search me-2"></i>Buscar Paciente
+                </h4>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           id="searchInput" 
+                           placeholder="Digite o nome do paciente..."
+                           autocomplete="off">
+                    <button class="btn btn-primary" type="button" id="searchButton">
+                        <i class="fas fa-search me-1"></i>Buscar
+                    </button>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Digite pelo menos 2 caracteres para iniciar a busca
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Buscando pacientes...</p>
+    </div>
+
+    <!-- Search Results -->
+    <div id="searchResults" class="search-results">
+        <div class="row mb-3">
+            <div class="col-12">
+                <h5>
+                    <i class="fas fa-users me-2"></i>Resultados da Busca
+                    <span id="resultCount" class="badge bg-primary ms-2">0</span>
+                </h5>
+            </div>
+        </div>
+        <div id="patientsContainer" class="row">
+            <!-- Resultados serão inseridos aqui via JavaScript -->
+        </div>
+    </div>
+
+    <!-- No Results -->
+    <div id="noResults" class="no-results" style="display: none;">
+        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+        <h5>Nenhum paciente encontrado</h5>
+        <p class="text-muted">Tente uma busca diferente ou verifique a ortografia</p>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instructions" class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-folder-medical fa-4x text-muted mb-3"></i>
+            <h4>Sistema de Prontuário</h4>
+            <p class="text-muted mb-4">
+                Use a busca acima para encontrar pacientes e visualizar seu histórico completo de exames ecocardiográficos.
+            </p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-box">
+                                <i class="fas fa-search fa-2x text-primary mb-2"></i>
+                                <h6>Busca Rápida</h6>
+                                <small class="text-muted">Encontre pacientes pelo nome</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-box">
+                                <i class="fas fa-history fa-2x text-success mb-2"></i>
+                                <h6>Histórico Completo</h6>
+                                <small class="text-muted">Visualize todos os exames</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-box">
+                                <i class="fas fa-edit fa-2x text-warning mb-2"></i>
+                                <h6>Edição Fácil</h6>
+                                <small class="text-muted">Edite exames quando necessário</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const loading = document.getElementById('loading');
+    const searchResults = document.getElementById('searchResults');
+    const noResults = document.getElementById('noResults');
+    const instructions = document.getElementById('instructions');
+    const patientsContainer = document.getElementById('patientsContainer');
+    const resultCount = document.getElementById('resultCount');
+
+    let searchTimeout;
+
+    // Busca ao digitar (com debounce)
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length >= 2) {
+            searchTimeout = setTimeout(() => {
+                buscarPacientes(query);
+            }, 300);
+        } else {
+            hideAllSections();
+            instructions.style.display = 'block';
+        }
+    });
+
+    // Busca ao clicar no botão
+    searchButton.addEventListener('click', function() {
+        const query = searchInput.value.trim();
+        if (query.length >= 2) {
+            buscarPacientes(query);
+        }
+    });
+
+    // Busca ao pressionar Enter
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const query = this.value.trim();
+            if (query.length >= 2) {
+                buscarPacientes(query);
+            }
+        }
+    });
+
+    function hideAllSections() {
+        loading.style.display = 'none';
+        searchResults.style.display = 'none';
+        noResults.style.display = 'none';
+        instructions.style.display = 'none';
+    }
+
+    function buscarPacientes(nome) {
+        hideAllSections();
+        loading.style.display = 'block';
+
+        fetch(`/prontuario/buscar?nome=${encodeURIComponent(nome)}`)
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.pacientes && data.pacientes.length > 0) {
+                    exibirResultados(data.pacientes);
+                } else {
+                    noResults.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na busca:', error);
+                loading.style.display = 'none';
+                noResults.style.display = 'block';
+            });
+    }
+
+    function exibirResultados(pacientes) {
+        patientsContainer.innerHTML = '';
+        resultCount.textContent = pacientes.length;
+        
+        pacientes.forEach(paciente => {
+            const patientCard = createPatientCard(paciente);
+            patientsContainer.appendChild(patientCard);
+        });
+        
+        searchResults.style.display = 'block';
+    }
+
+    function createPatientCard(paciente) {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4 mb-3';
+        
+        col.innerHTML = `
+            <div class="card patient-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="fas fa-user-circle me-2"></i>${paciente.nome}
+                    </h5>
+                    <div class="patient-stats">
+                        <span class="stat-badge">
+                            <i class="fas fa-file-medical me-1"></i>${paciente.total_exames} exames
+                        </span>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Último exame: ${paciente.ultimo_exame}
+                        </small>
+                    </div>
+                    <div class="mt-3 d-grid gap-2">
+                        <a href="/prontuario/paciente/${encodeURIComponent(paciente.nome)}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-folder-open me-1"></i>Ver Prontuário
+                        </a>
+                        <a href="/novo_exame?clone_paciente=${encodeURIComponent(paciente.nome)}" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i>Novo Exame
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return col;
+    }
+
+    // Função para criar novo exame baseado no último exame do paciente
+    window.novoExameFromProntuario = function(nomePaciente) {
+        if (!nomePaciente) {
+            alert('Nome do paciente não encontrado');
+            return;
+        }
+        
+        // Redirecionar para o fluxo normal de novo exame com dados clonados
+        window.location.href = `/novo_exame?clone_paciente=${encodeURIComponent(nomePaciente)}`;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Médico - Sistema de Ecocardiograma</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <style>
+        .signature-container {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        
+        #signature-pad {
+            width: 100%;
+            height: 200px;
+            background-color: #fff;
+        }
+        
+        .medico-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .medico-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .medico-card.selected {
+            border-color: #337ab7;
+            background-color: #f5f9ff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .medico-assinatura {
+            max-width: 100%;
+            max-height: 100px;
+            margin-top: 10px;
+        }
+        
+        .btn-selecionar {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">
+                    <img src="{{ url_for('static', filename='img/logo_vidah.png') }}" alt="Logo Vidah" height="30">
+                </a>
+            </div>
+            
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Início</a></li>
+                    <li><a href="/novo_exame">Novo Exame</a></li>
+                    <li class="active"><a href="/cadastro_medico">Cadastro de Médico</a></li>
+                </ul>
+                
+                <div class="navbar-right">
+                    <p class="navbar-text">Sistema de Ecocardiograma</p>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Conteúdo principal -->
+    <div class="container main-container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Cadastro e Seleção de Médicos</h2>
+                
+                {% if mensagem %}
+                <div class="alert alert-{{ tipo_mensagem }}">
+                    {{ mensagem }}
+                </div>
+                {% endif %}
+                
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Cadastrar Novo Médico</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form id="medico-form" action="{{ url_for('cadastro_medico') }}" method="POST">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nome_medico">Nome do Médico</label>
+                                        <input type="text" class="form-control" id="nome_medico" name="nome_medico" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="crm_medico">CRM</label>
+                                        <input type="text" class="form-control" id="crm_medico" name="crm_medico" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Assinatura Digital</label>
+                                <div class="signature-container">
+                                    <canvas id="signature-pad" class="signature-pad"></canvas>
+                                </div>
+                                <input type="hidden" id="signature_data" name="assinatura_data">
+                                <button type="button" id="clear-signature" class="btn btn-default">Limpar Assinatura</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Cadastrar Médico</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Médicos Cadastrados</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            {% if medicos|length > 0 %}
+                                {% for medico in medicos %}
+                                <div class="col-md-4">
+                                    <div class="medico-card {% if medico_selecionado and medico_selecionado == medico.id|string %}selected{% endif %}">
+                                        <h4>{{ medico.nome }}</h4>
+                                        <p><strong>CRM:</strong> {{ medico.crm }}</p>
+                                        
+                                        {% if medico.assinatura_url %}
+                                        <div class="text-center">
+                                            <img src="{{ medico.assinatura_url }}" alt="Assinatura de {{ medico.nome }}" class="medico-assinatura">
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted">Sem assinatura cadastrada</p>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('selecionar_medico', medico_id=medico.id) }}" class="btn btn-success btn-block btn-selecionar">
+                                            {% if medico_selecionado and medico_selecionado == medico.id|string %}
+                                            <span class="glyphicon glyphicon-check"></span> Selecionado
+                                            {% else %}
+                                            <span class="glyphicon glyphicon-ok"></span> Selecionar
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-md-12">
+                                    <p class="text-center">Nenhum médico cadastrado.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <a href="/" class="btn btn-default">
+                        <span class="glyphicon glyphicon-arrow-left"></span> Voltar para Início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rodapé -->
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted">Sistema de Ecocardiograma - Grupo Vidah &copy; 2025</p>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/signature_pad.js') }}"></script>
+    
+    <script>
+        // Armazenar médico selecionado no localStorage
+        {% if medico_selecionado %}
+        $(document).ready(function() {
+            // Buscar dados do médico selecionado
+            $.ajax({
+                url: '/obter_assinatura_medico/{{ medico_selecionado }}',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Armazenar no localStorage
+                        var medicoSelecionado = {
+                            id: {{ medico_selecionado }},
+                            nome: $('.medico-card.selected h4').text(),
+                            crm: $('.medico-card.selected p strong').next().text().trim(),
+                            assinatura_data: response.signature_data
+                        };
+                        
+                        localStorage.setItem('medicoSelecionado', JSON.stringify(medicoSelecionado));
+                    }
+                }
+            });
+        });
+        {% endif %}
+    </script>
+</body>
+</html>

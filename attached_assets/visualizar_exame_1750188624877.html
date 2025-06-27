@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Exame - Grupo Vidah</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .patient-card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .patient-card-header {
+            background-color: #0a2853;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+        }
+        
+        .patient-card-body {
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .patient-info-item {
+            margin-bottom: 10px;
+        }
+        
+        .patient-info-label {
+            font-weight: bold;
+            color: #0a2853;
+        }
+        
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .action-button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .action-button i {
+            margin-right: 8px;
+        }
+        
+        .action-button-primary {
+            background-color: #0a2853;
+        }
+        
+        .action-button-primary:hover {
+            background-color: #0d3a7a;
+        }
+        
+        .action-button-secondary {
+            background-color: #41828e;
+        }
+        
+        .action-button-secondary:hover {
+            background-color: #2c5c64;
+        }
+        
+        .action-button-danger {
+            background-color: #dc3545;
+        }
+        
+        .action-button-danger:hover {
+            background-color: #bd2130;
+        }
+        
+        .action-button-success {
+            background-color: #28a745;
+        }
+        
+        .action-button-success:hover {
+            background-color: #218838;
+        }
+        
+        .section-title {
+            color: #0a2853;
+            border-bottom: 2px solid #41828e;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .parameters-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .parameter-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .parameter-label {
+            font-weight: bold;
+            color: #41828e;
+            font-size: 0.9em;
+        }
+        
+        .parameter-value {
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+        
+        .parameter-reference {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        .laudo-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .laudo-section-title {
+            font-weight: bold;
+            color: #0a2853;
+            margin-bottom: 8px;
+        }
+        
+        .laudo-content {
+            white-space: pre-line;
+        }
+        
+        .signature-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .signature-image {
+            max-width: 300px;
+            max-height: 100px;
+            margin: 0 auto;
+            display: block;
+            border-bottom: 1px solid #333;
+        }
+        
+        .signature-line {
+            width: 300px;
+            margin: 10px auto;
+            border-top: 1px solid #333;
+        }
+        
+        .doctor-info {
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .navigation-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .navigation-bar a {
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #0a2853;
+            font-weight: bold;
+        }
+        
+        .navigation-bar a:hover {
+            background-color: #e9ecef;
+        }
+        
+        .navigation-bar a.active {
+            background-color: #0a2853;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="eco-header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="eco-logo">
+        </div>
+        <div class="header-center">
+            <h1 class="eco-title">Sistema de Ecocardiograma</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Alternar tema claro/escuro">
+                <i class="fas fa-moon"></i>
+                <span>Modo escuro</span>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Navegação principal -->
+    <nav class="eco-nav">
+        <ul class="eco-nav-list">
+            <li class="eco-nav-item"><a href="{{ url_for('index') }}">Início</a></li>
+            <li class="eco-nav-item"><a href="{{ url_for('novo_exame') }}">Novo Exame</a></li>
+        </ul>
+    </nav>
+    
+    <!-- Conteúdo principal -->
+    <main class="container mt-4">
+        <!-- Barra de navegação do exame -->
+        <div class="navigation-bar">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Início</a>
+            <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" class="active"><i class="fas fa-eye"></i> Visualizar Exame</a>
+            <a href="{{ url_for('parametros', exame_id=exame.id) }}"><i class="fas fa-stethoscope"></i> Parâmetros</a>
+            <a href="{{ url_for('laudo', exame_id=exame.id) }}"><i class="fas fa-file-medical-alt"></i> Laudo</a>
+        </div>
+        
+        <!-- Informações do paciente -->
+        <div class="patient-card">
+            <div class="patient-card-header">
+                Informações do Paciente
+            </div>
+            <div class="patient-card-body">
+                <div class="patient-info">
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Nome:</div>
+                        <div>{{ exame.nome_paciente }}</div>
+                    </div>
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Data de Nascimento:</div>
+                        <div>{{ exame.data_nascimento }}</div>
+                    </div>
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Idade:</div>
+                        <div>{{ exame.idade }} anos</div>
+                    </div>
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Sexo:</div>
+                        <div>{{ exame.sexo }}</div>
+                    </div>
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Data do Exame:</div>
+                        <div>{{ exame.data_exame }}</div>
+                    </div>
+                    <div class="patient-info-item">
+                        <div class="patient-info-label">Médico Solicitante:</div>
+                        <div>{{ exame.medico_solicitante }}</div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="action-button action-button-primary">
+                        <i class="fas fa-stethoscope"></i> Editar Parâmetros
+                    </a>
+                    <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="action-button action-button-secondary">
+                        <i class="fas fa-file-medical-alt"></i> Editar Laudo
+                    </a>
+                    <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="action-button action-button-success" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Gerar PDF
+                    </a>
+                    <a href="{{ url_for('index') }}" class="action-button action-button-danger">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resumo dos parâmetros -->
+        <h2 class="section-title">Resumo dos Parâmetros</h2>
+        
+        {% if parametros %}
+        <div class="parameters-summary">
+            <div class="parameter-item">
+                <div class="parameter-label">Fração de Ejeção</div>
+                <div class="parameter-value">{{ parametros.fracao_ejecao if parametros.fracao_ejecao else 'N/A' }}%</div>
+                <div class="parameter-reference">Ref: >55%</div>
+            </div>
+            <div class="parameter-item">
+                <div class="parameter-label">DDVE</div>
+                <div class="parameter-value">{{ parametros.diametro_diastolico_final_ve if parametros.diametro_diastolico_final_ve else 'N/A' }} mm</div>
+                <div class="parameter-reference">Ref: 3,5-5,6 cm</div>
+            </div>
+            <div class="parameter-item">
+                <div class="parameter-label">Átrio Esquerdo</div>
+                <div class="parameter-value">{{ parametros.atrio_esquerdo if parametros.atrio_esquerdo else 'N/A' }} mm</div>
+                <div class="parameter-reference">Ref: 2,7-3,8 cm</div>
+            </div>
+            <div class="parameter-item">
+                <div class="parameter-label">Septo</div>
+                <div class="parameter-value">{{ parametros.espessura_diastolica_septo if parametros.espessura_diastolica_septo else 'N/A' }} mm</div>
+                <div class="parameter-reference">Ref: 0,6-1,1 cm</div>
+            </div>
+            <div class="parameter-item">
+                <div class="parameter-label">Parede Posterior</div>
+                <div class="parameter-value">{{ parametros.espessura_diastolica_ppve if parametros.espessura_diastolica_ppve else 'N/A' }} mm</div>
+                <div class="parameter-reference">Ref: 0,6-1,1 cm</div>
+            </div>
+            <div class="parameter-item">
+                <div class="parameter-label">PSAP</div>
+                <div class="parameter-value">{{ parametros.psap if parametros.psap else 'N/A' }} mmHg</div>
+                <div class="parameter-reference">Ref: <35 mmHg</div>
+            </div>
+        </div>
+        
+        <div class="text-center mb-4">
+            <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Ver Todos os Parâmetros
+            </a>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Nenhum parâmetro cadastrado para este exame.
+            <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="alert-link">Cadastrar parâmetros</a>
+        </div>
+        {% endif %}
+        
+        <!-- Resumo do laudo -->
+        <h2 class="section-title">Resumo do Laudo</h2>
+        
+        {% if laudo %}
+        <div class="laudo-section">
+            <div class="laudo-section-title">Resumo do Exame</div>
+            <div class="laudo-content">{{ laudo.resumo_exame }}</div>
+        </div>
+        
+        <div class="laudo-section">
+            <div class="laudo-section-title">Conclusão</div>
+            <div class="laudo-content">{{ laudo.conclusao }}</div>
+        </div>
+        
+        <div class="signature-container">
+            {% if laudo.signature_data %}
+            <img src="{{ laudo.signature_data }}" alt="Assinatura do médico" class="signature-image">
+            {% else %}
+            <div class="signature-line"></div>
+            {% endif %}
+            
+            <div class="doctor-info">
+                <p><strong>{{ laudo.medico_responsavel if laudo.medico_responsavel else 'Michel Raineri Haddad' }}</strong></p>
+                <p>CRM: {{ laudo.crm_medico if laudo.crm_medico else '183299' }}</p>
+                <p>Médico Responsável</p>
+            </div>
+        </div>
+        
+        <div class="text-center mb-4">
+            <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Ver Laudo Completo
+            </a>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Nenhum laudo cadastrado para este exame.
+            <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="alert-link">Cadastrar laudo</a>
+        </div>
+        {% endif %}
+    </main>
+    
+    <!-- Rodapé -->
+    <footer class="bg-primary text-center py-3">
+        <div class="container">
+            <p class="mb-0">© 2025 Grupo Vidah - Sistema de Ecocardiograma</p>
+            <p class="mb-0">Desenvolvido com <i class="fas fa-heart text-accent"></i> para o Grupo Vidah</p>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Alternar tema claro/escuro
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    text.textContent = 'Modo claro';
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    text.textContent = 'Modo escuro';
+                }
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            });
+            
+            // Verificar tema salvo
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const icon = document.querySelector('#theme-toggle i');
+                const text = document.querySelector('#theme-toggle span');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Modo claro';
+            }
+        });
+    </script>
+</body>
+</html>

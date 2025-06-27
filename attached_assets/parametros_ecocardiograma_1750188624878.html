@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parâmetros Ecocardiográficos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/branding.css') }}">
+    <style>
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        .tab-button {
+            margin-right: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button.active {
+            background-color: #0056b3;
+            color: white;
+        }
+        #save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .calculated-field {
+            background-color: #f8f9fa;
+        }
+        .nav-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .navigation-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .navigation-bar a {
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #0a2853;
+            font-weight: bold;
+        }
+        .navigation-bar a:hover {
+            background-color: #e9ecef;
+        }
+        .save-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .save-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="logo-container text-center mb-4">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Logo Grupo Vidah" class="img-fluid" style="max-height: 100px;">
+        </div>
+        
+        <h1 class="text-center mb-4">Parâmetros Ecocardiográficos</h1>
+        
+        <!-- Barra de navegação principal -->
+        <div class="navigation-bar">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Início</a>
+            <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}"><i class="fas fa-eye"></i> Visualizar Exame</a>
+            <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="active"><i class="fas fa-stethoscope"></i> Parâmetros</a>
+            <a href="{{ url_for('laudo', exame_id=exame.id) }}"><i class="fas fa-file-medical-alt"></i> Laudo</a>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Dados do Paciente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nome:</strong> {{ exame.nome_paciente }}</p>
+                        <p><strong>Data de Nascimento:</strong> {{ exame.data_nascimento }}</p>
+                        <p><strong>Idade:</strong> {{ exame.idade }} anos</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Sexo:</strong> {{ exame.sexo }}</p>
+                        <p><strong>Data do Exame:</strong> {{ exame.data_exame }}</p>
+                        <p><strong>Médico Solicitante:</strong> {{ exame.medico_solicitante }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="save-notification">Dados salvos com sucesso!</div>
+        
+        <div class="btn-group mb-4" role="group">
+            <button class="btn btn-outline-primary tab-button active" data-tab="tab-medidas">Medidas Básicas</button>
+            <button class="btn btn-outline-primary tab-button" data-tab="tab-volumes">Volumes e Função Sistólica</button>
+            <button class="btn btn-outline-primary tab-button" data-tab="tab-fluxos">Fluxos e Gradientes</button>
+        </div>
+        
+        <form id="form-parametros" action="{{ url_for('salvar_parametros', exame_id=exame.id) }}" method="post">
+            <input type="hidden" id="exame_id" name="exame_id" value="{{ exame.id }}">
+            
+            <div id="tab-medidas" class="tab-pane active">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Medidas Antropométricas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="peso">Peso (kg)</label>
+                                    <input type="number" step="0.01" class="form-control" id="peso" name="peso" value="{{ parametros.peso if parametros and parametros.peso != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="altura">Altura (cm)</label>
+                                    <input type="number" step="0.01" class="form-control" id="altura" name="altura" value="{{ parametros.altura if parametros and parametros.altura != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="superficie_corporal">Superfície Corporal (m²)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="superficie_corporal" name="superficie_corporal" value="{{ parametros.superficie_corporal if parametros and parametros.superficie_corporal != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="frequencia_cardiaca">Frequência Cardíaca (bpm)</label>
+                                    <input type="number" step="1" class="form-control" id="frequencia_cardiaca" name="frequencia_cardiaca" value="{{ parametros.frequencia_cardiaca if parametros and parametros.frequencia_cardiaca != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Medidas Cardíacas Básicas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="atrio_esquerdo">Átrio Esquerdo (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="atrio_esquerdo" name="atrio_esquerdo" value="{{ parametros.atrio_esquerdo if parametros and parametros.atrio_esquerdo != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="raiz_aorta">Raiz da Aorta (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="raiz_aorta" name="raiz_aorta" value="{{ parametros.raiz_aorta if parametros and parametros.raiz_aorta != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="relacao_atrio_esquerdo_aorta">Relação AE/Ao</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="relacao_atrio_esquerdo_aorta" name="relacao_atrio_esquerdo_aorta" value="{{ parametros.relacao_atrio_esquerdo_aorta if parametros and parametros.relacao_atrio_esquerdo_aorta != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="aorta_ascendente">Aorta Ascendente (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="aorta_ascendente" name="aorta_ascendente" value="{{ parametros.aorta_ascendente if parametros and parametros.aorta_ascendente != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="diametro_ventricular_direito">Diâmetro VD (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="diametro_ventricular_direito" name="diametro_ventricular_direito" value="{{ parametros.diametro_ventricular_direito if parametros and parametros.diametro_ventricular_direito != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="diametro_basal_vd">Diâmetro Basal VD (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="diametro_basal_vd" name="diametro_basal_vd" value="{{ parametros.diametro_basal_vd if parametros and parametros.diametro_basal_vd != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="diametro_diastolico_final_ve">DDVE (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="diametro_diastolico_final_ve" name="diametro_diastolico_final_ve" value="{{ parametros.diametro_diastolico_final_ve if parametros and parametros.diametro_diastolico_final_ve != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="diametro_sistolico_final">DSVE (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="diametro_sistolico_final" name="diametro_sistolico_final" value="{{ parametros.diametro_sistolico_final if parametros and parametros.diametro_sistolico_final != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="percentual_encurtamento">% Encurtamento</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="percentual_encurtamento" name="percentual_encurtamento" value="{{ parametros.percentual_encurtamento if parametros and parametros.percentual_encurtamento != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="espessura_diastolica_septo">Septo (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="espessura_diastolica_septo" name="espessura_diastolica_septo" value="{{ parametros.espessura_diastolica_septo if parametros and parametros.espessura_diastolica_septo != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="espessura_diastolica_ppve">PP (mm)</label>
+                                    <input type="number" step="0.1" class="form-control" id="espessura_diastolica_ppve" name="espessura_diastolica_ppve" value="{{ parametros.espessura_diastolica_ppve if parametros and parametros.espessura_diastolica_ppve != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="relacao_septo_parede_posterior">Relação Septo/PP</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="relacao_septo_parede_posterior" name="relacao_septo_parede_posterior" value="{{ parametros.relacao_septo_parede_posterior if parametros and parametros.relacao_septo_parede_posterior != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <button type="submit" class="save-button" id="btn-salvar-parametros-medidas">
+                        <i class="fas fa-save"></i> Salvar Parâmetros
+                    </button>
+                </div>
+                
+                <div class="nav-buttons">
+                    <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" class="btn btn-secondary">Voltar para Exame</a>
+                    <button type="button" class="btn btn-primary next-tab" data-next="tab-volumes">Próxima Aba</button>
+                </div>
+            </div>
+            
+            <div id="tab-volumes" class="tab-pane">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Volumes e Função Sistólica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="volume_diastolico_final">Volume Diastólico Final (mL)</label>
+                                    <input type="number" step="0.1" class="form-control calculated-field" id="volume_diastolico_final" name="volume_diastolico_final" value="{{ parametros.volume_diastolico_final if parametros and parametros.volume_diastolico_final != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="volume_sistolico_final">Volume Sistólico Final (mL)</label>
+                                    <input type="number" step="0.1" class="form-control calculated-field" id="volume_sistolico_final" name="volume_sistolico_final" value="{{ parametros.volume_sistolico_final if parametros and parametros.volume_sistolico_final != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="volume_sistolico">Volume Sistólico (mL)</label>
+                                    <input type="number" step="0.1" class="form-control calculated-field" id="volume_sistolico" name="volume_sistolico" value="{{ parametros.volume_sistolico if parametros and parametros.volume_sistolico != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="fracao_ejecao_teichols">Fração de Ejeção Teichols (%)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="fracao_ejecao_teichols" name="fracao_ejecao_teichols" value="{{ parametros.fracao_ejecao_teichols if parametros and parametros.fracao_ejecao_teichols != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="fracao_ejecao_simpson">Fração de Ejeção Simpson (%)</label>
+                                    <input type="number" step="0.01" class="form-control" id="fracao_ejecao_simpson" name="fracao_ejecao_simpson" value="{{ parametros.fracao_ejecao_simpson if parametros and parametros.fracao_ejecao_simpson != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="fracao_ejecao">Fração de Ejeção Final (%)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="fracao_ejecao" name="fracao_ejecao" value="{{ parametros.fracao_ejecao if parametros and parametros.fracao_ejecao != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="debito_cardiaco">Débito Cardíaco (L/min)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="debito_cardiaco" name="debito_cardiaco" value="{{ parametros.debito_cardiaco if parametros and parametros.debito_cardiaco != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="indice_cardiaco">Índice Cardíaco (L/min/m²)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="indice_cardiaco" name="indice_cardiaco" value="{{ parametros.indice_cardiaco if parametros and parametros.indice_cardiaco != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="volume_atrio_esquerdo">Volume AE (mL)</label>
+                                    <input type="number" step="0.1" class="form-control" id="volume_atrio_esquerdo" name="volume_atrio_esquerdo" value="{{ parametros.volume_atrio_esquerdo if parametros and parametros.volume_atrio_esquerdo != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="massa_ve">Massa VE (g)</label>
+                                    <input type="number" step="0.1" class="form-control calculated-field" id="massa_ve" name="massa_ve" value="{{ parametros.massa_ve if parametros and parametros.massa_ve != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="indice_massa_ve">Índice de Massa VE (g/m²)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="indice_massa_ve" name="indice_massa_ve" value="{{ parametros.indice_massa_ve if parametros and parametros.indice_massa_ve != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="relacao_volume_massa">Relação Volume/Massa</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="relacao_volume_massa" name="relacao_volume_massa" value="{{ parametros.relacao_volume_massa if parametros and parametros.relacao_volume_massa != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <button type="submit" class="save-button" id="btn-salvar-parametros-volumes">
+                        <i class="fas fa-save"></i> Salvar Parâmetros
+                    </button>
+                </div>
+                
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-secondary prev-tab" data-prev="tab-medidas">Aba Anterior</button>
+                    <button type="button" class="btn btn-primary next-tab" data-next="tab-fluxos">Próxima Aba</button>
+                </div>
+            </div>
+            
+            <div id="tab-fluxos" class="tab-pane">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Fluxos e Gradientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fluxo_pulmonar">Fluxo Pulmonar (m/s)</label>
+                                    <input type="number" step="0.01" class="form-control" id="fluxo_pulmonar" name="fluxo_pulmonar" value="{{ parametros.fluxo_pulmonar if parametros and parametros.fluxo_pulmonar != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gradiente_vd_ap">Gradiente VD/AP (mmHg)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="gradiente_vd_ap" name="gradiente_vd_ap" value="{{ parametros.gradiente_vd_ap if parametros and parametros.gradiente_vd_ap != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fluxo_aortico">Fluxo Aórtico (m/s)</label>
+                                    <input type="number" step="0.01" class="form-control" id="fluxo_aortico" name="fluxo_aortico" value="{{ parametros.fluxo_aortico if parametros and parametros.fluxo_aortico != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gradiente_ve_ao">Gradiente VE/Ao (mmHg)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="gradiente_ve_ao" name="gradiente_ve_ao" value="{{ parametros.gradiente_ve_ao if parametros and parametros.gradiente_ve_ao != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fluxo_mitral">Fluxo Mitral (m/s)</label>
+                                    <input type="number" step="0.01" class="form-control" id="fluxo_mitral" name="fluxo_mitral" value="{{ parametros.fluxo_mitral if parametros and parametros.fluxo_mitral != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gradiente_ae_ve">Gradiente AE/VE (mmHg)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="gradiente_ae_ve" name="gradiente_ae_ve" value="{{ parametros.gradiente_ae_ve if parametros and parametros.gradiente_ae_ve != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fluxo_tricuspide">Fluxo Tricúspide (m/s)</label>
+                                    <input type="number" step="0.01" class="form-control" id="fluxo_tricuspide" name="fluxo_tricuspide" value="{{ parametros.fluxo_tricuspide if parametros and parametros.fluxo_tricuspide != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gradiente_ad_vd">Gradiente AD/VD (mmHg)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="gradiente_ad_vd" name="gradiente_ad_vd" value="{{ parametros.gradiente_ad_vd if parametros and parametros.gradiente_ad_vd != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Pressões Estimadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pressao_atrio_direito">Pressão do AD (mmHg)</label>
+                                    <input type="number" step="1" class="form-control" id="pressao_atrio_direito" name="pressao_atrio_direito" value="{{ parametros.pressao_atrio_direito if parametros and parametros.pressao_atrio_direito != None else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="psap">PSAP (mmHg)</label>
+                                    <input type="number" step="0.01" class="form-control calculated-field" id="psap" name="psap" value="{{ parametros.psap if parametros and parametros.psap != None else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <button type="submit" class="save-button" id="btn-salvar-parametros-fluxos">
+                        <i class="fas fa-save"></i> Salvar Parâmetros
+                    </button>
+                </div>
+                
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-secondary prev-tab" data-prev="tab-volumes">Aba Anterior</button>
+                    <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="btn btn-primary">Ir para Laudo</a>
+                </div>
+            </div>
+        </form>
+        
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+        <script src="{{ url_for('static', filename='js/calculos.js') }}"></script>
+        <script>
+            $(document).ready(function() {
+                // Navegação entre abas
+                $('.tab-button').click(function() {
+                    const tabId = $(this).data('tab');
+                    $('.tab-pane').removeClass('active');
+                    $('.tab-button').removeClass('active');
+                    $('#' + tabId).addClass('active');
+                    $(this).addClass('active');
+                });
+                
+                // Botões de navegação entre abas
+                $('.next-tab').click(function() {
+                    const nextTabId = $(this).data('next');
+                    $('.tab-pane').removeClass('active');
+                    $('.tab-button').removeClass('active');
+                    $('#' + nextTabId).addClass('active');
+                    $('[data-tab="' + nextTabId + '"]').addClass('active');
+                });
+                
+                $('.prev-tab').click(function() {
+                    const prevTabId = $(this).data('prev');
+                    $('.tab-pane').removeClass('active');
+                    $('.tab-button').removeClass('active');
+                    $('#' + prevTabId).addClass('active');
+                    $('[data-tab="' + prevTabId + '"]').addClass('active');
+                });
+                
+                // Função para mostrar notificação de salvamento
+                function showSaveNotification(message) {
+                    $('#save-notification').text(message);
+                    $('#save-notification').fadeIn();
+                    setTimeout(function() {
+                        $('#save-notification').fadeOut();
+                    }, 3000);
+                }
+                
+                // Manipulação do formulário para salvamento manual
+                $('#form-parametros').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = $(this).serialize();
+                    const url = $(this).attr('action');
+                    
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: formData,
+                        success: function(response) {
+                            showSaveNotification('Parâmetros salvos com sucesso!');
+                        },
+                        error: function(error) {
+                            showSaveNotification('Erro ao salvar parâmetros. Tente novamente.');
+                            console.error('Erro ao salvar:', error);
+                        }
+                    });
+                });
+                
+                // Botões de salvamento em cada aba
+                $('#btn-salvar-parametros-medidas, #btn-salvar-parametros-volumes, #btn-salvar-parametros-fluxos').click(function(e) {
+                    e.preventDefault();
+                    $('#form-parametros').submit();
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>

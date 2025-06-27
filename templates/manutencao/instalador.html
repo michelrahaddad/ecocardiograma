@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Instalador/Desinstalador - Sistema de Ecocardiograma{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-download me-2"></i>Instalador/Desinstalador do Sistema
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Instalação de Componentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Gerencie a instalação de componentes do sistema de ecocardiograma.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Componente a Instalar:</label>
+                    <select class="form-select" id="componente-instalar">
+                        <option value="">Selecione um componente</option>
+                        <option value="templates">Templates de Laudo</option>
+                        <option value="assinaturas">Sistema de Assinaturas</option>
+                        <option value="backup">Módulo de Backup Avançado</option>
+                        <option value="relatorios">Sistema de Relatórios</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-success" onclick="instalarComponente()">
+                    <i class="fas fa-download me-1"></i>Instalar Componente
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-minus-circle me-2"></i>Desinstalação de Componentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Remova componentes desnecessários do sistema.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Componente a Remover:</label>
+                    <select class="form-select" id="componente-remover">
+                        <option value="">Selecione um componente</option>
+                        <option value="dados-teste">Dados de Teste</option>
+                        <option value="logs-antigos">Logs Antigos</option>
+                        <option value="backups-antigos">Backups Antigos</option>
+                        <option value="cache-temporario">Cache Temporário</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-danger" onclick="desinstalarComponente()">
+                    <i class="fas fa-trash me-1"></i>Remover Componente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Status dos Componentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Componente</th>
+                                <th>Status</th>
+                                <th>Versão</th>
+                                <th>Última Atualização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sistema Principal</td>
+                                <td><span class="badge bg-success">Instalado</span></td>
+                                <td>1.0.0</td>
+                                <td>18/06/2025</td>
+                            </tr>
+                            <tr>
+                                <td>Sistema de Backup</td>
+                                <td><span class="badge bg-success">Instalado</span></td>
+                                <td>1.0.0</td>
+                                <td>18/06/2025</td>
+                            </tr>
+                            <tr>
+                                <td>Templates de Laudo</td>
+                                <td><span class="badge bg-success">Instalado</span></td>
+                                <td>1.0.0</td>
+                                <td>18/06/2025</td>
+                            </tr>
+                            <tr>
+                                <td>Sistema de Logs</td>
+                                <td><span class="badge bg-success">Instalado</span></td>
+                                <td>1.0.0</td>
+                                <td>18/06/2025</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('manutencao_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar ao Painel de Manutenção
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function instalarComponente() {
+    const componente = document.getElementById('componente-instalar').value;
+    
+    if (!componente) {
+        alert('Selecione um componente para instalar.');
+        return;
+    }
+    
+    if (confirm(`Deseja instalar o componente: ${componente}?`)) {
+        alert(`Componente ${componente} instalado com sucesso!`);
+    }
+}
+
+function desinstalarComponente() {
+    const componente = document.getElementById('componente-remover').value;
+    
+    if (!componente) {
+        alert('Selecione um componente para remover.');
+        return;
+    }
+    
+    if (confirm(`Deseja remover o componente: ${componente}? Esta ação não pode ser desfeita.`)) {
+        alert(`Componente ${componente} removido com sucesso!`);
+    }
+}
+</script>
+{% endblock %}

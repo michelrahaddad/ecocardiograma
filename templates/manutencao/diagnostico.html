@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico do Sistema - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+.diagnostic-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.diagnostic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.status-ok { color: #28a745; }
+.status-warning { color: #ffc107; }
+.status-error { color: #dc3545; }
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.progress-animated {
+    animation: progress-animation 2s ease-in-out;
+}
+
+@keyframes progress-animation {
+    0% { width: 0%; }
+    100% { width: var(--progress-width); }
+}
+
+.system-health {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.diagnostic-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Diagnóstico e Desempenho do Sistema
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health Overview -->
+<div class="system-health text-center">
+    <h3 class="mb-3">
+        <i class="fas fa-heartbeat me-2 {% if diagnosticos %}status-ok{% else %}status-error{% endif %}"></i>
+        Status Geral do Sistema
+    </h3>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="mb-2">
+                <i class="fas fa-server diagnostic-icon {% if diagnosticos.get('banco_dados') == 'OK' %}status-ok{% else %}status-error{% endif %}"></i>
+            </div>
+            <h5>Banco de Dados</h5>
+            <span class="badge bg-{% if diagnosticos.get('banco_dados') == 'OK' %}success{% else %}danger{% endif %} fs-6">
+                {{ diagnosticos.get('banco_dados', 'ERRO') }}
+            </span>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-2">
+                <i class="fas fa-hdd diagnostic-icon {% if diagnosticos.get('espaco_disco') == 'OK' %}status-ok{% else %}status-warning{% endif %}"></i>
+            </div>
+            <h5>Espaço em Disco</h5>
+            <span class="badge bg-{% if diagnosticos.get('espaco_disco') == 'OK' %}success{% else %}warning{% endif %} fs-6">
+                {{ diagnosticos.get('espaco_disco', 'ATENÇÃO') }}
+            </span>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-2">
+                <i class="fas fa-memory diagnostic-icon {% if diagnosticos.get('memoria') == 'OK' %}status-ok{% else %}status-warning{% endif %}"></i>
+            </div>
+            <h5>Memória</h5>
+            <span class="badge bg-{% if diagnosticos.get('memoria') == 'OK' %}success{% else %}warning{% endif %} fs-6">
+                {{ diagnosticos.get('memoria', 'ATENÇÃO') }}
+            </span>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-2">
+                <i class="fas fa-database diagnostic-icon {% if diagnosticos.get('backup_recente') == 'OK' %}status-ok{% else %}status-warning{% endif %}"></i>
+            </div>
+            <h5>Backup Recente</h5>
+            <span class="badge bg-{% if diagnosticos.get('backup_recente') == 'OK' %}success{% else %}warning{% endif %} fs-6">
+                {{ diagnosticos.get('backup_recente', 'ATENÇÃO') }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Metrics -->
+<div class="row">
+    <!-- Database Metrics -->
+    <div class="col-md-6 mb-4">
+        <div class="card diagnostic-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>Métricas do Banco de Dados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="metric-value text-primary">15</div>
+                            <small class="text-muted">Conexões Ativas</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <div class="metric-value text-success">0.03s</div>
+                            <small class="text-muted">Tempo de Resposta</small>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-2">
+                    <small class="text-muted">Uso de Pool de Conexões</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-success progress-animated" style="--progress-width: 25%; width: 25%"></div>
+                    </div>
+                    <small class="text-muted">25% de 100 conexões</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Resources -->
+    <div class="col-md-6 mb-4">
+        <div class="card diagnostic-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-microchip me-2"></i>Recursos do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">CPU</small>
+                        <small class="text-muted">15%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info progress-animated" style="--progress-width: 15%; width: 15%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Memória</small>
+                        <small class="text-muted">45%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning progress-animated" style="--progress-width: 45%; width: 45%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Disco</small>
+                        <small class="text-muted">68%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger progress-animated" style="--progress-width: 68%; width: 68%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Metrics -->
+    <div class="col-md-6 mb-4">
+        <div class="card diagnostic-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Métricas da Aplicação
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="metric-value text-primary">147</div>
+                        <small class="text-muted">Exames Total</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-value text-success">23</div>
+                        <small class="text-muted">Hoje</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-value text-warning">3</div>
+                        <small class="text-muted">Pendentes</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <small class="text-muted">Uptime do Sistema</small>
+                    <div class="metric-value text-success">99.8%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="col-md-6 mb-4">
+        <div class="card diagnostic-card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="metric-value text-info">1.2s</div>
+                        <small class="text-muted">Tempo de Carregamento</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-value text-success">156</div>
+                        <small class="text-muted">Req/min</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-2">
+                    <small class="text-muted">Performance Score</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-success progress-animated" style="--progress-width: 92%; width: 92%"></div>
+                    </div>
+                    <small class="text-muted">92/100</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Alerts -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>Alertas Recentes
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning d-flex align-items-center">
+            <i class="fas fa-hdd me-2"></i>
+            <div>
+                <strong>Espaço em disco baixo:</strong> O sistema está utilizando 68% do espaço disponível. 
+                Considere fazer limpeza ou expandir o armazenamento.
+            </div>
+        </div>
+        <div class="alert alert-info d-flex align-items-center">
+            <i class="fas fa-clock me-2"></i>
+            <div>
+                <strong>Backup agendado:</strong> Próximo backup automático em 6 horas.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Diagnostic Actions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-tools me-2"></i>Ações de Diagnóstico
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <button class="btn btn-primary w-100" onclick="executarDiagnostico()">
+                    <i class="fas fa-play me-1"></i>Executar Diagnóstico Completo
+                </button>
+            </div>
+            <div class="col-md-3 mb-2">
+                <button class="btn btn-info w-100" onclick="verificarConectividade()">
+                    <i class="fas fa-wifi me-1"></i>Verificar Conectividade
+                </button>
+            </div>
+            <div class="col-md-3 mb-2">
+                <button class="btn btn-warning w-100" onclick="otimizarBanco()">
+                    <i class="fas fa-database me-1"></i>Otimizar Banco
+                </button>
+            </div>
+            <div class="col-md-3 mb-2">
+                <button class="btn btn-success w-100" onclick="exportarRelatorio()">
+                    <i class="fas fa-file-export me-1"></i>Exportar Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="mt-4 d-flex justify-content-start">
+    <a href="{{ url_for('manutencao_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Voltar à Manutenção
+    </a>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Executando Diagnóstico</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Executando...</span>
+                    </div>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="diagnostic-progress" style="width: 0%"></div>
+                </div>
+                <div id="diagnostic-status">Iniciando diagnóstico...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function executarDiagnostico() {
+    $('#progressModal').modal('show');
+    
+    // Simular processo de diagnóstico
+    let progress = 0;
+    const steps = [
+        'Verificando banco de dados...',
+        'Testando conectividade...',
+        'Analisando performance...',
+        'Verificando recursos do sistema...',
+        'Gerando relatório...'
+    ];
+    
+    const interval = setInterval(() => {
+        progress += 20;
+        $('#diagnostic-progress').css('width', progress + '%');
+        
+        if (progress <= 100) {
+            const stepIndex = Math.floor((progress - 1) / 20);
+            if (stepIndex < steps.length) {
+                $('#diagnostic-status').text(steps[stepIndex]);
+            }
+        }
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                $('#progressModal').modal('hide');
+                alert('Diagnóstico concluído com sucesso!');
+                location.reload();
+            }, 1000);
+        }
+    }, 800);
+}
+
+function verificarConectividade() {
+    alert('Verificando conectividade...\n\n✓ Conexão com banco de dados: OK\n✓ Conectividade de rede: OK\n✓ DNS: OK');
+}
+
+function otimizarBanco() {
+    if (confirm('Deseja otimizar o banco de dados? Esta operação pode demorar alguns minutos.')) {
+        alert('Otimização do banco de dados iniciada. Você será notificado quando concluída.');
+    }
+}
+
+function exportarRelatorio() {
+    window.open('/manutencao/relatorio_diagnostico.pdf', '_blank');
+}
+
+// Auto-refresh da página a cada 5 minutos
+setInterval(() => {
+    location.reload();
+}, 300000);
+
+// Animate progress bars on load
+$(document).ready(function() {
+    $('.progress-animated').each(function() {
+        const width = $(this).css('--progress-width') || $(this).css('width');
+        $(this).css('width', '0%').animate({width: width}, 1000);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Prontuário - {{ paciente.nome_paciente }} - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+.patient-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 2px solid #bfdbfe;
+}
+
+.exam-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.exam-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+}
+
+.exam-item {
+    position: relative;
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08);
+    transition: all 0.3s ease;
+}
+
+.exam-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.exam-item::before {
+    content: '';
+    position: absolute;
+    left: -2.25rem;
+    top: 1.5rem;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.exam-date {
+    position: absolute;
+    left: -8rem;
+    top: 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.exam-content {
+    padding: 1.5rem;
+}
+
+.exam-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.patient-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #3b82f6;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin: 0;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .exam-date {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .exam-timeline {
+        padding-left: 1rem;
+    }
+    
+    .exam-timeline::before {
+        left: 0.5rem;
+    }
+    
+    .exam-item::before {
+        left: -0.75rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('prontuario') }}">
+                            <i class="fas fa-folder-medical me-1"></i>Prontuário
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ paciente.nome_paciente }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Patient Header -->
+    <div class="patient-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2">
+                    <i class="fas fa-user-circle me-2"></i>{{ paciente.nome_paciente }}
+                </h2>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p class="mb-1">
+                            <strong>Data de Nascimento:</strong> {{ paciente.data_nascimento }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Idade:</strong> {{ paciente.idade }} anos
+                        </p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1">
+                            <strong>Sexo:</strong> {{ paciente.sexo }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Total de Exames:</strong> {{ exames|length }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('novo_exame', clone_paciente=paciente.nome_paciente) }}" 
+                   class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Novo Exame
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="patient-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+                <div class="stat-number">{{ exames|length }}</div>
+                <div class="stat-label">Total de Exames</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-number">{{ exames[0].data_exame if exames }}</div>
+                <div class="stat-label">Último Exame</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="stat-number">{{ exames[-1].data_exame if exames|length > 1 else 'N/A' }}</div>
+                <div class="stat-label">Primeiro Exame</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exams Timeline -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Histórico de Exames
+                        <span class="badge bg-primary ms-2">{{ exames|length }} exames</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exames %}
+                    <div class="exam-timeline">
+                        {% for exame in exames %}
+                        <div class="exam-item">
+                            <div class="exam-date">{{ exame.data_exame }}</div>
+                            <div class="exam-content">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="text-primary mb-2">
+                                            <i class="fas fa-heartbeat me-2"></i>
+                                            Ecocardiograma Transtorácico
+                                        </h6>
+                                        {% if exame.medico_solicitante %}
+                                        <p class="mb-1">
+                                            <strong>Médico Solicitante:</strong> {{ exame.medico_solicitante }}
+                                        </p>
+                                        {% endif %}
+                                        {% if exame.tipo_atendimento %}
+                                        <p class="mb-1">
+                                            <strong>Tipo de Atendimento:</strong> {{ exame.tipo_atendimento }}
+                                        </p>
+                                        {% endif %}
+                                        {% if exame.indicacao %}
+                                        <p class="mb-1">
+                                            <strong>Indicação:</strong> {{ exame.indicacao[:100] }}...
+                                        </p>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Criado em: {{ exame.created_at.strftime('%d/%m/%Y às %H:%M') if exame.created_at }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="exam-actions">
+                                            <a href="{{ url_for('prontuario_exame', exame_id=exame.id) }}" 
+                                               class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="fas fa-eye me-1"></i>Visualizar
+                                            </a>
+                                            <a href="{{ url_for('prontuario_editar_exame', exame_id=exame.id) }}" 
+                                               class="btn btn-outline-warning btn-sm flex-fill">
+                                                <i class="fas fa-edit me-1"></i>Editar
+                                            </a>
+                                            <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" 
+                                               class="btn btn-outline-success btn-sm flex-fill" 
+                                               target="_blank">
+                                                <i class="fas fa-file-pdf me-1"></i>PDF
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm flex-fill btn-excluir-exame" 
+                                                    style="z-index: 10; position: relative;"
+                                                    onclick="excluirExame({{ exame.id }}, '{{ paciente.nome_paciente }}', '{{ exame.data_exame }}')">
+                                                <i class="fas fa-trash me-1"></i>Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                        <h5>Nenhum exame encontrado</h5>
+                        <p class="text-muted">Este paciente ainda não possui exames registrados.</p>
+                        <a href="{{ url_for('novo_exame') }}?paciente={{ paciente.nome_paciente }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Criar Primeiro Exame
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Função global definida antes do DOM
+window.excluirExame = function(exameId, pacienteNome, dataExame) {
+    console.log('Função excluirExame chamada:', {exameId, pacienteNome, dataExame});
+    
+    const confirmacao = confirm(
+        'Tem certeza que deseja excluir este exame?\n\n' +
+        'Paciente: ' + pacienteNome + '\n' +
+        'Data: ' + dataExame + '\n\n' +
+        'Esta ação não pode ser desfeita!'
+    );
+    
+    if (confirmacao) {
+        console.log('Usuário confirmou exclusão, redirecionando...');
+        window.location.href = '/excluir_exame/' + exameId;
+    } else {
+        console.log('Usuário cancelou exclusão');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Sistema de exclusão carregado');
+    
+    // Verificar se os botões estão presentes
+    const botoesExcluir = document.querySelectorAll('.btn-excluir-exame');
+    console.log('Botões de exclusão encontrados:', botoesExcluir.length);
+    
+    // Testar se a função está disponível
+    console.log('Função excluirExame disponível:', typeof window.excluirExame);
+});
+</script>
+{% endblock %}

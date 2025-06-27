@@ -1,0 +1,805 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Templates de Laudo{% endblock %}
+
+{% block extra_css %}
+<style>
+.template-card {
+    border: 1px solid #e3f2fd;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.template-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.template-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-bottom: 1px solid #e3f2fd;
+    padding: 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.template-body {
+    padding: 1rem;
+}
+
+.template-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.badge-favorito {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+}
+
+.badge-publico {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.search-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-novo-template {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-novo-template:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.filters-row {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header da Página -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0 text-primary">
+            <i class="fas fa-file-medical me-2"></i>
+            Gerenciar Templates de Laudo
+        </h1>
+        <p class="text-muted mb-0">Crie, edite e organize templates de laudos médicos</p>
+    </div>
+    <button class="btn btn-novo-template" onclick="abrirModalNovoTemplate()">
+        <i class="fas fa-plus me-2"></i>Novo Template
+    </button>
+</div>
+
+<!-- Seção de Busca e Filtros -->
+<div class="search-section">
+    <div class="row g-3">
+        <!-- Busca por texto -->
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-search me-1"></i>Buscar Templates
+            </label>
+            <input type="text" class="form-control" id="busca-texto" placeholder="Nome, conteúdo ou diagnóstico...">
+        </div>
+        
+        <!-- Filtro por categoria -->
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-tags me-1"></i>Categoria
+            </label>
+            <select class="form-select" id="filtro-categoria">
+                <option value="">Todas as categorias</option>
+                <option value="Normal">Normal</option>
+                <option value="Cardiomiopatias">Cardiomiopatias</option>
+                <option value="Valvopatias">Valvopatias</option>
+                <option value="Alterações Estruturais">Alterações Estruturais</option>
+                <option value="Alterações Hemodinâmicas">Alterações Hemodinâmicas</option>
+            </select>
+        </div>
+        
+        <!-- Filtro por médico -->
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-user-md me-1"></i>Médico
+            </label>
+            <select class="form-select" id="filtro-medico">
+                <option value="">Todos os médicos</option>
+                <option value="global">Templates Globais</option>
+                {% for medico in medicos %}
+                <option value="{{ medico.id }}">{{ medico.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Filtros especiais -->
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">
+                <i class="fas fa-filter me-1"></i>Filtros
+            </label>
+            <div class="d-flex flex-column">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filtro-favoritos">
+                    <label class="form-check-label" for="filtro-favoritos">
+                        <i class="fas fa-star text-warning me-1"></i>Favoritos
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filtro-publicos">
+                    <label class="form-check-label" for="filtro-publicos">
+                        <i class="fas fa-globe text-success me-1"></i>Públicos
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <button class="btn btn-primary me-2" id="btn-buscar">
+                <i class="fas fa-search me-1"></i>Buscar
+            </button>
+            <button class="btn btn-outline-secondary" onclick="limparFiltros()">
+                <i class="fas fa-eraser me-1"></i>Limpar Filtros
+            </button>
+            <div class="float-end">
+                <small class="text-muted">
+                    <span id="contador-templates">0</span> templates encontrados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-spinner" id="loading-templates">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando templates...</p>
+</div>
+
+<!-- Lista de Templates -->
+<div id="lista-templates"></div>
+
+<!-- Modal Novo Template -->
+<div class="modal fade" id="modalNovoTemplate" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>Novo Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-novo-template" action="/salvar_laudo/{{ exame_id }}" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome do Template *</label>
+                            <input type="text" class="form-control" id="novo-nome" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Patologia *</label>
+                            <select class="form-select" id="novo-patologia" required>
+                                <option value="">Selecione...</option>
+                                {% for patologia in patologias %}
+                                <option value="{{ patologia.id }}">{{ patologia.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Médico</label>
+                            <select class="form-select" id="novo-medico">
+                                <option value="">Template Global</option>
+                                {% for medico in medicos %}
+                                <option value="{{ medico.id }}">{{ medico.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Configurações</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="novo-publico">
+                                    <label class="form-check-label" for="novo-publico">
+                                        <i class="fas fa-globe me-1"></i>Público
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="novo-favorito">
+                                    <label class="form-check-label" for="novo-favorito">
+                                        <i class="fas fa-star me-1"></i>Favorito
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Modo M e Bidimensional</label>
+                            <textarea class="form-control" id="novo-modo-m" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Doppler Convencional</label>
+                            <textarea class="form-control" id="novo-doppler" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Doppler Tecidual</label>
+                            <textarea class="form-control" id="novo-tecidual" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Conclusão</label>
+                            <textarea class="form-control" id="novo-conclusao" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Template
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Template -->
+<div class="modal fade" id="modalEditarTemplate" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Editar Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-editar-template" action="/salvar_laudo/{{ exame_id }}" method="POST">
+                <input type="hidden" id="editar-id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome do Template *</label>
+                            <input type="text" class="form-control" id="editar-nome" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Configurações</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="editar-publico">
+                                    <label class="form-check-label" for="editar-publico">
+                                        <i class="fas fa-globe me-1"></i>Público
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="editar-favorito">
+                                    <label class="form-check-label" for="editar-favorito">
+                                        <i class="fas fa-star me-1"></i>Favorito
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Modo M e Bidimensional</label>
+                            <textarea class="form-control" id="editar-modo-m" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Doppler Convencional</label>
+                            <textarea class="form-control" id="editar-doppler" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Doppler Tecidual</label>
+                            <textarea class="form-control" id="editar-tecidual" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Conclusão</label>
+                            <textarea class="form-control" id="editar-conclusao" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let templatesData = [];
+
+$(document).ready(function() {
+    // Carregar templates iniciais
+    buscarTemplates();
+    
+    // Event listeners para filtros em tempo real
+    $('#busca-texto').on('input keyup', debounce(buscarTemplates, 300));
+    $('#filtro-categoria, #filtro-medico').on('change', buscarTemplates);
+    $('#filtro-favoritos, #filtro-publicos').on('change', buscarTemplates);
+    
+    // Event listener para botão de busca
+    $('#btn-buscar').on('click', function(e) {
+        e.preventDefault();
+        buscarTemplates();
+    });
+    
+    // Event listener para Enter no campo de busca
+    $('#busca-texto').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault();
+            buscarTemplates();
+        }
+    });
+    
+    // Form novo template
+    $('#form-novo-template').on('submit', function(e) {
+        e.preventDefault();
+        criarNovoTemplate();
+    });
+    
+    // Form editar template
+    $('#form-editar-template').on('submit', function(e) {
+        e.preventDefault();
+        salvarEdicaoTemplate();
+    });
+});
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function buscarTemplates() {
+    $('#loading-templates').show();
+    $('#lista-templates').hide();
+    
+    const params = new URLSearchParams({
+        busca: $('#busca-texto').val(),
+        categoria: $('#filtro-categoria').val(),
+        medico_id: $('#filtro-medico').val(),
+        favoritos: $('#filtro-favoritos').is(':checked'),
+        publicos: $('#filtro-publicos').is(':checked')
+    });
+    
+    $.ajax({
+        url: `/api/templates-laudo/buscar?${params}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                templatesData = response.templates;
+                renderizarTemplates(response.templates);
+                $('#contador-templates').text(response.total);
+            } else {
+                mostrarErro('Erro ao buscar templates: ' + response.error);
+            }
+        },
+        error: function() {
+            mostrarErro('Erro de conexão ao buscar templates');
+        },
+        complete: function() {
+            $('#loading-templates').hide();
+            $('#lista-templates').show();
+        }
+    });
+}
+
+function renderizarTemplates(templates) {
+    const container = $('#lista-templates');
+    
+    if (templates.length === 0) {
+        container.html(`
+            <div class="empty-state">
+                <i class="fas fa-file-medical"></i>
+                <h4>Nenhum template encontrado</h4>
+                <p>Não foram encontrados templates com os filtros aplicados.</p>
+                <button class="btn btn-primary" onclick="abrirModalNovoTemplate()">
+                    <i class="fas fa-plus me-1"></i>Criar Primeiro Template
+                </button>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '<div class="row">';
+    templates.forEach(template => {
+        const badges = [];
+        if (template.favorito) badges.push('<span class="badge badge-favorito"><i class="fas fa-star me-1"></i>Favorito</span>');
+        if (template.publico) badges.push('<span class="badge badge-publico"><i class="fas fa-globe me-1"></i>Público</span>');
+        
+        html += `
+            <div class="col-lg-6 col-xl-4 mb-3">
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 text-primary">${template.nome}</h6>
+                                <div class="template-meta">
+                                    <small><i class="fas fa-stethoscope me-1"></i>${template.patologia_nome || 'Sem patologia'}</small><br>
+                                    <small><i class="fas fa-user-md me-1"></i>${template.medico_nome}</small>
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="editarTemplate(${template.id})">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="duplicarTemplate(${template.id})">
+                                        <i class="fas fa-copy me-2"></i>Duplicar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="toggleFavorito(${template.id}, ${!template.favorito})">
+                                        <i class="fas fa-star me-2"></i>${template.favorito ? 'Remover dos' : 'Adicionar aos'} Favoritos
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="excluirTemplate(${template.id}, '${template.nome}')">
+                                        <i class="fas fa-trash me-2"></i>Excluir
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        ${badges.length > 0 ? '<div class="mt-2">' + badges.join(' ') + '</div>' : ''}
+                    </div>
+                    <div class="template-body">
+                        ${template.modo_m_bidimensional ? `<p class="mb-2"><strong>Modo M:</strong> ${template.modo_m_bidimensional.substring(0, 100)}${template.modo_m_bidimensional.length > 100 ? '...' : ''}</p>` : ''}
+                        ${template.conclusao ? `<p class="mb-2"><strong>Conclusão:</strong> ${template.conclusao.substring(0, 100)}${template.conclusao.length > 100 ? '...' : ''}</p>` : ''}
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>Usado ${template.vezes_usado || 0}x
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>${template.created_at_formatted || 'Data não disponível'}
+                                </small>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-sm btn-primary" onclick="visualizarTemplate(${template.id})">
+                                    <i class="fas fa-eye me-1"></i>Ver Completo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.html(html);
+}
+
+function abrirModalNovoTemplate() {
+    $('#form-novo-template')[0].reset();
+    $('#modalNovoTemplate').modal('show');
+}
+
+function criarNovoTemplate() {
+    const formData = {
+        nome: $('#novo-nome').val(),
+        patologia_id: parseInt($('#novo-patologia').val()),
+        medico_id: $('#novo-medico').val() ? parseInt($('#novo-medico').val()) : null,
+        modo_m_bidimensional: $('#novo-modo-m').val(),
+        doppler_convencional: $('#novo-doppler').val(),
+        doppler_tecidual: $('#novo-tecidual').val(),
+        conclusao: $('#novo-conclusao').val(),
+        publico: $('#novo-publico').is(':checked'),
+        favorito: $('#novo-favorito').is(':checked')
+    };
+    
+    if (!formData.nome || !formData.patologia_id) {
+        mostrarErro('Nome e patologia são obrigatórios');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/templates-laudo',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                $('#modalNovoTemplate').modal('hide');
+                $('#form-novo-template')[0].reset();
+                buscarTemplates();
+                mostrarSucesso('Template criado com sucesso!');
+            } else {
+                mostrarErro('Erro ao criar template: ' + response.error);
+            }
+        },
+        error: function() {
+            mostrarErro('Erro de conexão ao criar template');
+        }
+    });
+}
+
+function editarTemplate(templateId) {
+    const template = templatesData.find(t => t.id === templateId);
+    if (!template) return;
+    
+    $('#editar-id').val(template.id);
+    $('#editar-nome').val(template.nome);
+    $('#editar-modo-m').val(template.modo_m_bidimensional || '');
+    $('#editar-doppler').val(template.doppler_convencional || '');
+    $('#editar-tecidual').val(template.doppler_tecidual || '');
+    $('#editar-conclusao').val(template.conclusao || '');
+    $('#editar-publico').prop('checked', template.publico);
+    $('#editar-favorito').prop('checked', template.favorito);
+    
+    $('#modalEditarTemplate').modal('show');
+}
+
+function salvarEdicaoTemplate() {
+    const templateId = $('#editar-id').val();
+    const formData = {
+        nome: $('#editar-nome').val(),
+        modo_m_bidimensional: $('#editar-modo-m').val(),
+        doppler_convencional: $('#editar-doppler').val(),
+        doppler_tecidual: $('#editar-tecidual').val(),
+        conclusao: $('#editar-conclusao').val(),
+        publico: $('#editar-publico').is(':checked'),
+        favorito: $('#editar-favorito').is(':checked')
+    };
+    
+    $.ajax({
+        url: `/api/templates-laudo/${templateId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                $('#modalEditarTemplate').modal('hide');
+                buscarTemplates();
+                mostrarSucesso('Template atualizado com sucesso!');
+            } else {
+                mostrarErro('Erro ao atualizar template: ' + response.error);
+            }
+        },
+        error: function() {
+            mostrarErro('Erro de conexão ao atualizar template');
+        }
+    });
+}
+
+function excluirTemplate(templateId, nomeTemplate) {
+    if (confirm(`Tem certeza que deseja excluir o template "${nomeTemplate}"?\n\nEsta ação não pode ser desfeita.`)) {
+        $.ajax({
+            url: `/api/templates-laudo/${templateId}`,
+            method: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    buscarTemplates();
+                    mostrarSucesso('Template excluído com sucesso!');
+                } else {
+                    mostrarErro('Erro ao excluir template: ' + response.error);
+                }
+            },
+            error: function() {
+                mostrarErro('Erro de conexão ao excluir template');
+            }
+        });
+    }
+}
+
+function toggleFavorito(templateId, favorito) {
+    $.ajax({
+        url: `/api/templates-laudo/${templateId}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ favorito: favorito }),
+        success: function(response) {
+            if (response.success) {
+                buscarTemplates();
+                mostrarSucesso(favorito ? 'Template adicionado aos favoritos!' : 'Template removido dos favoritos!');
+            } else {
+                mostrarErro('Erro ao atualizar favorito: ' + response.error);
+            }
+        },
+        error: function() {
+            mostrarErro('Erro de conexão ao atualizar favorito');
+        }
+    });
+}
+
+function duplicarTemplate(templateId) {
+    const template = templatesData.find(t => t.id === templateId);
+    if (!template) return;
+    
+    // Preencher modal novo template com dados do template a ser duplicado
+    $('#novo-nome').val(template.nome + ' (Cópia)');
+    $('#novo-patologia').val(template.patologia_id || '');
+    $('#novo-medico').val(''); // Sempre como template global
+    $('#novo-modo-m').val(template.modo_m_bidimensional || '');
+    $('#novo-doppler').val(template.doppler_convencional || '');
+    $('#novo-tecidual').val(template.doppler_tecidual || '');
+    $('#novo-conclusao').val(template.conclusao || '');
+    $('#novo-publico').prop('checked', false);
+    $('#novo-favorito').prop('checked', false);
+    
+    $('#modalNovoTemplate').modal('show');
+}
+
+function visualizarTemplate(templateId) {
+    const template = templatesData.find(t => t.id === templateId);
+    if (!template) return;
+    
+    const modalContent = `
+        <div class="modal fade" id="modalVisualizarTemplate" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-eye me-2"></i>${template.nome}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Patologia:</strong> ${template.patologia_nome || 'Não especificada'}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Médico:</strong> ${template.medico_nome}
+                            </div>
+                        </div>
+                        
+                        ${template.modo_m_bidimensional ? `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Modo M e Bidimensional:</h6>
+                            <p>${template.modo_m_bidimensional}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${template.doppler_convencional ? `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Doppler Convencional:</h6>
+                            <p>${template.doppler_convencional}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${template.doppler_tecidual ? `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Doppler Tecidual:</h6>
+                            <p>${template.doppler_tecidual}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${template.conclusao ? `
+                        <div class="mb-3">
+                            <h6 class="text-success">Conclusão:</h6>
+                            <p><strong>${template.conclusao}</strong></p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary" onclick="editarTemplate(${template.id}); $('#modalVisualizarTemplate').modal('hide');">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove modal anterior se existir
+    $('#modalVisualizarTemplate').remove();
+    
+    // Adiciona e mostra novo modal
+    $('body').append(modalContent);
+    $('#modalVisualizarTemplate').modal('show');
+}
+
+function limparFiltros() {
+    $('#busca-texto').val('');
+    $('#filtro-categoria').val('');
+    $('#filtro-medico').val('');
+    $('#filtro-favoritos').prop('checked', false);
+    $('#filtro-publicos').prop('checked', false);
+    buscarTemplates();
+}
+
+function mostrarSucesso(mensagem) {
+    // Criar toast de sucesso
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-success border-0 position-fixed" style="top: 20px; right: 20px; z-index: 1055;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>${mensagem}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    const bsToast = new bootstrap.Toast(toast[0]);
+    bsToast.show();
+    
+    // Remove o toast após ser ocultado
+    toast.on('hidden.bs.toast', function() {
+        $(this).remove();
+    });
+}
+
+function mostrarErro(mensagem) {
+    // Criar toast de erro
+    const toast = $(`
+        <div class="toast align-items-center text-white bg-danger border-0 position-fixed" style="top: 20px; right: 20px; z-index: 1055;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i>${mensagem}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    const bsToast = new bootstrap.Toast(toast[0]);
+    bsToast.show();
+    
+    // Remove o toast após ser ocultado
+    toast.on('hidden.bs.toast', function() {
+    </script>
+{% endblock %}

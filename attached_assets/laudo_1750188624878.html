@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laudo do Exame - Sistema de Ecocardiograma</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos específicos para a página de laudo */
+        .laudo-tabs {
+            margin-bottom: 20px;
+        }
+        
+        .laudo-tabs .nav-tabs {
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .laudo-tabs .nav-tabs li {
+            margin-right: 5px;
+            margin-bottom: -1px;
+        }
+        
+        .laudo-tabs .nav-tabs li a {
+            padding: 10px 15px;
+            border: 1px solid transparent;
+            border-radius: 4px 4px 0 0;
+            display: block;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .laudo-tabs .nav-tabs li a:hover {
+            border-color: #eee #eee #ddd;
+            background-color: #f8f9fa;
+        }
+        
+        .laudo-tabs .nav-tabs li.active a {
+            border-color: #ddd #ddd #fff;
+            background-color: #fff;
+            color: #0a2853;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        .tab-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #0a2853;
+            font-size: 1.5rem;
+        }
+        
+        /* Estilos para o formulário de laudo */
+        .laudo-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .laudo-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .laudo-form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .laudo-form-control:focus {
+            border-color: #41828e;
+            outline: none;
+        }
+        
+        .laudo-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* Estilos para a visualização prévia do laudo */
+        .laudo-preview {
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .laudo-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0a2853;
+        }
+        
+        .preview-logo {
+            height: 60px;
+            margin-right: 20px;
+        }
+        
+        .laudo-title {
+            flex: 1;
+        }
+        
+        .laudo-title h2 {
+            margin: 0;
+            color: #0a2853;
+            font-size: 1.8rem;
+        }
+        
+        .laudo-patient-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .laudo-patient-info p {
+            margin: 5px 0;
+        }
+        
+        .laudo-section {
+            margin-bottom: 20px;
+        }
+        
+        .laudo-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #0a2853;
+            font-size: 1.3rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        /* Estilos para a assinatura digital */
+        .signature-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .signature-pad-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 500px;
+            height: 200px;
+            position: relative;
+            background-color: #fff;
+        }
+        
+        #signature-pad {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .signature-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .signature-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .signature-btn-clear {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .signature-btn-save {
+            background-color: #41828e;
+            color: white;
+        }
+        
+        .signature-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Estilos para os padrões de laudo */
+        .padroes-laudo {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .padroes-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .padroes-title {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #0a2853;
+        }
+        
+        .padroes-search {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .padroes-search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+        
+        .padroes-search-btn {
+            padding: 8px 15px;
+            background-color: #0a2853;
+            color: white;
+            border: 1px solid #0a2853;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .padroes-search-btn:hover {
+            background-color: #41828e;
+        }
+        
+        .padroes-results {
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            display: none;
+        }
+        
+        .padrao-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .padrao-item:last-child {
+            border-bottom: none;
+        }
+        
+        .padrao-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .padrao-titulo {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .padrao-tipo {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Estilos para as informações do médico */
+        .medico-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .medico-info p {
+            margin: 5px 0;
+        }
+        
+        .medico-info-fields {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .medico-info-fields input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .medico-info-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        /* Notificação de salvamento */
+        #save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        /* Estilos para os botões de ação na parte inferior */
+        .bottom-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .bottom-action-btn {
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background-color: #0a2853;
+            color: white;
+            border: 1px solid #0a2853;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0d3268;
+        }
+        
+        .btn-warning {
+            background-color: #f0ad4e;
+            color: white;
+            border: 1px solid #f0ad4e;
+        }
+        
+        .btn-warning:hover {
+            background-color: #ec971f;
+        }
+        
+        .btn-info {
+            background-color: #41828e;
+            color: white;
+            border: 1px solid #41828e;
+        }
+        
+        .btn-info:hover {
+            background-color: #356a74;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: 1px solid #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip link para acessibilidade -->
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+    
+    <!-- Cabeçalho -->
+    <header class="eco-header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="eco-logo">
+        </div>
+        <div class="header-center">
+            <h1 class="eco-title">Sistema de Ecocardiograma</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Alternar tema claro/escuro">
+                <i class="fas fa-moon"></i>
+                <span>Modo escuro</span>
+            </button>
+            <div class="language-selector">
+                <select id="language-select" aria-label="Selecionar idioma">
+                    <option value="pt-br" selected>Português</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                </select>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navegação principal -->
+    <nav class="eco-nav">
+        <ul class="eco-nav-list">
+            <li class="eco-nav-item"><a href="{{ url_for('index') }}">Início</a></li>
+            <li class="eco-nav-item"><a href="{{ url_for('novo_exame') }}">Novo Exame</a></li>
+            <li class="eco-nav-item"><a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}">Dados do Exame</a></li>
+            <li class="eco-nav-item"><a href="{{ url_for('parametros', exame_id=exame.id) }}">Parâmetros</a></li>
+            <li class="eco-nav-item active"><a href="{{ url_for('laudo', exame_id=exame.id) }}">Laudo</a></li>
+        </ul>
+    </nav>
+    
+    <!-- Notificação de salvamento -->
+    <div id="save-notification">Laudo salvo com sucesso!</div>
+    
+    <!-- Conteúdo principal -->
+    <main id="main-content" class="container">
+        <div class="eco-section">
+            <div class="eco-section-header">
+                <h2 class="eco-section-title">Laudo do Exame</h2>
+                <div class="eco-section-actions">
+                    <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="btn btn-warning" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Gerar PDF
+                    </a>
+                    <button id="save-laudo-btn" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar Laudo
+                    </button>
+                </div>
+            </div>
+            
+            <div class="laudo-tabs">
+                <ul class="nav-tabs">
+                    <li class="active"><a href="#tab-laudo" data-toggle="tab">Laudo</a></li>
+                    <li><a href="#tab-preview" data-toggle="tab">Visualização</a></li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- Aba 1: Laudo -->
+                    <div class="tab-pane active" id="tab-laudo">
+                        <h3 class="tab-title">Edição do Laudo</h3>
+                        
+                        <!-- Padrões de Laudo -->
+                        <div class="padroes-laudo">
+                            <div class="padroes-header">
+                                <h4 class="padroes-title">
+                                    <i class="fas fa-file-medical-alt"></i> Padrões de Laudo
+                                </h4>
+                            </div>
+                            
+                            <div class="padroes-search">
+                                <input type="text" id="padroes-search-input" class="padroes-search-input" placeholder="Pesquisar padrões (ex: normal, hipertensão, pediátrico)" aria-label="Pesquisar padrões de laudo">
+                                <button id="padroes-search-btn" class="padroes-search-btn">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                            
+                            <div id="padroes-results" class="padroes-results"></div>
+                        </div>
+                        
+                        <!-- Formulário de Laudo -->
+                        <form id="laudo-form" method="post" action="{{ url_for('salvar_laudo', exame_id=exame.id) }}">
+                            <div class="laudo-form-group">
+                                <label for="resumo_exame">Resumo do Exame</label>
+                                <textarea id="resumo_exame" name="resumo_exame" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.resumo_exame if laudo else 'Exame ecocardiográfico transtorácico realizado em repouso. Boa janela acústica.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="ritmo_cardiaco">Ritmo Cardíaco</label>
+                                <input type="text" id="ritmo_cardiaco" name="ritmo_cardiaco" class="laudo-form-control" value="{{ laudo.ritmo_cardiaco if laudo else 'Ritmo sinusal durante o exame.' }}">
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="ventriculo_esquerdo">Ventrículo Esquerdo</label>
+                                <textarea id="ventriculo_esquerdo" name="ventriculo_esquerdo" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.ventriculo_esquerdo if laudo else 'Dimensões normais. Espessuras parietais normais. Função sistólica global preservada.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="ventriculo_direito">Ventrículo Direito</label>
+                                <textarea id="ventriculo_direito" name="ventriculo_direito" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.ventriculo_direito if laudo else 'Dimensões e função sistólica normais.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="valvas">Valvas</label>
+                                <textarea id="valvas" name="valvas" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.valvas if laudo else 'Valvas morfologicamente normais, com abertura e fechamento adequados. Ausência de refluxos patológicos.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="pericardio">Pericárdio</label>
+                                <textarea id="pericardio" name="pericardio" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.pericardio if laudo else 'Pericárdio de espessura normal, sem derrame.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="aorta">Aorta e Grandes Vasos</label>
+                                <textarea id="aorta" name="aorta" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.aorta if laudo else 'Aorta de dimensões normais. Arco aórtico normal.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="conclusao">Conclusão</label>
+                                <textarea id="conclusao" name="conclusao" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.conclusao if laudo else 'Exame ecocardiográfico dentro dos limites da normalidade.' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="achados_ecocardiograficos">Achados Ecocardiográficos (opcional)</label>
+                                <textarea id="achados_ecocardiograficos" name="achados_ecocardiograficos" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.achados_ecocardiograficos if laudo else '' }}</textarea>
+                            </div>
+                            
+                            <div class="laudo-form-group">
+                                <label for="observacoes">Observações (opcional)</label>
+                                <textarea id="observacoes" name="observacoes" class="laudo-form-control laudo-textarea" rows="3">{{ laudo.observacoes if laudo else '' }}</textarea>
+                            </div>
+                            
+                            <!-- Assinatura Digital -->
+                            <div class="signature-container">
+                                <h4>Assinatura Digital</h4>
+                                <div class="signature-pad-container">
+                                    <canvas id="signature-pad"></canvas>
+                                </div>
+                                <div class="signature-actions">
+                                    <button type="button" id="clear-signature" class="signature-btn signature-btn-clear">Limpar Assinatura</button>
+                                </div>
+                                <input type="hidden" id="signature_data" name="signature_data" value="{{ laudo.signature_data if laudo else '' }}">
+                            </div>
+                            
+                            <!-- Informações do Médico -->
+                            <div class="medico-info">
+                                <h4>Médico Responsável</h4>
+                                <div class="medico-info-fields">
+                                    <input type="text" id="medico_responsavel" name="medico_responsavel" placeholder="Nome do médico" value="{{ laudo.medico_responsavel if laudo else 'Michel Raineri Haddad' }}">
+                                    <input type="text" id="crm_medico" name="crm_medico" placeholder="CRM" value="{{ laudo.crm_medico if laudo else 'CRM: 183299' }}">
+                                </div>
+                                <p class="medico-info-hint">Estas informações serão salvas automaticamente para uso em exames futuros.</p>
+                            </div>
+                            
+                            <!-- Botões de ação na parte inferior -->
+                            <div class="bottom-actions">
+                                <a href="{{ url_for('index') }}" class="bottom-action-btn btn-secondary">
+                                    <i class="fas fa-home"></i> Voltar à Página Inicial
+                                </a>
+                                <button type="submit" id="save-laudo-bottom-btn" class="bottom-action-btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Laudo
+                                </button>
+                                <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="bottom-action-btn btn-warning" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Aba 2: Visualização -->
+                    <div class="tab-pane" id="tab-preview">
+                        <h3 class="tab-title">Visualização do Laudo</h3>
+                        
+                        <div class="laudo-preview">
+                            <div class="laudo-header">
+                                <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="preview-logo">
+                                <div class="laudo-title">
+                                    <h2>LAUDO DE ECOCARDIOGRAMA TRANSTORÁCICO</h2>
+                                </div>
+                            </div>
+                            
+                            <div class="laudo-patient-info">
+                                <p><strong>Paciente:</strong> {{ exame.nome_paciente }}</p>
+                                <p><strong>Data de Nascimento:</strong> {{ exame.data_nascimento }}</p>
+                                <p><strong>Idade:</strong> {{ exame.idade }} anos</p>
+                                <p><strong>Sexo:</strong> {{ exame.sexo }}</p>
+                                <p><strong>Data do Exame:</strong> {{ exame.data_exame }}</p>
+                                <p><strong>Médico Solicitante:</strong> {{ exame.medico_solicitante }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Resumo do Exame</h3>
+                                <p id="preview-resumo">{{ laudo.resumo_exame if laudo else 'Exame ecocardiográfico transtorácico realizado em repouso. Boa janela acústica.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Ritmo Cardíaco</h3>
+                                <p id="preview-ritmo">{{ laudo.ritmo_cardiaco if laudo else 'Ritmo sinusal durante o exame.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Ventrículo Esquerdo</h3>
+                                <p id="preview-ve">{{ laudo.ventriculo_esquerdo if laudo else 'Dimensões normais. Espessuras parietais normais. Função sistólica global preservada.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Ventrículo Direito</h3>
+                                <p id="preview-vd">{{ laudo.ventriculo_direito if laudo else 'Dimensões e função sistólica normais.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Valvas</h3>
+                                <p id="preview-valvas">{{ laudo.valvas if laudo else 'Valvas morfologicamente normais, com abertura e fechamento adequados. Ausência de refluxos patológicos.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Pericárdio</h3>
+                                <p id="preview-pericardio">{{ laudo.pericardio if laudo else 'Pericárdio de espessura normal, sem derrame.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Aorta e Grandes Vasos</h3>
+                                <p id="preview-aorta">{{ laudo.aorta if laudo else 'Aorta de dimensões normais. Arco aórtico normal.' }}</p>
+                            </div>
+                            
+                            <div class="laudo-section">
+                                <h3>Conclusão</h3>
+                                <p id="preview-conclusao">{{ laudo.conclusao if laudo else 'Exame ecocardiográfico dentro dos limites da normalidade.' }}</p>
+                            </div>
+                            
+                            {% if laudo and laudo.achados_ecocardiograficos %}
+                            <div class="laudo-section">
+                                <h3>Achados Ecocardiográficos</h3>
+                                <p id="preview-achados">{{ laudo.achados_ecocardiograficos }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if laudo and laudo.observacoes %}
+                            <div class="laudo-section">
+                                <h3>Observações</h3>
+                                <p id="preview-observacoes">{{ laudo.observacoes }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="signature-container">
+                                {% if laudo and laudo.signature_data %}
+                                <img src="{{ laudo.signature_data }}" alt="Assinatura do médico" style="max-width: 200px; max-height: 80px; margin: 0 auto; display: block;">
+                                {% else %}
+                                <div style="border-top: 1px solid #333; width: 250px; margin: 10px auto;"></div>
+                                {% endif %}
+                                
+                                <div style="text-align: center; margin-top: 5px;">
+                                    <p><strong id="preview-medico">{{ laudo.medico_responsavel if laudo else 'Michel Raineri Haddad' }}</strong></p>
+                                    <p id="preview-crm">{{ laudo.crm_medico if laudo else 'CRM: 183299' }}</p>
+                                    <p>Médico Responsável</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Botões de ação na parte inferior da visualização -->
+                        <div class="bottom-actions">
+                            <a href="{{ url_for('index') }}" class="bottom-action-btn btn-secondary">
+                                <i class="fas fa-home"></i> Voltar à Página Inicial
+                            </a>
+                            <button type="button" id="save-preview-btn" class="bottom-action-btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Laudo
+                            </button>
+                            <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="bottom-action-btn btn-warning" target="_blank">
+                                <i class="fas fa-file-pdf"></i> Gerar PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Rodapé -->
+    <footer class="eco-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Grupo Vidah - Sistema de Ecocardiograma</p>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/signature_pad.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/medico_auto_preenchimento.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            // Alternar entre as abas
+            $('.nav-tabs a').click(function(e) {
+                e.preventDefault();
+                var tabId = $(this).attr('href');
+                
+                // Remover classe ativa de todas as abas
+                $('.nav-tabs li').removeClass('active');
+                $('.tab-pane').removeClass('active');
+                
+                // Adicionar classe ativa à aba clicada
+                $(this).parent('li').addClass('active');
+                $(tabId).addClass('active');
+                
+                // Atualizar visualização prévia se a aba de visualização for selecionada
+                if (tabId === '#tab-preview') {
+                    updatePreview();
+                }
+            });
+            
+            // Atualizar visualização prévia
+            function updatePreview() {
+                $('#preview-resumo').text($('#resumo_exame').val());
+                $('#preview-ritmo').text($('#ritmo_cardiaco').val());
+                $('#preview-ve').text($('#ventriculo_esquerdo').val());
+                $('#preview-vd').text($('#ventriculo_direito').val());
+                $('#preview-valvas').text($('#valvas').val());
+                $('#preview-pericardio').text($('#pericardio').val());
+                $('#preview-aorta').text($('#aorta').val());
+                $('#preview-conclusao').text($('#conclusao').val());
+                
+                var achados = $('#achados_ecocardiograficos').val();
+                if (achados) {
+                    $('#preview-achados').text(achados);
+                    $('#preview-achados').parent().show();
+                } else {
+                    $('#preview-achados').parent().hide();
+                }
+                
+                var observacoes = $('#observacoes').val();
+                if (observacoes) {
+                    $('#preview-observacoes').text(observacoes);
+                    $('#preview-observacoes').parent().show();
+                } else {
+                    $('#preview-observacoes').parent().hide();
+                }
+                
+                $('#preview-medico').text($('#medico_responsavel').val());
+                $('#preview-crm').text($('#crm_medico').val());
+            }
+            
+            // Salvar laudo via AJAX
+            function saveLaudo() {
+                var formData = $('#laudo-form').serialize();
+                
+                $.ajax({
+                    url: "{{ url_for('salvar_laudo', exame_id=exame.id) }}",
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        $('#save-notification').text('Laudo salvo com sucesso!').fadeIn().delay(3000).fadeOut();
+                    },
+                    error: function(error) {
+                        $('#save-notification').text('Erro ao salvar o laudo. Tente novamente.').fadeIn().delay(3000).fadeOut();
+                    }
+                });
+            }
+            
+            // Evento de clique no botão de salvar laudo (topo)
+            $('#save-laudo-btn').click(function(e) {
+                e.preventDefault();
+                saveLaudo();
+            });
+            
+            // Evento de clique no botão de salvar laudo (parte inferior)
+            $('#save-laudo-bottom-btn').click(function(e) {
+                e.preventDefault();
+                saveLaudo();
+            });
+            
+            // Evento de clique no botão de salvar na visualização
+            $('#save-preview-btn').click(function(e) {
+                e.preventDefault();
+                saveLaudo();
+            });
+            
+            // Atualizar visualização prévia quando os campos são alterados
+            $('.laudo-form-control').on('input', function() {
+                updatePreview();
+            });
+            
+            // Inicializar a visualização prévia
+            updatePreview();
+        });
+    </script>
+    <!-- Script para busca em tempo real de modelos -->
+    <script src="{{ url_for('static', filename='js/busca_modelos.js') }}"></script>
+</body>
+</html>

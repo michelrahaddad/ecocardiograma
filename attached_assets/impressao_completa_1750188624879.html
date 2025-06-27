@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressão Completa - Grupo Vidah</title>
+    <style>
+        /* Estilos para impressão */
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Montserrat', 'Roboto', Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+        
+        .page {
+            page-break-after: always;
+            position: relative;
+            padding: 20px;
+            height: 257mm; /* Altura fixa para A4 menos margens */
+            box-sizing: border-box;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0a2853;
+            padding-bottom: 15px;
+        }
+        
+        .logo {
+            max-width: 250px;
+            height: auto;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        
+        .title {
+            color: #0a2853;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
+        
+        .subtitle {
+            color: #41828e;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .patient-info {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .patient-info p {
+            margin: 3px 0;
+        }
+        
+        .section {
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            color: #0a2853;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid #41828e;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 10px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #0a2853;
+            color: white;
+            padding: 6px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 6px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: calc(100% - 40px);
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .signature-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .signature-image {
+            max-width: 200px;
+            max-height: 80px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 250px;
+            margin: 10px auto;
+        }
+        
+        .doctor-info {
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .doctor-info p {
+            margin: 2px 0;
+            font-size: 12px;
+        }
+        
+        /* Estilos específicos para cada página */
+        .page-1 .section-title {
+            background-color: #0a2853;
+            color: white;
+            padding: 5px 10px;
+            border-bottom: none;
+        }
+        
+        .page-2 .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .page-3 .conclusion {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .page-3 .recommendations {
+            background-color: #e1ebee;
+            padding: 10px;
+            border-left: 4px solid #41828e;
+        }
+        
+        /* Ajustes para garantir que caiba em 3 páginas */
+        .compact-table th, .compact-table td {
+            padding: 4px;
+            font-size: 10px;
+        }
+        
+        .compact-text {
+            font-size: 11px;
+        }
+        
+        /* Evitar sobreposição de textos */
+        .clear-both {
+            clear: both;
+        }
+        
+        /* Ajustes para tabelas específicas */
+        .small-table {
+            font-size: 9px;
+        }
+        
+        .small-table th, .small-table td {
+            padding: 3px;
+        }
+        
+        /* Ajustes para laudo */
+        .laudo-section {
+            margin-bottom: 15px;
+        }
+        
+        .laudo-title {
+            font-weight: bold;
+            color: #0a2853;
+            margin-bottom: 5px;
+        }
+        
+        .laudo-content {
+            white-space: pre-line;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Página 1: Dados do Paciente e Medidas Principais -->
+    <div class="page page-1">
+        <div class="header">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="logo">
+            <div class="title">LAUDO DE ECOCARDIOGRAMA TRANSTORÁCICO</div>
+            <div class="subtitle">Relatório Completo</div>
+        </div>
+        
+        <div class="patient-info">
+            <p><strong>Paciente:</strong> {{ exame.nome_paciente }}</p>
+            <p><strong>Data de Nascimento:</strong> {{ exame.data_nascimento }}</p>
+            <p><strong>Idade:</strong> {{ exame.idade }} anos</p>
+            <p><strong>Sexo:</strong> {{ exame.sexo }}</p>
+            <p><strong>Data do Exame:</strong> {{ exame.data_exame }}</p>
+            <p><strong>Médico Solicitante:</strong> {{ exame.medico_solicitante }}</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">DADOS ANTROPOMÉTRICOS</div>
+            <table>
+                <tr>
+                    <th>Parâmetro</th>
+                    <th>Valor</th>
+                    <th>Unidade</th>
+                    <th>Referência</th>
+                </tr>
+                <tr>
+                    <td>Peso</td>
+                    <td>{{ parametros.peso if parametros and parametros.peso else '-' }}</td>
+                    <td>kg</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Altura</td>
+                    <td>{{ parametros.altura if parametros and parametros.altura else '-' }}</td>
+                    <td>cm</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Superfície Corporal</td>
+                    <td>{{ parametros.superficie_corporal if parametros and parametros.superficie_corporal else '-' }}</td>
+                    <td>m²</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Frequência Cardíaca</td>
+                    <td>{{ parametros.frequencia_cardiaca if parametros and parametros.frequencia_cardiaca else '-' }}</td>
+                    <td>bpm</td>
+                    <td>60-100</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">MEDIDAS ECOCARDIOGRÁFICAS</div>
+            <table class="compact-table">
+                <tr>
+                    <th>Parâmetro</th>
+                    <th>Valor</th>
+                    <th>Unidade</th>
+                    <th>Referência</th>
+                </tr>
+                <tr>
+                    <td>Átrio Esquerdo</td>
+                    <td>{{ parametros.atrio_esquerdo if parametros and parametros.atrio_esquerdo else '-' }}</td>
+                    <td>cm</td>
+                    <td>2,7-3,8</td>
+                </tr>
+                <tr>
+                    <td>Raiz da Aorta</td>
+                    <td>{{ parametros.raiz_aorta if parametros and parametros.raiz_aorta else '-' }}</td>
+                    <td>cm</td>
+                    <td>2,1-3,4</td>
+                </tr>
+                <tr>
+                    <td>Relação AE/Ao</td>
+                    <td>{{ parametros.relacao_atrio_esquerdo_aorta if parametros and parametros.relacao_atrio_esquerdo_aorta else '-' }}</td>
+                    <td>-</td>
+                    <td>&lt;1,5</td>
+                </tr>
+                <tr>
+                    <td>Aorta Ascendente</td>
+                    <td>{{ parametros.aorta_ascendente if parametros and parametros.aorta_ascendente else '-' }}</td>
+                    <td>cm</td>
+                    <td>&lt;3,8</td>
+                </tr>
+                <tr>
+                    <td>Diâmetro VD</td>
+                    <td>{{ parametros.diametro_ventricular_direito if parametros and parametros.diametro_ventricular_direito else '-' }}</td>
+                    <td>cm</td>
+                    <td>0,7-2,3</td>
+                </tr>
+                <tr>
+                    <td>Diâmetro Basal VD</td>
+                    <td>{{ parametros.diametro_basal_vd if parametros and parametros.diametro_basal_vd else '-' }}</td>
+                    <td>cm</td>
+                    <td>2,5-4,1</td>
+                </tr>
+                <tr>
+                    <td>DDVE</td>
+                    <td>{{ parametros.diametro_diastolico_final_ve if parametros and parametros.diametro_diastolico_final_ve else '-' }}</td>
+                    <td>cm</td>
+                    <td>3,5-5,6</td>
+                </tr>
+                <tr>
+                    <td>DSVE</td>
+                    <td>{{ parametros.diametro_sistolico_final if parametros and parametros.diametro_sistolico_final else '-' }}</td>
+                    <td>cm</td>
+                    <td>2,1-4,0</td>
+                </tr>
+                <tr>
+                    <td>% Encurtamento</td>
+                    <td>{{ parametros.percentual_encurtamento if parametros and parametros.percentual_encurtamento else '-' }}</td>
+                    <td>%</td>
+                    <td>25-45</td>
+                </tr>
+                <tr>
+                    <td>Septo</td>
+                    <td>{{ parametros.espessura_diastolica_septo if parametros and parametros.espessura_diastolica_septo else '-' }}</td>
+                    <td>cm</td>
+                    <td>0,6-1,1</td>
+                </tr>
+                <tr>
+                    <td>Parede Posterior</td>
+                    <td>{{ parametros.espessura_diastolica_ppve if parametros and parametros.espessura_diastolica_ppve else '-' }}</td>
+                    <td>cm</td>
+                    <td>0,6-1,1</td>
+                </tr>
+                <tr>
+                    <td>Relação Septo/PP</td>
+                    <td>{{ parametros.relacao_septo_parede_posterior if parametros and parametros.relacao_septo_parede_posterior else '-' }}</td>
+                    <td>-</td>
+                    <td>&lt;1,3</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>Grupo Vidah - Sistema de Ecocardiograma - Página 1/3</p>
+        </div>
+    </div>
+    
+    <!-- Página 2: Volumes, Função Sistólica e Fluxos -->
+    <div class="page page-2">
+        <div class="header">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="logo">
+            <div class="title">LAUDO DE ECOCARDIOGRAMA TRANSTORÁCICO</div>
+            <div class="subtitle">{{ exame.nome_paciente }} - {{ exame.data_exame }}</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">VOLUMES E FUNÇÃO SISTÓLICA</div>
+            <div class="data-grid">
+                <table class="compact-table">
+                    <tr>
+                        <th>Parâmetro</th>
+                        <th>Valor</th>
+                        <th>Unidade</th>
+                        <th>Referência</th>
+                    </tr>
+                    <tr>
+                        <td>Volume Diastólico Final</td>
+                        <td>{{ parametros.volume_diastolico_final if parametros and parametros.volume_diastolico_final else '-' }}</td>
+                        <td>mL</td>
+                        <td>67-155</td>
+                    </tr>
+                    <tr>
+                        <td>Volume Sistólico Final</td>
+                        <td>{{ parametros.volume_sistolico_final if parametros and parametros.volume_sistolico_final else '-' }}</td>
+                        <td>mL</td>
+                        <td>22-58</td>
+                    </tr>
+                    <tr>
+                        <td>Volume Sistólico</td>
+                        <td>{{ parametros.volume_sistolico if parametros and parametros.volume_sistolico else '-' }}</td>
+                        <td>mL</td>
+                        <td>45-97</td>
+                    </tr>
+                    <tr>
+                        <td>Fração de Ejeção (Teichholz)</td>
+                        <td>{{ parametros.fracao_ejecao_teichols if parametros and parametros.fracao_ejecao_teichols else '-' }}</td>
+                        <td>%</td>
+                        <td>&gt;55</td>
+                    </tr>
+                    <tr>
+                        <td>Fração de Ejeção (Simpson)</td>
+                        <td>{{ parametros.fracao_ejecao_simpson if parametros and parametros.fracao_ejecao_simpson else '-' }}</td>
+                        <td>%</td>
+                        <td>&gt;55</td>
+                    </tr>
+                    <tr>
+                        <td>Fração de Ejeção Final</td>
+                        <td>{{ parametros.fracao_ejecao if parametros and parametros.fracao_ejecao else '-' }}</td>
+                        <td>%</td>
+                        <td>&gt;55</td>
+                    </tr>
+                </table>
+                
+                <table class="compact-table">
+                    <tr>
+                        <th>Parâmetro</th>
+                        <th>Valor</th>
+                        <th>Unidade</th>
+                        <th>Referência</th>
+                    </tr>
+                    <tr>
+                        <td>Débito Cardíaco</td>
+                        <td>{{ parametros.debito_cardiaco if parametros and parametros.debito_cardiaco else '-' }}</td>
+                        <td>L/min</td>
+                        <td>4,0-8,0</td>
+                    </tr>
+                    <tr>
+                        <td>Índice Cardíaco</td>
+                        <td>{{ parametros.indice_cardiaco if parametros and parametros.indice_cardiaco else '-' }}</td>
+                        <td>L/min/m²</td>
+                        <td>2,5-4,0</td>
+                    </tr>
+                    <tr>
+                        <td>Volume AE</td>
+                        <td>{{ parametros.volume_atrio_esquerdo if parametros and parametros.volume_atrio_esquerdo else '-' }}</td>
+                        <td>mL</td>
+                        <td>&lt;34</td>
+                    </tr>
+                    <tr>
+                        <td>Massa VE</td>
+                        <td>{{ parametros.massa_ve if parametros and parametros.massa_ve else '-' }}</td>
+                        <td>g</td>
+                        <td>F: 67-162<br>M: 88-224</td>
+                    </tr>
+                    <tr>
+                        <td>Índice de Massa VE</td>
+                        <td>{{ parametros.indice_massa_ve if parametros and parametros.indice_massa_ve else '-' }}</td>
+                        <td>g/m²</td>
+                        <td>F: &lt;95<br>M: &lt;115</td>
+                    </tr>
+                    <tr>
+                        <td>Relação Volume/Massa</td>
+                        <td>{{ parametros.relacao_volume_massa if parametros and parametros.relacao_volume_massa else '-' }}</td>
+                        <td>-</td>
+                        <td>0,5-0,9</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">FLUXOS E GRADIENTES</div>
+            <table class="compact-table">
+                <tr>
+                    <th>Parâmetro</th>
+                    <th>Velocidade (m/s)</th>
+                    <th>Gradiente (mmHg)</th>
+                    <th>Referência</th>
+                </tr>
+                <tr>
+                    <td>Fluxo Pulmonar</td>
+                    <td>{{ parametros.fluxo_pulmonar if parametros and parametros.fluxo_pulmonar else '-' }}</td>
+                    <td>{{ parametros.gradiente_vd_ap if parametros and parametros.gradiente_vd_ap else '-' }}</td>
+                    <td>&lt;2,0 m/s<br>&lt;10 mmHg</td>
+                </tr>
+                <tr>
+                    <td>Fluxo Aórtico</td>
+                    <td>{{ parametros.fluxo_aortico if parametros and parametros.fluxo_aortico else '-' }}</td>
+                    <td>{{ parametros.gradiente_ve_ao if parametros and parametros.gradiente_ve_ao else '-' }}</td>
+                    <td>&lt;1,7 m/s<br>&lt;10 mmHg</td>
+                </tr>
+                <tr>
+                    <td>Fluxo Mitral</td>
+                    <td>{{ parametros.fluxo_mitral if parametros and parametros.fluxo_mitral else '-' }}</td>
+                    <td>{{ parametros.gradiente_ae_ve if parametros and parametros.gradiente_ae_ve else '-' }}</td>
+                    <td>&lt;1,3 m/s<br>&lt;4 mmHg</td>
+                </tr>
+                <tr>
+                    <td>Fluxo Tricúspide</td>
+                    <td>{{ parametros.fluxo_tricuspide if parametros and parametros.fluxo_tricuspide else '-' }}</td>
+                    <td>{{ parametros.gradiente_ad_vd if parametros and parametros.gradiente_ad_vd else '-' }}</td>
+                    <td>&lt;0,7 m/s<br>&lt;2 mmHg</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">PRESSÕES ESTIMADAS</div>
+            <table class="compact-table">
+                <tr>
+                    <th>Parâmetro</th>
+                    <th>Valor</th>
+                    <th>Unidade</th>
+                    <th>Referência</th>
+                </tr>
+                <tr>
+                    <td>Pressão AD</td>
+                    <td>{{ parametros.pressao_atrio_direito if parametros and parametros.pressao_atrio_direito else '-' }}</td>
+                    <td>mmHg</td>
+                    <td>3-8</td>
+                </tr>
+                <tr>
+                    <td>PSAP</td>
+                    <td>{{ parametros.psap if parametros and parametros.psap else '-' }}</td>
+                    <td>mmHg</td>
+                    <td>&lt;35</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>Grupo Vidah - Sistema de Ecocardiograma - Página 2/3</p>
+        </div>
+    </div>
+    
+    <!-- Página 3: Laudo Completo -->
+    <div class="page page-3">
+        <div class="header">
+            <img src="{{ url_for('static', filename='img/logo_vidah_site.png') }}" alt="Grupo Vidah" class="logo">
+            <div class="title">LAUDO DE ECOCARDIOGRAMA TRANSTORÁCICO</div>
+            <div class="subtitle">{{ exame.nome_paciente }} - {{ exame.data_exame }}</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">LAUDO ECOCARDIOGRÁFICO</div>
+            
+            {% if laudo %}
+            <div class="laudo-section">
+                <div class="laudo-title">Resumo do Exame</div>
+                <div class="laudo-content">{{ laudo.resumo_exame if laudo.resumo_exame else 'Exame ecocardiográfico transtorácico realizado em repouso. Boa janela acústica.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Ritmo Cardíaco</div>
+                <div class="laudo-content">{{ laudo.ritmo_cardiaco if laudo.ritmo_cardiaco else 'Ritmo sinusal durante o exame.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Ventrículo Esquerdo</div>
+                <div class="laudo-content">{{ laudo.ventriculo_esquerdo if laudo.ventriculo_esquerdo else 'Dimensões normais. Espessuras parietais normais. Função sistólica global preservada.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Ventrículo Direito</div>
+                <div class="laudo-content">{{ laudo.ventriculo_direito if laudo.ventriculo_direito else 'Dimensões e função sistólica normais.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Valvas</div>
+                <div class="laudo-content">{{ laudo.valvas if laudo.valvas else 'Valvas morfologicamente normais, com abertura e fechamento adequados. Ausência de refluxos patológicos.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Pericárdio</div>
+                <div class="laudo-content">{{ laudo.pericardio if laudo.pericardio else 'Pericárdio de espessura normal, sem derrame.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Aorta e Grandes Vasos</div>
+                <div class="laudo-content">{{ laudo.aorta if laudo.aorta else 'Aorta de dimensões normais. Arco aórtico normal.' }}</div>
+            </div>
+            
+            <div class="laudo-section">
+                <div class="laudo-title">Conclusão</div>
+                <div class="laudo-content">{{ laudo.conclusao if laudo.conclusao else 'Exame ecocardiográfico dentro dos limites da normalidade.' }}</div>
+            </div>
+            
+            {% if laudo.achados_ecocardiograficos %}
+            <div class="laudo-section">
+                <div class="laudo-title">Achados Ecocardiográficos</div>
+                <div class="laudo-content">{{ laudo.achados_ecocardiograficos }}</div>
+            </div>
+            {% endif %}
+            
+            {% if laudo.observacoes %}
+            <div class="laudo-section">
+                <div class="laudo-title">Observações</div>
+                <div class="laudo-content">{{ laudo.observacoes }}</div>
+            </div>
+            {% endif %}
+            
+            <div class="signature-container">
+                {% if laudo.signature_data %}
+                <img src="{{ laudo.signature_data }}" alt="Assinatura do médico" class="signature-image">
+                {% else %}
+                <div class="signature-line"></div>
+                {% endif %}
+                
+                <div class="doctor-info">
+                    <p><strong>{{ laudo.medico_responsavel if laudo.medico_responsavel else 'Michel Raineri Haddad' }}</strong></p>
+                    <p>{{ laudo.crm_medico if laudo.crm_medico else 'CRM: 183299' }}</p>
+                    <p>Médico Responsável</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="laudo-section">
+                <div class="laudo-content">Laudo não disponível.</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Grupo Vidah - Sistema de Ecocardiograma - Página 3/3</p>
+        </div>
+    </div>
+</body>
+</html>

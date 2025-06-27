@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Migração - Score 100/100</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .score-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .progress-bar { transition: width 0.5s ease; }
+        .status-running { color: #28a745; }
+        .status-complete { color: #17a2b8; }
+        .migration-log { max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-database"></i> Dashboard de Migração para Score 100/100
+                </h1>
+            </div>
+        </div>
+
+        <!-- Score Principal -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card score-card text-white">
+                    <div class="card-body text-center">
+                        <h2 id="total-score">0.0</h2>
+                        <p class="mb-0">Score Total / 100</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h4 id="current-patients">0</h4>
+                        <p class="mb-0">Pacientes Únicos</p>
+                        <small class="text-muted">Meta: 11.447</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h4 id="current-exams">0</h4>
+                        <p class="mb-0">Total de Exames</p>
+                        <small class="text-muted">Meta: 17.182</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barras de Progresso -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users"></i> Progresso de Pacientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress">
+                            <div id="patients-progress" class="progress-bar bg-primary" style="width: 0%"></div>
+                        </div>
+                        <small id="patients-percent" class="text-muted">0.0%</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-heartbeat"></i> Progresso de Exames</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress">
+                            <div id="exams-progress" class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
+                        <small id="exams-percent" class="text-muted">0.0%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles de Migração -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Controles de Migração</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button id="start-migration" class="btn btn-primary w-100">
+                                    <i class="fas fa-play"></i> Iniciar Migração
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="batch-migration" class="btn btn-warning w-100">
+                                    <i class="fas fa-layer-group"></i> Lote (500)
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="large-batch" class="btn btn-info w-100">
+                                    <i class="fas fa-rocket"></i> Lote Grande (2000)
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="refresh-status" class="btn btn-secondary w-100">
+                                    <i class="fas fa-sync"></i> Atualizar Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log de Atividades -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list"></i> Log de Migração</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="migration-log" class="migration-log">
+                            <p class="text-muted">Aguardando início da migração...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variáveis globais
+        let migrationInterval = null;
+        let isRunning = false;
+
+        // Funções utilitárias
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('migration-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? 'fas fa-check-circle text-success' : 
+                        type === 'error' ? 'fas fa-exclamation-circle text-danger' : 
+                        'fas fa-info-circle text-primary';
+            
+            log.innerHTML += `<p><i class="${icon}"></i> ${timestamp} - ${message}</p>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateProgress(data) {
+            // Atualizar scores
+            document.getElementById('total-score').textContent = data.total_score;
+            document.getElementById('current-patients').textContent = data.current_patients.toLocaleString();
+            document.getElementById('current-exams').textContent = data.current_exams.toLocaleString();
+
+            // Atualizar barras de progresso
+            const patientsPercent = Math.min(data.progress_patients, 100);
+            const examsPercent = Math.min(data.progress_exams, 100);
+
+            document.getElementById('patients-progress').style.width = patientsPercent + '%';
+            document.getElementById('exams-progress').style.width = examsPercent + '%';
+            document.getElementById('patients-percent').textContent = patientsPercent.toFixed(1) + '%';
+            document.getElementById('exams-percent').textContent = examsPercent.toFixed(1) + '%';
+
+            // Verificar se atingiu 100/100
+            if (data.total_score >= 100) {
+                addLog('🎯 META 100/100 ATINGIDA! Migração completa!', 'success');
+                stopMigration();
+            }
+        }
+
+        function refreshStatus() {
+            fetch('/api/migration-progress')
+                .then(response => response.json())
+                .then(data => {
+                    updateProgress(data);
+                })
+                .catch(error => {
+                    addLog('Erro ao atualizar status: ' + error, 'error');
+                });
+        }
+
+        function executeBatch(batchSize) {
+            return fetch('/api/migration-batch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ batch_size: batchSize })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog(`Lote concluído: ${data.created} registros criados`, 'success');
+                    refreshStatus();
+                    return true;
+                } else {
+                    addLog('Erro no lote: ' + data.error, 'error');
+                    return false;
+                }
+            })
+            .catch(error => {
+                addLog('Erro na execução: ' + error, 'error');
+                return false;
+            });
+        }
+
+        function startContinuousMigration() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            document.getElementById('start-migration').disabled = true;
+            addLog('Migração contínua iniciada...', 'info');
+
+            migrationInterval = setInterval(async () => {
+                const success = await executeBatch(1000);
+                if (!success) {
+                    stopMigration();
+                }
+            }, 3000); // A cada 3 segundos
+        }
+
+        function stopMigration() {
+            if (migrationInterval) {
+                clearInterval(migrationInterval);
+                migrationInterval = null;
+            }
+            isRunning = false;
+            document.getElementById('start-migration').disabled = false;
+            addLog('Migração pausada.', 'info');
+        }
+
+        // Event listeners
+        document.getElementById('start-migration').addEventListener('click', () => {
+            if (isRunning) {
+                stopMigration();
+            } else {
+                startContinuousMigration();
+            }
+        });
+
+        document.getElementById('batch-migration').addEventListener('click', () => {
+            addLog('Executando lote de 500 registros...', 'info');
+            executeBatch(500);
+        });
+
+        document.getElementById('large-batch').addEventListener('click', () => {
+            addLog('Executando lote grande de 2000 registros...', 'info');
+            executeBatch(2000);
+        });
+
+        document.getElementById('refresh-status').addEventListener('click', refreshStatus);
+
+        // Atualização automática do status
+        setInterval(refreshStatus, 5000); // A cada 5 segundos
+
+        // Carregar status inicial
+        refreshStatus();
+        addLog('Dashboard de migração carregado. Pronto para atingir 100/100!', 'success');
+    </script>
+</body>
+</html>

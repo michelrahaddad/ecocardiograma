@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Sistema Vidah{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h3 class="card-title text-primary fw-bold">Login</h3>
+                        <p class="text-muted">Acesse o Sistema de Ecocardiograma</p>
+                    </div>
+
+                    <form method="POST" class="needs-validation" novalidate method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Usuário</label>
+                            <input type="text" class="form-control" id="username" name="username" required 
+                                   placeholder="Digite seu usuário">
+                            <div class="invalid-feedback">
+                                Por favor, digite seu usuário.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="password" name="password" required 
+                                   placeholder="Digite sua senha">
+                            <div class="invalid-feedback">
+                                Por favor, digite sua senha.
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">
+                                Lembrar de mim
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('auth.initialize_system') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-cog me-1"></i>Inicializar Sistema
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação de formulário
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

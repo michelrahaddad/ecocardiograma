@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Usuário - Sistema Vidah{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Criar Novo Usuário
+                    </h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation" novalidate method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Usuário *</label>
+                                <input type="text" class="form-control" id="username" name="username" required 
+                                       placeholder="Nome de usuário">
+                                <div class="invalid-feedback">
+                                    Por favor, digite um nome de usuário.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required 
+                                       placeholder="email@exemplo.com">
+                                <div class="invalid-feedback">
+                                    Por favor, digite um email válido.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Primeiro Nome</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       placeholder="Primeiro nome">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Sobrenome</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       placeholder="Sobrenome">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Senha *</label>
+                                <input type="password" class="form-control" id="password" name="password" required 
+                                       placeholder="Senha segura">
+                                <div class="invalid-feedback">
+                                    Por favor, digite uma senha.
+                                </div>
+                                <div class="form-text">
+                                    <small class="text-muted">Mínimo 8 caracteres com letras, números e símbolos</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">Função *</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Selecione uma função</option>
+                                    <option value="user">Usuário</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor, selecione uma função.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('auth.list_users') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Criar Usuário
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação de formulário
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Validação em tempo real de força da senha
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const feedback = this.parentNode.querySelector('.form-text small');
+    
+    if (password.length >= 8) {
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        
+        const score = [hasUpper, hasLower, hasNumber, hasSymbol].filter(Boolean).length;
+        
+        if (score >= 3) {
+            feedback.textContent = 'Senha forte';
+            feedback.className = 'text-success';
+        } else if (score >= 2) {
+            feedback.textContent = 'Senha média - adicione mais variações';
+            feedback.className = 'text-warning';
+        } else {
+            feedback.textContent = 'Senha fraca - use letras, números e símbolos';
+            feedback.className = 'text-danger';
+        }
+    } else {
+        feedback.textContent = 'Mínimo 8 caracteres com letras, números e símbolos';
+        feedback.className = 'text-muted';
+    }
+});
+</script>
+{% endblock %}

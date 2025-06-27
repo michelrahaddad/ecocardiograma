@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Principal - Sistema de Ecocardiograma{% endblock %}
+
+{% block content %}
+<!-- Hero Section - Grupo Vidah Style -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-title">GRUPO VIDAH</div>
+            <div class="hero-subtitle">Sistema Avançado de Ecocardiograma</div>
+            <p class="hero-description mb-4" style="font-size: 1.1rem; opacity: 0.8;">
+                Plataforma completa para gestão de exames ecocardiográficos com tecnologia de ponta
+            </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('novo_exame') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-plus-circle me-2"></i>Novo Paciente
+                </a>
+                <a href="{{ url_for('prontuario') }}" class="btn btn-success btn-lg me-3">
+                    <i class="fas fa-folder-medical me-2"></i>Prontuário
+                </a>
+                <a href="#estatisticas" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-chart-bar me-2"></i>Ver Estatísticas
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="container mt-5" id="estatisticas">
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card eco-stat-card text-center">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-file-medical-alt"></i>
+                </div>
+                <h3 class="stat-number">{{ total_exames }}</h3>
+                <p class="stat-label">Total de Exames</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card eco-stat-card text-center">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="stat-number">{{ total_pacientes }}</h3>
+                <p class="stat-label">Pacientes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card eco-stat-card text-center">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <h3 class="stat-number">{{ exames_hoje }}</h3>
+                <p class="stat-label">Exames Hoje</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card eco-stat-card text-center">
+            <div class="card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="stat-number" id="current-time">--:--</h3>
+                <p class="stat-label">Hora Atual</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{{ url_for('novo_exame') }}" class="btn btn-primary btn-lg w-100 eco-action-btn">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            <div>
+                                <strong>Novo Paciente</strong>
+                                <small class="d-block">Iniciar nova avaliação</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{{ url_for('prontuario') }}" class="btn btn-success btn-lg w-100 eco-action-btn">
+                            <i class="fas fa-folder-medical me-2"></i>
+                            <div>
+                                <strong>Prontuário</strong>
+                                <small class="d-block">Buscar histórico de pacientes</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{{ url_for('cadastro_medico') }}" class="btn btn-secondary btn-lg w-100 eco-action-btn">
+                            <i class="fas fa-user-md me-2"></i>
+                            <div>
+                                <strong>Gerenciar Médicos</strong>
+                                <small class="d-block">Cadastro e assinaturas</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Fechar Container Principal -->
+</div>
+
+<script>
+// Atualizar hora atual de Brasília via API
+function updateCurrentTime() {
+    fetch('/api/hora-atual')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('current-time').textContent = data.hora;
+            } else {
+                // Fallback para horário local se API falhar
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                });
+                document.getElementById('current-time').textContent = timeString;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao buscar hora atual:', error);
+            // Fallback para horário local
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'America/Sao_Paulo'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        });
+}
+
+// Atualizar imediatamente e depois a cada segundo para precisão
+updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+</script>
+
+{% endblock %}
