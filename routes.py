@@ -967,8 +967,7 @@ def manutencao_index():
 def pagina_backup():
     """Página de backup e restauração"""
     # Backups do sistema antigo
-    backups_antigos = db.session.query(BackupSistema).order_by(desc(BackupSistema.created_at)).limit(10).all()
-    
+backups_antigos = []  # BackupSistema removido para deploy    
     # Backups do sistema seguro
     try:
         backups_seguros = get_backup_list()[:10]  # Últimos 10 backups
