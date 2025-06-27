@@ -2,21 +2,25 @@ services:
   - type: web
     name: sistema-ecocardiograma
     env: python
-    region: ohio
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 main:app
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: SESSION_SECRET
-        generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: ecocardiograma-db
+          name: sistema-ecocardiograma-db
           property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
 
 databases:
-  - name: ecocardiograma-db
-    databaseName: ecocardiograma
-    user: ecocardiograma_user
+  - name: sistema-ecocardiograma-db
+    plan: free
+    databaseName: sistema_ecocardiograma
+    user: postgres
