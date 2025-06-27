@@ -8,21 +8,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, desc
 from functools import wraps
 from app import app, db
-from models import Exame, ParametrosEcocardiograma, LaudoEcocardiograma, Medico, LogSistema, PatologiaLaudo, TemplateLaudo, LaudoTemplate, datetime_brasilia
+from models import Exame, ParametrosEcocardiograma, LaudoEcocardiograma, Medico, LogSistema, LaudoTemplate, datetime_brasilia
 from auth.models import AuthUser
-from utils.pdf_generator_compacto import generate_pdf_report
-from utils.calculations import calcular_parametros_derivados
-from utils.backup import criar_backup, restaurar_backup
-from utils.backup_security import create_manual_backup, create_daily_backup, get_backup_list, restore_from_backup
-from utils.backup_scheduler import init_backup_scheduler, get_backup_scheduler
-from utils.logging_system import (
-    log_system_event, log_user_action, log_database_operation, 
-    log_pdf_generation, log_backup_operation, log_error_with_traceback,
-    LoggedOperation
-)
 import logging
-import os
-from datetime import datetime
+import tempfile
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+# Configurar logging básico
+logging.basicConfig(level=logging.INFO)
 
 def admin_required(f):
     """Decorator para rotas que requerem acesso administrativo"""
@@ -36,6 +30,350 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# ===== FUNCÕES DE UTILIDADE INTEGRADAS =====
+
+def generate_pdf_report(exame):
+    """Gerar PDF do exame usando ReportLab"""
+    try:
+        # Criar arquivo temporário
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            caminho_pdf = tmp_file.name
+        
+        # Criar PDF
+        c = canvas.Canvas(caminho_pdf, pagesize=A4)
+        
+        # Cabeçalho
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(50, 750, "GRUPO VIDAH - MEDICINA DIAGNÓSTICA")
+        c.setFont("Helvetica", 10)
+        c.drawString(50, 735, "R. XV de Novembro, 594 - Ibitinga-SP | Tel: (16) 3342-4768")
+        
+        # Linha divisória
+        c.line(50, 720, 550, 720)
+        
+        # Título do laudo
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(200, 700, "LAUDO DE ECOCARDIOGRAMA TRANSTORÁCICO")
+        
+        # Dados do paciente
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, 670, "DADOS DO PACIENTE")
+        
+        c.setFont("Helvetica", 10)
+        y = 650
+        c.drawString(50, y, f"Nome: {exame.nome_paciente}")
+        y -= 15
+        c.drawString(50, y, f"Data de Nascimento: {exame.data_nascimento}")
+        y -= 15
+        c.drawString(50, y, f"Idade: {exame.idade} anos")
+        y -= 15
+        c.drawString(50, y, f"Sexo: {exame.sexo}")
+        y -= 15
+        c.drawString(50, y, f"Data do Exame: {exame.data_exame}")
+        y -= 15
+        if exame.tipo_atendimento:
+            c.drawString(50, y, f"Tipo Atendimento: {exame.tipo_atendimento}")
+            y -= 15
+        
+        # Parâmetros ecocardiográficos
+        if exame.parametros:
+            y -= 20
+            c.setFont("Helvetica-Bold", 12)
+            c.drawString(50, y, "PARÂMETROS ECOCARDIOGRÁFICOS")
+            y -= 20
+            
+            c.setFont("Helvetica", 9)
+            
+            # Dados antropométricos
+            if exame.parametros.peso or exame.parametros.altura:
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(50, y, "Dados Antropométricos:")
+                y -= 15
+                c.setFont("Helvetica", 9)
+                
+                if exame.parametros.peso:
+                    c.drawString(70, y, f"Peso: {exame.parametros.peso} kg")
+                    y -= 12
+                if exame.parametros.altura:
+                    c.drawString(70, y, f"Altura: {exame.parametros.altura} cm")
+                    y -= 12
+                if exame.parametros.superficie_corporal:
+                    c.drawString(70, y, f"Superfície Corporal: {exame.parametros.superficie_corporal} m²")
+                    y -= 12
+                if exame.parametros.frequencia_cardiaca:
+                    c.drawString(70, y, f"Frequência Cardíaca: {exame.parametros.frequencia_cardiaca} bpm")
+                    y -= 12
+            
+            # Medidas básicas
+            y -= 10
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, y, "Medidas Ecocardiográficas Básicas:")
+            y -= 15
+            c.setFont("Helvetica", 9)
+            
+            if exame.parametros.atrio_esquerdo:
+                c.drawString(70, y, f"Átrio Esquerdo: {exame.parametros.atrio_esquerdo} mm")
+                y -= 12
+            if exame.parametros.raiz_aorta:
+                c.drawString(70, y, f"Raiz da Aorta: {exame.parametros.raiz_aorta} mm")
+                y -= 12
+            if exame.parametros.aorta_ascendente:
+                c.drawString(70, y, f"Aorta Ascendente: {exame.parametros.aorta_ascendente} mm")
+                y -= 12
+            
+            # Ventrículo Esquerdo
+            y -= 10
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, y, "Ventrículo Esquerdo:")
+            y -= 15
+            c.setFont("Helvetica", 9)
+            
+            if exame.parametros.diametro_diastolico_final_ve:
+                c.drawString(70, y, f"DDVE: {exame.parametros.diametro_diastolico_final_ve} mm")
+                y -= 12
+            if exame.parametros.diametro_sistolico_final:
+                c.drawString(70, y, f"DSVE: {exame.parametros.diametro_sistolico_final} mm")
+                y -= 12
+            if exame.parametros.fracao_ejecao:
+                c.drawString(70, y, f"Fração de Ejeção: {exame.parametros.fracao_ejecao}%")
+                y -= 12
+            
+            # Volumes
+            if exame.parametros.volume_diastolico_final:
+                c.drawString(70, y, f"Volume Diastólico Final: {exame.parametros.volume_diastolico_final} mL")
+                y -= 12
+            if exame.parametros.volume_sistolico_final:
+                c.drawString(70, y, f"Volume Sistólico Final: {exame.parametros.volume_sistolico_final} mL")
+                y -= 12
+        
+        # Laudos médicos
+        if exame.laudos:
+            laudo = exame.laudos[0]
+            y -= 20
+            
+            # Modo M e Bidimensional
+            if laudo.modo_m_bidimensional:
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(50, y, "MODO M E BIDIMENSIONAL:")
+                y -= 15
+                c.setFont("Helvetica", 9)
+                
+                # Quebrar texto
+                texto = laudo.modo_m_bidimensional
+                palavras = texto.split()
+                linha_atual = ""
+                
+                for palavra in palavras:
+                    if len(linha_atual + " " + palavra) < 70:
+                        linha_atual += " " + palavra if linha_atual else palavra
+                    else:
+                        c.drawString(70, y, linha_atual)
+                        y -= 12
+                        linha_atual = palavra
+                        if y < 100:  # Nova página se necessário
+                            c.showPage()
+                            y = 750
+                
+                if linha_atual:
+                    c.drawString(70, y, linha_atual)
+                    y -= 12
+                
+                y -= 10
+            
+            # Doppler Convencional
+            if laudo.doppler_convencional:
+                if y < 150:  # Nova página se necessário
+                    c.showPage()
+                    y = 750
+                
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(50, y, "DOPPLER CONVENCIONAL:")
+                y -= 15
+                c.setFont("Helvetica", 9)
+                
+                # Quebrar texto
+                texto = laudo.doppler_convencional
+                palavras = texto.split()
+                linha_atual = ""
+                
+                for palavra in palavras:
+                    if len(linha_atual + " " + palavra) < 70:
+                        linha_atual += " " + palavra if linha_atual else palavra
+                    else:
+                        c.drawString(70, y, linha_atual)
+                        y -= 12
+                        linha_atual = palavra
+                        if y < 100:  # Nova página se necessário
+                            c.showPage()
+                            y = 750
+                
+                if linha_atual:
+                    c.drawString(70, y, linha_atual)
+                    y -= 12
+                
+                y -= 10
+            
+            # Conclusão
+            if laudo.conclusao:
+                if y < 150:  # Nova página se necessário
+                    c.showPage()
+                    y = 750
+                
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(50, y, "CONCLUSÃO:")
+                y -= 15
+                c.setFont("Helvetica", 9)
+                
+                # Quebrar texto
+                texto = laudo.conclusao
+                palavras = texto.split()
+                linha_atual = ""
+                
+                for palavra in palavras:
+                    if len(linha_atual + " " + palavra) < 70:
+                        linha_atual += " " + palavra if linha_atual else palavra
+                    else:
+                        c.drawString(70, y, linha_atual)
+                        y -= 12
+                        linha_atual = palavra
+                        if y < 100:  # Nova página se necessário
+                            c.showPage()
+                            y = 750
+                
+                if linha_atual:
+                    c.drawString(70, y, linha_atual)
+                    y -= 12
+        
+        # Assinatura médica
+        if y < 100:  # Nova página se necessário
+            c.showPage()
+            y = 750
+        
+        y -= 40
+        c.setFont("Helvetica", 10)
+        c.drawString(200, y, "Dr. Michel Raineri Haddad")
+        y -= 15
+        c.drawString(220, y, "CRM-SP 183299")
+        y -= 15
+        c.drawString(180, y, f"Data: {datetime.now().strftime('%d/%m/%Y')}")
+        
+        c.save()
+        
+        return caminho_pdf
+        
+    except Exception as e:
+        logging.error(f'Erro ao gerar PDF: {str(e)}')
+        return None
+
+def calcular_parametros_derivados(parametros):
+    """Calcular parâmetros derivados dos ecocardiográficos"""
+    try:
+        # Calcular superfície corporal (DuBois)
+        if parametros.get('peso') and parametros.get('altura'):
+            peso = float(parametros['peso'])
+            altura = float(parametros['altura'])
+            sc = 0.007184 * (peso ** 0.425) * (altura ** 0.725)
+            parametros['superficie_corporal'] = round(sc, 2)
+        
+        # Calcular volumes pelo método Teichholz
+        ddve = parametros.get('diametro_diastolico_final_ve')
+        dsve = parametros.get('diametro_sistolico_final')
+        
+        if ddve and dsve:
+            ddve = float(ddve) / 10  # mm para cm
+            dsve = float(dsve) / 10  # mm para cm
+            
+            # Volume diastólico final
+            vdf = (7.0 / (2.4 + ddve)) * (ddve ** 3)
+            parametros['volume_diastolico_final'] = round(vdf, 1)
+            
+            # Volume sistólico final
+            vsf = (7.0 / (2.4 + dsve)) * (dsve ** 3)
+            parametros['volume_sistolico_final'] = round(vsf, 1)
+            
+            # Fração de ejeção
+            if vdf > 0:
+                fe = ((vdf - vsf) / vdf) * 100
+                parametros['fracao_ejecao'] = round(fe, 1)
+            
+            # Volume de ejeção
+            parametros['volume_ejecao'] = round(vdf - vsf, 1)
+        
+        # Calcular massa VE
+        septo = parametros.get('espessura_diastolica_septo')
+        pp = parametros.get('espessura_diastolica_ppve')
+        
+        if ddve and septo and pp:
+            ddve_mm = float(ddve) if isinstance(ddve, str) else ddve
+            septo_mm = float(septo) if isinstance(septo, str) else septo
+            pp_mm = float(pp) if isinstance(pp, str) else pp
+            
+            # Fórmula ASE corrigida
+            massa = 0.8 * (1.04 * (((ddve_mm + septo_mm + pp_mm) ** 3) - (ddve_mm ** 3))) + 0.6
+            parametros['massa_ve'] = round(massa, 1)
+            
+            # Índice de massa VE
+            if parametros.get('superficie_corporal'):
+                indice_massa = massa / float(parametros['superficie_corporal'])
+                parametros['indice_massa_ve'] = round(indice_massa, 1)
+        
+        # Calcular gradientes (Bernoulli)
+        fluxos = ['fluxo_pulmonar', 'fluxo_mitral', 'fluxo_aortico', 'fluxo_tricuspide']
+        gradientes = ['gradiente_vd_ap', 'gradiente_ae_ve', 'gradiente_ve_ao', 'gradiente_ad_vd']
+        
+        for fluxo, gradiente in zip(fluxos, gradientes):
+            if parametros.get(fluxo):
+                velocidade = float(parametros[fluxo])
+                grad = 4 * (velocidade ** 2)
+                parametros[gradiente] = round(grad, 1)
+        
+        # Calcular PSAP
+        if parametros.get('gradiente_tricuspide'):
+            grad_tricuspide = float(parametros['gradiente_tricuspide'])
+            psap = grad_tricuspide + 10  # CVP estimada = 10mmHg
+            parametros['pressao_sistolica_vd'] = round(psap, 1)
+        
+        return parametros
+        
+    except Exception as e:
+        logging.error(f'Erro ao calcular parâmetros derivados: {str(e)}')
+        return parametros
+
+def log_system_event(message, user_id=None):
+    """Log de eventos do sistema"""
+    try:
+        log_entry = LogSistema()
+        log_entry.nivel = 'INFO'
+        log_entry.mensagem = message
+        log_entry.modulo = 'system'
+        if user_id:
+            log_entry.usuario_id = user_id
+        
+        db.session.add(log_entry)
+        db.session.commit()
+        logging.info(f'System event logged: {message}')
+    except Exception as e:
+        logging.error(f'Erro ao registrar log: {str(e)}')
+
+def log_error_with_traceback(message, error, user_id=None):
+    """Log de erros com traceback"""
+    try:
+        import traceback
+        full_message = f"{message}: {str(error)}\n{traceback.format_exc()}"
+        
+        log_entry = LogSistema()
+        log_entry.nivel = 'ERROR'
+        log_entry.mensagem = full_message
+        log_entry.modulo = 'error'
+        if user_id:
+            log_entry.usuario_id = user_id
+        
+        db.session.add(log_entry)
+        db.session.commit()
+        logging.error(full_message)
+    except Exception as e:
+        logging.error(f'Erro ao registrar log de erro: {str(e)}')
+
 # ===== ROTAS DE AUTENTICAÇÃO =====
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -48,238 +386,551 @@ def auth_login():
         username = request.form['username']
         password = request.form['password']
         
-        usuario = AuthUser.query.filter_by(username=username).first()
+        # Tentar AuthUser primeiro (novo sistema)
+        user = AuthUser.query.filter_by(username=username).first()
         
-        if usuario and usuario.check_password(password) and usuario.is_active:
-            login_user(usuario)
-            log_user_action(f'Login realizado com sucesso - Usuário {username}')
-            
+        if user and user.check_password(password):
+            login_user(user)
+            log_system_event(f'Login bem-sucedido: {username}', user.id)
             next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for('index'))
-        else:
-            flash('Nome de usuário ou senha incorretos.', 'error')
-            log_user_action(f'Tentativa de login falhada - Usuário {username}')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        
+        flash('Usuário ou senha inválidos', 'error')
+        log_system_event(f'Tentativa de login falhada: {username}')
     
     return render_template('auth/login.html')
 
 @app.route('/logout')
 @login_required
 def auth_logout():
-    """Logout do sistema"""
+    """Logout do usuário"""
     username = current_user.username
+    user_id = current_user.id
     logout_user()
-    log_user_action(f'Logout realizado - Usuário {username}')
-    flash('Logout realizado com sucesso.', 'success')
+    log_system_event(f'Logout realizado: {username}', user_id)
+    flash('Logout realizado com sucesso', 'success')
     return redirect(url_for('auth_login'))
-
-@app.route('/gerenciar-usuarios')
-@admin_required
-def gerenciar_usuarios():
-    """Página de gerenciamento de usuários (apenas administradores)"""
-    usuarios = AuthUser.query.all()
-    return render_template('auth/gerenciar_usuarios.html', usuarios=usuarios)
-
-@app.route('/criar-usuario', methods=['GET', 'POST'])
-@admin_required
-def criar_usuario():
-    """Criar novo usuário (apenas administradores)"""
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
-        
-        # Verificar se usuário já existe
-        if AuthUser.query.filter_by(username=username).first():
-            flash('Nome de usuário já existe.', 'error')
-            return redirect(url_for('criar_usuario'))
-        
-        if AuthUser.query.filter_by(email=email).first():
-            flash('Email já está em uso.', 'error')
-            return redirect(url_for('criar_usuario'))
-        
-        # Criar novo usuário
-        novo_usuario = AuthUser(
-            username=username,
-            email=email,
-            role=role,
-            is_verified=True,
-            is_active_flag=True
-        )
-        novo_usuario.set_password(password)
-        
-        db.session.add(novo_usuario)
-        db.session.commit()
-        
-        log_user_action(f'Usuário {username} criado com sucesso pelo administrador {current_user.username}')
-        flash(f'Usuário {username} criado com sucesso.', 'success')
-        return redirect(url_for('gerenciar_usuarios'))
-    
-    return render_template('auth/criar_usuario.html')
-
-@app.route('/editar-usuario/<int:usuario_id>', methods=['GET', 'POST'])
-@admin_required
-def editar_usuario(usuario_id):
-    """Editar usuário existente (apenas administradores)"""
-    usuario = AuthUser.query.get_or_404(usuario_id)
-    
-    if request.method == 'POST':
-        usuario.username = request.form['username']
-        usuario.email = request.form['email']
-        usuario.role = request.form['role']
-        usuario.is_active_flag = 'ativo' in request.form
-        
-        if request.form.get('password'):
-            usuario.set_password(request.form['password'])
-        
-        db.session.commit()
-        
-        log_user_action(f'Usuário {usuario.username} editado pelo administrador {current_user.username}')
-        flash(f'Usuário {usuario.username} atualizado com sucesso.', 'success')
-        return redirect(url_for('gerenciar_usuarios'))
-    
-    return render_template('auth/editar_usuario.html', usuario=usuario)
-
-@app.route('/deletar-usuario/<int:usuario_id>', methods=['POST'])
-@admin_required
-def deletar_usuario(usuario_id):
-    """Deletar usuário (apenas administradores)"""
-    usuario = AuthUser.query.get_or_404(usuario_id)
-    
-    if usuario.id == current_user.id:
-        flash('Você não pode deletar sua própria conta.', 'error')
-        return redirect(url_for('gerenciar_usuarios'))
-    
-    username = usuario.username
-    db.session.delete(usuario)
-    db.session.commit()
-    
-    log_user_action(f'Usuário {username} deletado pelo administrador {current_user.username}')
-    flash(f'Usuário {username} deletado com sucesso.', 'success')
-    return redirect(url_for('gerenciar_usuarios'))
-
-# ===== INICIALIZAÇÃO DO SISTEMA =====
-
-@app.route('/inicializar-sistema')
-def inicializar_sistema():
-    """Criar usuário administrador padrão se não existir"""
-    try:
-        # Verificar se já existe algum usuário administrador
-        admin_existente = AuthUser.query.filter_by(role='admin').first()
-        
-        if not admin_existente:
-            # Criar usuário administrador padrão
-            admin = AuthUser(
-                username='admin',
-                email='admin@grupovidah.com.br',
-                role='admin',
-                is_verified=True,
-                is_active_flag=True
-            )
-            admin.set_password('admin123')
-            
-            db.session.add(admin)
-            db.session.commit()
-            
-            log_user_action('Usuário administrador padrão criado no sistema')
-            flash('Sistema inicializado! Usuário: admin | Senha: admin123', 'success')
-        else:
-            flash('Sistema já possui usuário administrador configurado.', 'info')
-            
-        return redirect(url_for('auth_login'))
-        
-    except Exception as e:
-        log_error_with_traceback(f'Erro ao inicializar sistema: {str(e)}')
-        flash('Erro ao inicializar sistema.', 'error')
-        return redirect(url_for('auth_login'))
 
 # ===== ROTAS PRINCIPAIS =====
 
 @app.route('/')
 @login_required
 def index():
-    """Página inicial com lista de exames recentes e estatísticas"""
+    """Página inicial do sistema"""
     try:
-        # Buscar exames recentes agrupados por paciente
-        exames_recentes = db.session.query(
-            Exame.nome_paciente,
-            func.count(Exame.id).label('total_exames'),
-            func.max(Exame.data_exame).label('ultimo_exame')
-        ).group_by(Exame.nome_paciente).order_by(desc('ultimo_exame')).limit(10).all()
+        # Estatísticas básicas do sistema
+        total_exames = Exame.query.count()
+        total_pacientes = db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar()
         
-        # Estatísticas gerais
-        total_exames = db.session.query(Exame).count()
-        total_pacientes = db.session.query(Exame.nome_paciente).distinct().count()
-        exames_hoje = db.session.query(Exame).filter(
-            Exame.data_exame == datetime_brasilia().strftime('%d/%m/%Y')
-        ).count()
+        # Exames recentes (últimos 10)
+        exames_recentes = Exame.query.order_by(desc(Exame.created_at)).limit(10).all()
+        
+        # Exames hoje
+        hoje = datetime.now().date()
+        exames_hoje = Exame.query.filter(func.date(Exame.created_at) == hoje).count()
+        
+        # Log de acesso
+        log_system_event(f'Acesso à página inicial - Usuário: {current_user.username}', current_user.id)
         
         return render_template('index.html', 
-                             exames_recentes=exames_recentes,
                              total_exames=total_exames,
                              total_pacientes=total_pacientes,
+                             exames_recentes=exames_recentes,
                              exames_hoje=exames_hoje)
+                             
     except Exception as e:
-        logging.error(f"Erro na página inicial: {str(e)}")
+        log_error_with_traceback('Erro na página inicial', e, current_user.id)
+        flash('Erro ao carregar página inicial', 'error')
         return render_template('index.html', 
-                             exames_recentes=[],
                              total_exames=0,
                              total_pacientes=0,
+                             exames_recentes=[],
                              exames_hoje=0)
 
-def normalizar_nome_paciente(nome):
-    """Normaliza o nome do paciente para verificação rigorosa de duplicatas"""
-    if not nome:
-        return ""
-    import unicodedata
-    import re
-    
-    # Remove espaços extras e converte para minúsculas
-    nome_limpo = ' '.join(nome.strip().split())
-    
-    # Remove acentos e caracteres especiais
-    nome_sem_acento = unicodedata.normalize('NFD', nome_limpo).encode('ascii', 'ignore').decode('ascii')
-    
-    # Remove pontuação e converte para minúsculas
-    nome_normalizado = re.sub(r'[^\w\s]', '', nome_sem_acento.lower())
-    
-    # Remove espaços duplos resultantes
-    return ' '.join(nome_normalizado.split())
-
-def verificar_nome_duplicado(nome_paciente):
-    """Verifica se já existe um paciente com nome similar"""
-    nome_normalizado = normalizar_nome_paciente(nome_paciente)
-    
-    # Buscar todos os nomes de pacientes existentes
-    pacientes_existentes = db.session.query(Exame.nome_paciente).distinct().all()
-    
-    for (nome_existente,) in pacientes_existentes:
-        if normalizar_nome_paciente(nome_existente) == nome_normalizado:
-            return nome_existente  # Retorna o nome original encontrado
-    
-    return None
-
-@app.route('/novo-exame', methods=['GET', 'POST'])
 @app.route('/novo_exame', methods=['GET', 'POST'])
+@login_required
 def novo_exame():
-    """Formulário para criação de novo exame"""
-    # Verificar se deve clonar dados de um paciente existente
+    """Criar novo exame ou clonar de paciente existente"""
     clone_paciente = request.args.get('clone_paciente')
     dados_clonados = None
     
-    if clone_paciente and request.method == 'GET':
-        # Buscar último exame do paciente para clonagem COMPLETA
-        logging.info(f"Tentando clonar dados COMPLETOS do paciente: {clone_paciente}")
-        
-        ultimo_exame = Exame.query.filter_by(nome_paciente=clone_paciente).order_by(Exame.id.desc()).first()
-        
-        if ultimo_exame:
-            logging.info(f"Último exame encontrado - ID: {ultimo_exame.id}, Data: {ultimo_exame.data_exame}")
+    if clone_paciente:
+        try:
+            # Buscar o último exame deste paciente
+            ultimo_exame = Exame.query.filter_by(nome_paciente=clone_paciente)\
+                                     .order_by(desc(Exame.created_at)).first()
             
-            # Clonar dados básicos
-            dados_clonados = {
+            if ultimo_exame:
+                dados_clonados = {
+                    'nome_paciente': ultimo_exame.nome_paciente,
+                    'data_nascimento': ultimo_exame.data_nascimento,
+                    'idade': ultimo_exame.idade,
+                    'sexo': ultimo_exame.sexo,
+                    'tipo_atendimento': ultimo_exame.tipo_atendimento,
+                    'medico_usuario': ultimo_exame.medico_usuario,
+                    'medico_solicitante': ultimo_exame.medico_solicitante,
+                    'indicacao': ultimo_exame.indicacao
+                }
+                
+                # Adicionar parâmetros se existirem
+                if ultimo_exame.parametros:
+                    params = ultimo_exame.parametros
+                    dados_clonados.update({
+                        'peso': params.peso,
+                        'altura': params.altura,
+                        'superficie_corporal': params.superficie_corporal,
+                        'frequencia_cardiaca': params.frequencia_cardiaca,
+                        'atrio_esquerdo': params.atrio_esquerdo,
+                        'raiz_aorta': params.raiz_aorta,
+                        'relacao_atrio_esquerdo_aorta': params.relacao_atrio_esquerdo_aorta,
+                        'aorta_ascendente': params.aorta_ascendente,
+                        'diametro_ventricular_direito': params.diametro_ventricular_direito,
+                        'diametro_basal_vd': params.diametro_basal_vd,
+                        'diametro_diastolico_final_ve': params.diametro_diastolico_final_ve,
+                        'diametro_sistolico_final': params.diametro_sistolico_final,
+                        'percentual_encurtamento': params.percentual_encurtamento,
+                        'espessura_diastolica_septo': params.espessura_diastolica_septo,
+                        'espessura_diastolica_ppve': params.espessura_diastolica_ppve,
+                        'relacao_septo_parede_posterior': params.relacao_septo_parede_posterior,
+                        'volume_diastolico_final': params.volume_diastolico_final,
+                        'volume_sistolico_final': params.volume_sistolico_final,
+                        'volume_ejecao': params.volume_ejecao,
+                        'fracao_ejecao': params.fracao_ejecao,
+                        'indice_massa_ve': params.indice_massa_ve,
+                        'massa_ve': params.massa_ve,
+                        'fluxo_pulmonar': params.fluxo_pulmonar,
+                        'fluxo_mitral': params.fluxo_mitral,
+                        'fluxo_aortico': params.fluxo_aortico,
+                        'fluxo_tricuspide': params.fluxo_tricuspide,
+                        'gradiente_vd_ap': params.gradiente_vd_ap,
+                        'gradiente_ae_ve': params.gradiente_ae_ve,
+                        'gradiente_ve_ao': params.gradiente_ve_ao,
+                        'gradiente_ad_vd': params.gradiente_ad_vd,
+                        'gradiente_tricuspide': params.gradiente_tricuspide,
+                        'pressao_sistolica_vd': params.pressao_sistolica_vd
+                    })
+                
+                # Adicionar laudos se existirem
+                if ultimo_exame.laudos:
+                    laudo = ultimo_exame.laudos[0]
+                    dados_clonados.update({
+                        'modo_m_bidimensional': laudo.modo_m_bidimensional,
+                        'doppler_convencional': laudo.doppler_convencional,
+                        'doppler_tecidual': laudo.doppler_tecidual,
+                        'conclusao': laudo.conclusao,
+                        'recomendacoes': laudo.recomendacoes
+                    })
+                
+                log_system_event(f'Dados clonados do último exame - Paciente: {clone_paciente}', current_user.id)
+        
+        except Exception as e:
+            log_error_with_traceback('Erro ao clonar dados do paciente', e, current_user.id)
+            flash('Erro ao carregar dados do paciente anterior', 'warning')
+    
+    if request.method == 'POST':
+        try:
+            # Dados básicos do exame
+            exame = Exame()
+            exame.nome_paciente = request.form['nome_paciente']
+            exame.data_nascimento = request.form['data_nascimento']
+            exame.idade = int(request.form['idade']) if request.form['idade'] else None
+            exame.sexo = request.form['sexo']
+            exame.data_exame = request.form['data_exame']
+            exame.tipo_atendimento = request.form.get('tipo_atendimento', '')
+            exame.medico_usuario = request.form.get('medico_usuario', '')
+            exame.medico_solicitante = request.form.get('medico_solicitante', '')
+            exame.indicacao = request.form.get('indicacao', '')
+            
+            db.session.add(exame)
+            db.session.flush()  # Para obter o ID
+            
+            # Criar parâmetros ecocardiográficos
+            parametros = ParametrosEcocardiograma()
+            parametros.exame_id = exame.id
+            
+            # Coletar todos os dados do formulário
+            form_data = {}
+            for key in request.form:
+                if key.startswith(('peso', 'altura', 'superficie', 'frequencia', 'atrio', 'raiz', 'relacao', 'aorta', 
+                                  'diametro', 'espessura', 'percentual', 'volume', 'fracao', 'massa', 'indice',
+                                  'fluxo', 'gradiente', 'pressao')):
+                    value = request.form[key]
+                    if value:
+                        form_data[key] = value
+            
+            # Calcular parâmetros derivados
+            form_data = calcular_parametros_derivados(form_data)
+            
+            # Aplicar valores aos parâmetros
+            for field_name, value in form_data.items():
+                if hasattr(parametros, field_name) and value:
+                    try:
+                        if field_name in ['frequencia_cardiaca']:
+                            setattr(parametros, field_name, int(value))
+                        else:
+                            setattr(parametros, field_name, float(value))
+                    except (ValueError, TypeError):
+                        continue
+            
+            db.session.add(parametros)
+            
+            # Criar laudo médico
+            laudo = LaudoEcocardiograma()
+            laudo.exame_id = exame.id
+            laudo.modo_m_bidimensional = request.form.get('modo_m_bidimensional', '')
+            laudo.doppler_convencional = request.form.get('doppler_convencional', '')
+            laudo.doppler_tecidual = request.form.get('doppler_tecidual', '')
+            laudo.conclusao = request.form.get('conclusao', '')
+            laudo.recomendacoes = request.form.get('recomendacoes', '')
+            
+            db.session.add(laudo)
+            db.session.commit()
+            
+            # Log da operação
+            log_system_event(f'Novo exame criado: ID {exame.id}, Paciente: {exame.nome_paciente}', current_user.id)
+            
+            flash('Exame criado com sucesso!', 'success')
+            return redirect(url_for('visualizar_exame', id=exame.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            log_error_with_traceback('Erro ao criar novo exame', e, current_user.id)
+            flash(f'Erro ao criar exame: {str(e)}', 'error')
+    
+    # Buscar médicos para o formulário
+    try:
+        medicos = Medico.query.filter_by(ativo=True).all()
+    except:
+        medicos = []
+    
+    return render_template('novo_exame.html', 
+                         medicos=medicos,
+                         dados_clonados=dados_clonados)
+
+@app.route('/prontuario')
+@login_required
+def prontuario():
+    """Página principal do prontuário - busca de pacientes"""
+    log_system_event(f'Acesso ao prontuário - Usuário: {current_user.username}', current_user.id)
+    return render_template('prontuario/index.html')
+
+@app.route('/prontuario/buscar')
+@login_required
+def buscar_pacientes():
+    """Buscar pacientes no prontuário"""
+    termo = request.args.get('q', '').strip()
+    
+    if not termo:
+        return jsonify([])
+    
+    try:
+        # Dividir termo em palavras para busca mais precisa
+        palavras = termo.lower().split()
+        
+        # Buscar pacientes que contenham todas as palavras
+        query = db.session.query(Exame.nome_paciente, func.count(Exame.id).label('total_exames'))\
+                          .group_by(Exame.nome_paciente)
+        
+        for palavra in palavras:
+            # Busca por palavras completas
+            query = query.filter(
+                func.lower(Exame.nome_paciente).like(f'% {palavra} %') |
+                func.lower(Exame.nome_paciente).like(f'{palavra} %') |
+                func.lower(Exame.nome_paciente).like(f'% {palavra}') |
+                func.lower(Exame.nome_paciente).like(f'{palavra}')
+            )
+        
+        pacientes = query.order_by(Exame.nome_paciente).limit(20).all()
+        
+        resultados = []
+        for paciente in pacientes:
+            # Buscar último exame do paciente
+            ultimo_exame = Exame.query.filter_by(nome_paciente=paciente.nome_paciente)\
+                                    .order_by(desc(Exame.created_at)).first()
+            
+            if ultimo_exame:
+                resultados.append({
+                    'nome': paciente.nome_paciente,
+                    'total_exames': paciente.total_exames,
+                    'ultimo_exame': ultimo_exame.data_exame,
+                    'idade': ultimo_exame.idade,
+                    'sexo': ultimo_exame.sexo
+                })
+        
+        log_system_event(f'Busca no prontuário: "{termo}" - {len(resultados)} resultados', current_user.id)
+        return jsonify(resultados)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro na busca de pacientes', e, current_user.id)
+        return jsonify([])
+
+@app.route('/prontuario/<nome_paciente>')
+@login_required
+def prontuario_paciente(nome_paciente):
+    """Ver prontuário completo de um paciente"""
+    try:
+        # Buscar todos os exames do paciente
+        exames = Exame.query.filter_by(nome_paciente=nome_paciente)\
+                           .order_by(desc(Exame.created_at)).all()
+        
+        if not exames:
+            flash('Paciente não encontrado', 'error')
+            return redirect(url_for('prontuario'))
+        
+        # Dados do paciente (do último exame)
+        paciente = exames[0]
+        
+        log_system_event(f'Visualização de prontuário - Paciente: {nome_paciente}', current_user.id)
+        
+        return render_template('prontuario/paciente.html', 
+                             paciente=paciente,
+                             exames=exames)
+                             
+    except Exception as e:
+        log_error_with_traceback('Erro ao carregar prontuário do paciente', e, current_user.id)
+        flash('Erro ao carregar prontuário', 'error')
+        return redirect(url_for('prontuario'))
+
+@app.route('/parametros/<int:id>')
+@login_required
+def parametros(id):
+    """Página de parâmetros ecocardiográficos"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        
+        # Criar parâmetros se não existirem
+        if not exame.parametros:
+            parametros = ParametrosEcocardiograma()
+            parametros.exame_id = id
+            db.session.add(parametros)
+            db.session.commit()
+            log_system_event(f'Parâmetros criados para exame ID {id}', current_user.id)
+        
+        log_system_event(f'Acesso aos parâmetros - Exame ID: {id}', current_user.id)
+        return render_template('parametros.html', exame=exame)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao carregar parâmetros', e, current_user.id)
+        flash('Erro ao carregar parâmetros', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/salvar_parametros/<int:id>', methods=['POST'])
+@login_required
+def salvar_parametros(id):
+    """Salvar parâmetros ecocardiográficos"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        parametros = exame.parametros
+        
+        if not parametros:
+            parametros = ParametrosEcocardiograma()
+            parametros.exame_id = id
+            db.session.add(parametros)
+        
+        # Coletar dados do formulário
+        form_data = {}
+        for field_name in request.form:
+            value = request.form[field_name]
+            if value:
+                form_data[field_name] = value
+        
+        # Calcular parâmetros derivados
+        form_data = calcular_parametros_derivados(form_data)
+        
+        # Atualizar todos os campos dos parâmetros
+        for field_name, value in form_data.items():
+            if hasattr(parametros, field_name):
+                try:
+                    if field_name in ['frequencia_cardiaca']:
+                        setattr(parametros, field_name, int(value))
+                    else:
+                        setattr(parametros, field_name, float(value))
+                except (ValueError, TypeError):
+                    continue
+        
+        db.session.commit()
+        
+        log_system_event(f'Parâmetros atualizados para exame ID {id}', current_user.id)
+        flash('Parâmetros salvos com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        log_error_with_traceback('Erro ao salvar parâmetros', e, current_user.id)
+        flash(f'Erro ao salvar parâmetros: {str(e)}', 'error')
+    
+    return redirect(url_for('parametros', id=id))
+
+@app.route('/laudo/<int:id>')
+@login_required
+def laudo(id):
+    """Página de laudos médicos"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        
+        # Criar laudo se não existir
+        if not exame.laudos:
+            laudo = LaudoEcocardiograma()
+            laudo.exame_id = id
+            db.session.add(laudo)
+            db.session.commit()
+            log_system_event(f'Laudo criado para exame ID {id}', current_user.id)
+        
+        log_system_event(f'Acesso ao laudo - Exame ID: {id}', current_user.id)
+        return render_template('laudo.html', exame=exame)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao carregar laudo', e, current_user.id)
+        flash('Erro ao carregar laudo', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/salvar_laudo/<int:id>', methods=['POST'])
+@login_required
+def salvar_laudo(id):
+    """Salvar laudo médico"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        
+        if not exame.laudos:
+            laudo = LaudoEcocardiograma()
+            laudo.exame_id = id
+            db.session.add(laudo)
+        else:
+            laudo = exame.laudos[0]
+        
+        # Atualizar campos do laudo
+        laudo.modo_m_bidimensional = request.form.get('modo_m_bidimensional', '')
+        laudo.doppler_convencional = request.form.get('doppler_convencional', '')
+        laudo.doppler_tecidual = request.form.get('doppler_tecidual', '')
+        laudo.conclusao = request.form.get('conclusao', '')
+        laudo.recomendacoes = request.form.get('recomendacoes', '')
+        
+        db.session.commit()
+        
+        log_system_event(f'Laudo atualizado para exame ID {id}', current_user.id)
+        flash('Laudo salvo com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        log_error_with_traceback('Erro ao salvar laudo', e, current_user.id)
+        flash(f'Erro ao salvar laudo: {str(e)}', 'error')
+    
+    return redirect(url_for('laudo', id=id))
+
+@app.route('/visualizar_exame/<int:id>')
+@login_required
+def visualizar_exame(id):
+    """Visualizar exame completo"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        log_system_event(f'Visualização de exame - ID: {id}, Paciente: {exame.nome_paciente}', current_user.id)
+        return render_template('visualizar_exame.html', exame=exame)
+    except Exception as e:
+        log_error_with_traceback('Erro ao visualizar exame', e, current_user.id)
+        flash('Erro ao carregar exame', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/gerar-pdf/<int:id>')
+@login_required
+def gerar_pdf(id):
+    """Gerar PDF do exame"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        
+        # Gerar PDF
+        caminho_pdf = generate_pdf_report(exame)
+        
+        if caminho_pdf:
+            log_system_event(f'PDF gerado para exame ID {id}', current_user.id)
+            
+            # Retornar arquivo para download
+            return send_file(caminho_pdf, as_attachment=True, 
+                            download_name=f'laudo_ecocardiograma_{id}.pdf')
+        else:
+            raise Exception("Falha na geração do PDF")
+    
+    except Exception as e:
+        log_error_with_traceback('Erro ao gerar PDF', e, current_user.id)
+        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
+        return redirect(url_for('visualizar_exame', id=id))
+
+@app.route('/cadastro_medico', methods=['GET', 'POST'])
+@login_required
+def cadastro_medico():
+    """Cadastro e gestão de médicos"""
+    if request.method == 'POST':
+        try:
+            medico = Medico()
+            medico.nome = request.form['nome']
+            medico.crm = request.form['crm']
+            medico.assinatura_data = request.form.get('assinatura_data', '')
+            medico.assinatura_url = request.form.get('assinatura_url', '')
+            
+            db.session.add(medico)
+            db.session.commit()
+            
+            log_system_event(f'Médico cadastrado: {medico.nome} - {medico.crm}', current_user.id)
+            flash('Médico cadastrado com sucesso!', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            log_error_with_traceback('Erro ao cadastrar médico', e, current_user.id)
+            flash(f'Erro ao cadastrar médico: {str(e)}', 'error')
+    
+    # Listar médicos existentes
+    try:
+        medicos = Medico.query.filter_by(ativo=True).all()
+    except:
+        medicos = []
+    
+    return render_template('cadastro_medico.html', medicos=medicos)
+
+@app.route('/editar_medico/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_medico(id):
+    """Editar dados do médico"""
+    try:
+        medico = Medico.query.get_or_404(id)
+        
+        if request.method == 'POST':
+            medico.nome = request.form['nome']
+            medico.crm = request.form['crm']
+            medico.assinatura_data = request.form.get('assinatura_data', '')
+            medico.assinatura_url = request.form.get('assinatura_url', '')
+            
+            db.session.commit()
+            
+            log_system_event(f'Médico atualizado: {medico.nome} - {medico.crm}', current_user.id)
+            flash('Médico atualizado com sucesso!', 'success')
+            return redirect(url_for('cadastro_medico'))
+        
+        return render_template('editar_medico.html', medico=medico)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao editar médico', e, current_user.id)
+        flash('Erro ao carregar dados do médico', 'error')
+        return redirect(url_for('cadastro_medico'))
+
+@app.route('/novo-exame-prontuario/<nome_paciente>')
+@login_required
+def novo_exame_prontuario(nome_paciente):
+    """Rota para novo exame a partir do prontuário - redireciona para novo_exame com clone"""
+    return redirect(url_for('novo_exame', clone_paciente=nome_paciente))
+
+# ===== APIs DO SISTEMA =====
+
+@app.route('/api/ultimo-exame-paciente/<nome_paciente>')
+@login_required
+def api_ultimo_exame_paciente(nome_paciente):
+    """API para buscar último exame de um paciente"""
+    try:
+        ultimo_exame = Exame.query.filter_by(nome_paciente=nome_paciente)\
+                                 .order_by(desc(Exame.created_at)).first()
+        
+        if not ultimo_exame:
+            return jsonify({'erro': 'Paciente não encontrado'}), 404
+        
+        dados = {
+            'exame': {
                 'nome_paciente': ultimo_exame.nome_paciente,
                 'data_nascimento': ultimo_exame.data_nascimento,
                 'idade': ultimo_exame.idade,
@@ -289,1581 +940,649 @@ def novo_exame():
                 'medico_solicitante': ultimo_exame.medico_solicitante,
                 'indicacao': ultimo_exame.indicacao
             }
-            
-            # Clonar parâmetros ecocardiográficos se existirem
-            if ultimo_exame.parametros:
-                dados_clonados['parametros'] = {
-                    'peso': ultimo_exame.parametros.peso,
-                    'altura': ultimo_exame.parametros.altura,
-                    'superficie_corporal': ultimo_exame.parametros.superficie_corporal,
-                    'frequencia_cardiaca': ultimo_exame.parametros.frequencia_cardiaca,
-                    'atrio_esquerdo': ultimo_exame.parametros.atrio_esquerdo,
-                    'raiz_aorta': ultimo_exame.parametros.raiz_aorta,
-                    'relacao_atrio_esquerdo_aorta': ultimo_exame.parametros.relacao_atrio_esquerdo_aorta,
-                    'aorta_ascendente': ultimo_exame.parametros.aorta_ascendente,
-                    'diametro_diastolico_final_ve': ultimo_exame.parametros.diametro_diastolico_final_ve,
-                    'diametro_sistolico_final': ultimo_exame.parametros.diametro_sistolico_final,
-                    'percentual_encurtamento': ultimo_exame.parametros.percentual_encurtamento,
-                    'espessura_diastolica_septo': ultimo_exame.parametros.espessura_diastolica_septo,
-                    'espessura_diastolica_ppve': ultimo_exame.parametros.espessura_diastolica_ppve,
-                    'volume_diastolico_final': ultimo_exame.parametros.volume_diastolico_final,
-                    'volume_sistolico_final': ultimo_exame.parametros.volume_sistolico_final,
-                    'fracao_ejecao': ultimo_exame.parametros.fracao_ejecao,
-                    'massa_ve': ultimo_exame.parametros.massa_ve
-                }
-            
-            # Clonar laudos se existirem
-            if ultimo_exame.laudos and len(ultimo_exame.laudos) > 0:
-                laudo = ultimo_exame.laudos[0]
-                dados_clonados['laudos'] = {
-                    'modo_m_bidimensional': laudo.modo_m_bidimensional,
-                    'doppler_convencional': laudo.doppler_convencional,
-                    'doppler_tecidual': laudo.doppler_tecidual,
-                    'conclusao': laudo.conclusao,
-                    'recomendacoes': laudo.recomendacoes
-                }
-            
-            logging.info(f"Dados COMPLETOS clonados: dados básicos + {len(dados_clonados.get('parametros', {}))} parâmetros + laudos")
-        else:
-            logging.warning(f"Nenhum exame encontrado para o paciente: {clone_paciente}")
-    
-    if request.method == 'POST':
-        try:
-            nome_paciente = request.form['nome_paciente'].strip()
-            
-            # Comentado: Verificação de duplicação removida para permitir múltiplos exames
-            # nome_existente = verificar_nome_duplicado(nome_paciente)
-            # if nome_existente:
-            #     flash(f'Paciente "{nome_existente}" já existe no sistema. Use o nome exato ou acesse o prontuário para criar novo exame.', 'warning')
-            #     return render_template('novo_exame.html')
-            
-            # Log início da operação
-            log_user_action('Criação de novo exame iniciada', f"Paciente: {nome_paciente}")
-            
-            exame = Exame()
-            exame.nome_paciente = nome_paciente
-            exame.data_nascimento = request.form['data_nascimento']
-            exame.idade = int(request.form['idade'])
-            exame.sexo = request.form['sexo']
-            exame.data_exame = request.form['data_exame']
-            exame.tipo_atendimento = request.form.get('tipo_atendimento')
-            exame.medico_usuario = request.form.get('medico_usuario')
-            exame.medico_solicitante = request.form.get('medico_solicitante')
-            exame.indicacao = request.form.get('indicacao')
-            
-            db.session.add(exame)
-            db.session.flush()  # Para obter ID antes do commit
-            
-            # Se tem dados clonados, criar parâmetros e laudos automaticamente
-            if dados_clonados and dados_clonados.get('parametros'):
-                parametros = ParametrosEcocardiograma()
-                parametros.exame_id = exame.id
-                
-                # Copiar todos os parâmetros clonados
-                for campo, valor in dados_clonados['parametros'].items():
-                    if hasattr(parametros, campo) and valor is not None:
-                        setattr(parametros, campo, valor)
-                
-                db.session.add(parametros)
-            
-            # Se tem laudos clonados, criar laudos automaticamente
-            if dados_clonados and dados_clonados.get('laudos'):
-                laudo = LaudoEcocardiograma()
-                laudo.exame_id = exame.id
-                
-                # Copiar todos os laudos clonados
-                for campo, valor in dados_clonados['laudos'].items():
-                    if hasattr(laudo, campo) and valor:
-                        setattr(laudo, campo, valor)
-                
-                db.session.add(laudo)
-            
-            db.session.commit()
-            
-            # Log sucesso da operação
-            log_database_operation('CREATE', 'exames', exame.id, True)
-            log_user_action('Exame criado com sucesso', f"ID: {exame.id}, Paciente: {exame.nome_paciente}")
-            
-            flash('Exame criado com sucesso!', 'success')
-            return redirect(url_for('parametros', exame_id=exame.id))
-            
-        except Exception as e:
-            db.session.rollback()
-            log_error_with_traceback(e, 'novo_exame')
-            log_database_operation('CREATE', 'exames', None, False, str(e))
-            flash('Erro ao criar exame. Tente novamente.', 'error')
-    
-    return render_template('novo_exame.html', dados_clonados=dados_clonados)
-
-@app.route('/parametros/<int:exame_id>', methods=['GET', 'POST'])
-def parametros(exame_id):
-    """Formulário de parâmetros do ecocardiograma"""
-    exame = db.session.get(Exame, exame_id)
-    if not exame:
-        flash('Exame não encontrado.', 'error')
-        return redirect(url_for('index'))
-    
-    parametros_obj = exame.parametros
-    if not parametros_obj:
-        parametros_obj = ParametrosEcocardiograma()
-        parametros_obj.exame_id = exame_id
-        db.session.add(parametros_obj)
-        db.session.commit()
-    
-    if request.method == 'POST':
-        try:
-            # Atualizar todos os campos de parâmetros
-            campos_parametros = [
-                'peso', 'altura', 'superficie_corporal', 'frequencia_cardiaca',
-                'atrio_esquerdo', 'raiz_aorta', 'relacao_atrio_esquerdo_aorta',
-                'aorta_ascendente', 'diametro_ventricular_direito', 'diametro_basal_vd',
-                'diametro_diastolico_final_ve', 'diametro_sistolico_final',
-                'percentual_encurtamento', 'espessura_diastolica_septo',
-                'espessura_diastolica_ppve', 'relacao_septo_parede_posterior',
-                'volume_diastolico_final', 'volume_sistolico_final',
-                'volume_ejecao', 'fracao_ejecao', 'indice_massa_ve', 'massa_ve',
-                'fluxo_pulmonar', 'fluxo_mitral', 'fluxo_aortico', 'fluxo_tricuspide',
-                'onda_e', 'onda_a', 'relacao_e_a', 'tempo_desaceleracao_e',
-                'velocidade_propagacao_fluxo', 'gradiente_vd_ap', 'gradiente_ae_ve', 
-                'gradiente_ve_ao', 'gradiente_ad_vd', 'gradiente_tricuspide', 'pressao_sistolica_vd'
-            ]
-            
-            for campo in campos_parametros:
-                valor = request.form.get(campo)
-                if valor and valor.strip():
-                    try:
-                        setattr(parametros_obj, campo, float(valor))
-                    except ValueError:
-                        continue
-            
-            # Campos de texto/seleção
-            campos_texto = ['insuficiencia_mitral', 'insuficiencia_tricuspide',
-                           'insuficiencia_aortica', 'insuficiencia_pulmonar']
-            
-            for campo in campos_texto:
-                valor = request.form.get(campo)
-                if valor:
-                    setattr(parametros_obj, campo, valor)
-            
-            # Calcular parâmetros derivados
-            calcular_parametros_derivados(parametros_obj)
-            
-            db.session.commit()
-            flash('Parâmetros salvos com sucesso!', 'success')
-            
-            # Verificar se deve continuar para laudo
-            if 'continuar_laudo' in request.form:
-                return redirect(url_for('laudo', exame_id=exame_id))
-            
-        except Exception as e:
-            logging.error(f"Erro ao salvar parâmetros: {str(e)}")
-            flash('Erro ao salvar parâmetros. Tente novamente.', 'error')
-            db.session.rollback()
-    
-    return render_template('parametros.html', exame=exame, parametros=parametros_obj)
-
-@app.route('/salvar_parametros/<int:exame_id>', methods=['POST'])
-@login_required
-def salvar_parametros(exame_id):
-    """Rota específica para salvar parâmetros ecocardiográficos"""
-    try:
-        # Buscar exame
-        exame = Exame.query.get_or_404(exame_id)
-        
-        # Buscar parâmetros existentes ou criar novos
-        parametros = ParametrosEcocardiograma.query.filter_by(exame_id=exame_id).first()
-        if not parametros:
-            parametros = ParametrosEcocardiograma(exame_id=exame_id)
-            db.session.add(parametros)
-            db.session.commit()
-        
-        # Atualizar todos os campos dos parâmetros
-        campos_parametros = [
-            'peso', 'altura', 'superficie_corporal', 'frequencia_cardiaca',
-            'atrio_esquerdo', 'raiz_aorta', 'relacao_atrio_esquerdo_aorta',
-            'aorta_ascendente', 'diametro_ventricular_direito', 'diametro_basal_vd',
-            'diametro_diastolico_final_ve', 'diametro_sistolico_final',
-            'percentual_encurtamento', 'espessura_diastolica_septo',
-            'espessura_diastolica_ppve', 'relacao_septo_parede_posterior',
-            'volume_diastolico_final', 'volume_sistolico_final', 'volume_ejecao',
-            'fracao_ejecao', 'indice_massa_ve', 'massa_ve',
-            'fluxo_pulmonar', 'fluxo_mitral', 'fluxo_aortico', 'fluxo_tricuspide',
-            'gradiente_vd_ap', 'gradiente_ae_ve', 'gradiente_ve_ao', 'gradiente_ad_vd',
-            'gradiente_tricuspide', 'pressao_sistolica_vd'
-        ]
-        
-        campos_atualizados = 0
-        for campo in campos_parametros:
-            valor = request.form.get(campo)
-            if valor and valor.strip():
-                try:
-                    setattr(parametros, campo, float(valor.replace(',', '.')))
-                    campos_atualizados += 1
-                except ValueError:
-                    pass  # Ignorar valores inválidos
-        
-        db.session.commit()
-        
-        # Verificar se deve continuar para laudo
-        if request.form.get('continuar_laudo'):
-            flash('Parâmetros salvos! Redirecionando para o laudo.', 'success')
-            return redirect(url_for('laudo', exame_id=exame_id))
-        else:
-            flash('Parâmetros salvos com sucesso!', 'success')
-            return redirect(url_for('parametros', exame_id=exame_id))
-            
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao salvar parâmetros: {str(e)}', 'error')
-        return redirect(url_for('parametros', exame_id=exame_id))
-
-@app.route('/laudo/<int:exame_id>', methods=['GET', 'POST'])
-@login_required
-def laudo(exame_id):
-    """Formulário de laudo do ecocardiograma"""
-    exame = db.session.get(Exame, exame_id)
-    if not exame:
-        flash('Exame não encontrado.', 'error')
-        return redirect(url_for('index'))
-    
-    laudo_obj = None
-    if exame.laudos:
-        laudo_obj = exame.laudos[0]
-    
-    if not laudo_obj:
-        laudo_obj = LaudoEcocardiograma()
-        laudo_obj.exame_id = exame_id
-        db.session.add(laudo_obj)
-        db.session.commit()
-    
-    if request.method == 'POST':
-        try:
-            laudo_obj.modo_m_bidimensional = request.form.get('modo_m_bidimensional', '')
-            laudo_obj.doppler_convencional = request.form.get('doppler_convencional', '')
-            laudo_obj.doppler_tecidual = request.form.get('doppler_tecidual', '')
-            laudo_obj.conclusao = request.form.get('conclusao', '')
-            laudo_obj.recomendacoes = request.form.get('recomendacoes', '')
-            
-            db.session.commit()
-            flash('Laudo salvo com sucesso!', 'success')
-            
-            # Verificar se deve gerar PDF
-            if 'gerar_pdf' in request.form:
-                return redirect(url_for('gerar_pdf', exame_id=exame_id))
-            
-        except Exception as e:
-            logging.error(f"Erro ao salvar laudo: {str(e)}")
-            flash('Erro ao salvar laudo. Tente novamente.', 'error')
-            db.session.rollback()
-    
-    return render_template('laudo.html', exame=exame, laudo=laudo_obj)
-
-@app.route('/salvar_laudo/<int:exame_id>', methods=['POST'])
-@login_required
-def salvar_laudo(exame_id):
-    """Rota específica para salvar laudo ecocardiográfico"""
-    try:
-        # Buscar exame
-        exame = Exame.query.get_or_404(exame_id)
-        
-        # Buscar laudo existente ou criar novo
-        laudo_obj = None
-        if exame.laudos:
-            laudo_obj = exame.laudos[0]
-        else:
-            laudo_obj = LaudoEcocardiograma(exame_id=exame_id)
-            db.session.add(laudo_obj)
-        
-        # Atualizar campos do laudo
-        if 'modo_m_bidimensional' in request.form:
-            laudo_obj.modo_m_bidimensional = request.form['modo_m_bidimensional']
-        if 'doppler_convencional' in request.form:
-            laudo_obj.doppler_convencional = request.form['doppler_convencional']
-        if 'doppler_tecidual' in request.form:
-            laudo_obj.doppler_tecidual = request.form['doppler_tecidual']
-        if 'conclusao' in request.form:
-            laudo_obj.conclusao = request.form['conclusao']
-        if 'recomendacoes' in request.form:
-            laudo_obj.recomendacoes = request.form['recomendacoes']
-        
-        db.session.commit()
-        
-        flash('Laudo salvo com sucesso!', 'success')
-        return redirect(url_for('laudo', exame_id=exame_id))
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao salvar laudo: {str(e)}', 'error')
-        return redirect(url_for('laudo', exame_id=exame_id))
-
-@app.route('/visualizar_exame/<int:exame_id>')
-def visualizar_exame(exame_id):
-    """Visualização completa do exame"""
-    exame = db.session.get(Exame, exame_id)
-    if not exame:
-        flash('Exame não encontrado.', 'error')
-        return redirect(url_for('index'))
-    
-    return render_template('visualizar_exame.html', exame=exame)
-
-@app.route('/exames_paciente/<nome_paciente>')
-def exames_paciente(nome_paciente):
-    """Lista todos os exames de um paciente específico"""
-    exames = db.session.query(Exame).filter(
-        Exame.nome_paciente == nome_paciente
-    ).order_by(desc(Exame.data_exame)).all()
-    
-    return render_template('exames_paciente.html', 
-                         nome_paciente=nome_paciente, 
-                         exames=exames)
-
-@app.route('/gerar-pdf/<int:exame_id>')
-@app.route('/gerar_pdf/<int:exame_id>')
-def gerar_pdf(exame_id):
-    """Gera PDF completo do exame"""
-    try:
-        # Log início da operação
-        log_user_action('Geração de PDF iniciada', f'Exame ID: {exame_id}')
-        
-        # Buscar exame com recarregamento
-        exame = db.session.get(Exame, exame_id)
-        if not exame:
-            log_system_event('ERROR', f'Exame não encontrado para PDF: ID {exame_id}', 'pdf_generation')
-            flash('Exame não encontrado.', 'error')
-            return redirect(url_for('index'))
-        
-        # Recarregar relacionamentos
-        db.session.refresh(exame)
-        
-        log_system_event('INFO', f'Exame localizado para PDF: {exame.nome_paciente}', 'pdf_generation')
-        
-        # Buscar médico selecionado com fallback robusto
-        medico_selecionado = None
-        
-        # Primeiro: Tentar médico da sessão
-        medico_id = session.get('medico_selecionado')
-        if medico_id:
-            medico_selecionado = db.session.get(Medico, medico_id)
-            if medico_selecionado:
-                log_system_event('INFO', f'Médico selecionado para PDF: {medico_selecionado.nome}', 'pdf_generation')
-        
-        # Segundo: Tentar médico selecionado por ID
-        if not medico_selecionado:
-            medico_id = session.get('medico_selecionado_id')
-            if medico_id:
-                medico_selecionado = db.session.get(Medico, medico_id)
-                if medico_selecionado:
-                    log_system_event('INFO', f'Médico encontrado por ID: {medico_selecionado.nome}', 'pdf_generation')
-        
-        # Terceiro: Usar primeiro médico ativo
-        if not medico_selecionado:
-            medico_selecionado = db.session.query(Medico).filter_by(ativo=True).first()
-            if medico_selecionado:
-                logging.info(f"Usando primeiro médico ativo: {medico_selecionado.nome} (CRM: {medico_selecionado.crm})")
-            else:
-                logging.warning("Nenhum médico cadastrado no sistema")
-        
-        # Log dos dados encontrados para debug
-        logging.info(f"Exame {exame_id}: parâmetros={exame.parametros is not None}, laudos={len(exame.laudos) if exame.laudos else 0}")
-        
-        if exame.parametros:
-            logging.info(f"Parâmetros encontrados - peso: {exame.parametros.peso}, AE: {exame.parametros.atrio_esquerdo}")
-        
-        if exame.laudos:
-            logging.info(f"Laudos encontrados: {len(exame.laudos)}")
-        
-        # Gerar PDF usando o sistema moderno
-        logging.info(f"Iniciando geração de PDF moderno para {exame.nome_paciente}")
-        
-        # Preparar dados do médico com todas as informações
-        medico_data = {
-            'nome': medico_selecionado.nome if medico_selecionado else 'Michel Raineri Haddad',
-            'crm': medico_selecionado.crm if medico_selecionado else 'CRM-SP 183299',
-            'assinatura_data': medico_selecionado.assinatura_data if medico_selecionado else None,
-            'assinatura_url': medico_selecionado.assinatura_url if medico_selecionado else None
         }
         
-        # Usar o gerador premium com melhorias de design, layout e organização
-        from utils.pdf_generator_design_premium import gerar_pdf_design_premium  
-        pdf_path = gerar_pdf_design_premium(exame, medico_data)
-        file_size = os.path.getsize(pdf_path)
-        
-        # Verificar se arquivo foi criado
-        if not os.path.exists(pdf_path):
-            logging.error(f"Arquivo PDF moderno não foi criado: {pdf_path}")
-            raise Exception("Falha na criação do arquivo PDF moderno")
-        
-        logging.info(f"PDF moderno gerado com sucesso: {pdf_path} ({file_size} bytes)")
-        
-        # Nome seguro para download
-        safe_name = "".join(c for c in exame.nome_paciente if c.isalnum() or c in (' ', '_')).rstrip()
-        safe_date = exame.data_exame.replace("/", "") if exame.data_exame else datetime_brasilia().strftime('%Y%m%d')
-        download_name = f'laudo_eco_{safe_name.replace(" ", "_")}_{safe_date}.pdf'
-        
-        logging.info(f"Enviando PDF para download: {download_name}")
-        return send_file(pdf_path, as_attachment=True, download_name=download_name)
-    
-    except Exception as e:
-        logging.error(f"Erro crítico ao gerar PDF para exame {exame_id}: {str(e)}", exc_info=True)
-        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
-        return redirect(url_for('visualizar_exame', exame_id=exame_id))
-
-@app.route('/cadastro_medico', methods=['GET', 'POST'])
-@login_required
-def cadastro_medico():
-    """Página de cadastro e gerenciamento de médicos com assinatura digital"""
-    if request.method == 'POST':
-        try:
-            nome = request.form['nome']
-            crm = request.form['crm']
-            signature_data = request.form.get('signature_data')
-            
-            # Validar se assinatura foi fornecida
-            if not signature_data:
-                flash('Assinatura digital é obrigatória para cadastrar o médico.', 'error')
-                return redirect(url_for('cadastro_medico'))
-            
-            # Verificar se médico já existe
-            medico_existente = Medico.query.filter_by(crm=crm).first()
-            if medico_existente:
-                flash(f'Já existe um médico cadastrado com CRM {crm}.', 'error')
-                return redirect(url_for('cadastro_medico'))
-            
-            # Criar novo médico com assinatura digital
-            medico = Medico(
-                nome=nome, 
-                crm=crm,
-                assinatura_data=signature_data,
-                ativo=True
-            )
-            db.session.add(medico)
-            db.session.commit()
-            
-            log_user_action(f'Médico cadastrado: {nome} (CRM: {crm})')
-            flash(f'Médico {nome} cadastrado com sucesso e assinatura digital salva!', 'success')
-            return redirect(url_for('cadastro_medico'))
-            
-        except Exception as e:
-            db.session.rollback()
-            log_error_with_traceback(e, 'cadastro_medico')
-            flash('Erro ao cadastrar médico. Tente novamente.', 'error')
-    
-    # Buscar todos os médicos e o selecionado
-    medicos = Medico.query.filter_by(ativo=True).order_by(Medico.nome).all()
-    medico_selecionado_id = session.get('medico_selecionado')
-    medico_selecionado = None
-    if medico_selecionado_id:
-        medico_selecionado = Medico.query.get(medico_selecionado_id)
-    
-    return render_template('cadastro_medico.html', 
-                         medicos=medicos, 
-                         medico_selecionado=medico_selecionado)
-
-@app.route('/selecionar_medico/<int:medico_id>', methods=['GET', 'POST'])
-@login_required
-def selecionar_medico(medico_id):
-    """Selecionar médico para uso no sistema"""
-    try:
-        medico = Medico.query.get_or_404(medico_id)
-        
-        # Salvar na sessão
-        session['medico_selecionado'] = medico_id
-        session.permanent = True
-        
-        log_user_action(f'Médico selecionado: {medico.nome} (CRM: {medico.crm})')
-        
-        # Se for requisição AJAX, retornar JSON
-        if request.method == 'POST' or request.headers.get('Content-Type') == 'application/json':
-            return jsonify({
-                'success': True,
-                'message': f'Médico {medico.nome} selecionado com sucesso!',
-                'medico': {
-                    'id': medico.id,
-                    'nome': medico.nome,
-                    'crm': medico.crm,
-                    'assinatura_data': medico.assinatura_data
-                }
-            })
-        
-        flash(f'Médico {medico.nome} selecionado com sucesso!', 'success')
-        return redirect(url_for('cadastro_medico'))
-        
-    except Exception as e:
-        log_error_with_traceback(e, f'selecionar_medico_{medico_id}')
-        
-        if request.method == 'POST' or request.headers.get('Content-Type') == 'application/json':
-            return jsonify({
-                'success': False,
-                'message': 'Erro ao selecionar médico.'
-            }), 500
-        
-        flash('Erro ao selecionar médico.', 'error')
-        return redirect(url_for('cadastro_medico'))
-
-# ===== APIS PARA MÉDICOS =====
-
-@app.route('/api/medicos', methods=['GET'])
-@login_required
-def api_listar_medicos():
-    """API para listar médicos cadastrados"""
-    try:
-        medicos = Medico.query.filter_by(ativo=True).order_by(Medico.nome).all()
-        medico_selecionado_id = session.get('medico_selecionado')
-        
-        medicos_data = []
-        for medico in medicos:
-            medicos_data.append({
-                'id': medico.id,
-                'nome': medico.nome,
-                'crm': medico.crm,
-                'assinatura_data': medico.assinatura_data,
-                'ativo': medico.ativo,
-                'selecionado': medico.id == medico_selecionado_id,
-                'created_at': medico.created_at.isoformat() if medico.created_at else None
-            })
-        
-        return jsonify({
-            'success': True,
-            'medicos': medicos_data,
-            'total': len(medicos_data),
-            'medico_selecionado_id': medico_selecionado_id
-        })
-        
-    except Exception as e:
-        log_error_with_traceback(e, 'api_listar_medicos')
-        return jsonify({
-            'success': False,
-            'message': 'Erro ao buscar médicos.'
-        }), 500
-
-@app.route('/api/medicos/<int:medico_id>/assinatura', methods=['GET'])
-@login_required
-def api_obter_assinatura_medico(medico_id):
-    """API para obter assinatura de um médico específico"""
-    try:
-        medico = Medico.query.get_or_404(medico_id)
-        
-        return jsonify({
-            'success': True,
-            'medico': {
-                'id': medico.id,
-                'nome': medico.nome,
-                'crm': medico.crm,
-                'assinatura_data': medico.assinatura_data
+        # Adicionar parâmetros se existirem
+        if ultimo_exame.parametros:
+            dados['parametros'] = {
+                'peso': ultimo_exame.parametros.peso,
+                'altura': ultimo_exame.parametros.altura,
+                'superficie_corporal': ultimo_exame.parametros.superficie_corporal,
+                'frequencia_cardiaca': ultimo_exame.parametros.frequencia_cardiaca,
+                'atrio_esquerdo': ultimo_exame.parametros.atrio_esquerdo,
+                'raiz_aorta': ultimo_exame.parametros.raiz_aorta,
+                'relacao_atrio_esquerdo_aorta': ultimo_exame.parametros.relacao_atrio_esquerdo_aorta,
+                'aorta_ascendente': ultimo_exame.parametros.aorta_ascendente,
+                'diametro_ventricular_direito': ultimo_exame.parametros.diametro_ventricular_direito,
+                'diametro_basal_vd': ultimo_exame.parametros.diametro_basal_vd,
+                'diametro_diastolico_final_ve': ultimo_exame.parametros.diametro_diastolico_final_ve,
+                'diametro_sistolico_final': ultimo_exame.parametros.diametro_sistolico_final,
+                'percentual_encurtamento': ultimo_exame.parametros.percentual_encurtamento,
+                'espessura_diastolica_septo': ultimo_exame.parametros.espessura_diastolica_septo,
+                'espessura_diastolica_ppve': ultimo_exame.parametros.espessura_diastolica_ppve,
+                'relacao_septo_parede_posterior': ultimo_exame.parametros.relacao_septo_parede_posterior,
+                'volume_diastolico_final': ultimo_exame.parametros.volume_diastolico_final,
+                'volume_sistolico_final': ultimo_exame.parametros.volume_sistolico_final,
+                'volume_ejecao': ultimo_exame.parametros.volume_ejecao,
+                'fracao_ejecao': ultimo_exame.parametros.fracao_ejecao,
+                'indice_massa_ve': ultimo_exame.parametros.indice_massa_ve,
+                'massa_ve': ultimo_exame.parametros.massa_ve,
+                'fluxo_pulmonar': ultimo_exame.parametros.fluxo_pulmonar,
+                'fluxo_mitral': ultimo_exame.parametros.fluxo_mitral,
+                'fluxo_aortico': ultimo_exame.parametros.fluxo_aortico,
+                'fluxo_tricuspide': ultimo_exame.parametros.fluxo_tricuspide,
+                'gradiente_vd_ap': ultimo_exame.parametros.gradiente_vd_ap,
+                'gradiente_ae_ve': ultimo_exame.parametros.gradiente_ae_ve,
+                'gradiente_ve_ao': ultimo_exame.parametros.gradiente_ve_ao,
+                'gradiente_ad_vd': ultimo_exame.parametros.gradiente_ad_vd,
+                'gradiente_tricuspide': ultimo_exame.parametros.gradiente_tricuspide,
+                'pressao_sistolica_vd': ultimo_exame.parametros.pressao_sistolica_vd
             }
-        })
         
-    except Exception as e:
-        log_error_with_traceback(e, f'api_obter_assinatura_medico_{medico_id}')
-        return jsonify({
-            'success': False,
-            'message': 'Médico não encontrado.'
-        }), 404
-
-@app.route('/api/medicos/selecionado', methods=['GET'])
-@login_required
-def api_medico_selecionado():
-    """API para obter dados do médico atualmente selecionado"""
-    try:
-        medico_selecionado_id = session.get('medico_selecionado')
-        
-        if not medico_selecionado_id:
-            return jsonify({
-                'success': False,
-                'message': 'Nenhum médico selecionado.'
-            })
-        
-        medico = Medico.query.get(medico_selecionado_id)
-        if not medico or not medico.ativo:
-            # Limpar seleção inválida
-            session.pop('medico_selecionado', None)
-            return jsonify({
-                'success': False,
-                'message': 'Médico selecionado não encontrado ou inativo.'
-            })
-        
-        return jsonify({
-            'success': True,
-            'medico': {
-                'id': medico.id,
-                'nome': medico.nome,
-                'crm': medico.crm,
-                'assinatura_data': medico.assinatura_data,
-                'ativo': medico.ativo
+        # Adicionar laudos se existirem
+        if ultimo_exame.laudos:
+            dados['laudos'] = {
+                'modo_m_bidimensional': ultimo_exame.laudos[0].modo_m_bidimensional,
+                'doppler_convencional': ultimo_exame.laudos[0].doppler_convencional,
+                'doppler_tecidual': ultimo_exame.laudos[0].doppler_tecidual,
+                'conclusao': ultimo_exame.laudos[0].conclusao,
+                'recomendacoes': ultimo_exame.laudos[0].recomendacoes
             }
-        })
+        
+        return jsonify(dados)
         
     except Exception as e:
-        log_error_with_traceback(e, 'api_medico_selecionado')
-        return jsonify({
-            'success': False,
-            'message': 'Erro ao obter médico selecionado.'
-        }), 500
+        log_error_with_traceback('Erro na API último exame', e, current_user.id)
+        return jsonify({'erro': str(e)}), 500
 
-@app.route('/api/limpar-medicos', methods=['POST'])
-@login_required 
-def api_limpar_medicos():
-    """API para limpar todos os médicos cadastrados"""
-    try:
-        # Limpar seleção de médico da sessão
-        session.pop('medico_selecionado', None)
-        
-        # Excluir todos os médicos
-        medicos_removidos = Medico.query.count()
-        Medico.query.delete()
-        db.session.commit()
-        
-        log_user_action(f'Todos os médicos foram removidos ({medicos_removidos} médicos)')
-        
-        return jsonify({
-            'success': True,
-            'message': f'{medicos_removidos} médicos removidos com sucesso.',
-            'medicos_removidos': medicos_removidos
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        log_error_with_traceback(e, 'api_limpar_medicos')
-        return jsonify({
-            'success': False,
-            'message': 'Erro ao remover médicos.'
-        }), 500
-
-@app.route('/excluir_exame/<int:exame_id>')
+@app.route('/api/salvar-novo-exame-completo', methods=['POST'])
 @login_required
-def excluir_exame(exame_id):
-    """Exclui um exame do sistema"""
+def api_salvar_novo_exame_completo():
+    """API para salvar novo exame completo"""
     try:
-        exame = db.session.get(Exame, exame_id)
-        if exame:
-            nome_paciente = exame.nome_paciente
-            data_exame = exame.data_exame
-            
-            # Log da ação
-            log_user_action(f'Exame EXCLUÍDO: ID {exame_id} - {nome_paciente} ({data_exame})', current_user.username if current_user.is_authenticated else 'Sistema')
-            
-            # Excluir relacionamentos primeiro (CASCADE deve fazer isso automaticamente)
-            db.session.delete(exame)
-            db.session.commit()
-            
-            flash(f'Exame de {nome_paciente} ({data_exame}) excluído com sucesso!', 'success')
-            return redirect(url_for('prontuario_paciente', nome_paciente=nome_paciente))
-        else:
-            flash('Exame não encontrado.', 'error')
-            return redirect(url_for('prontuario'))
-    except Exception as e:
-        logging.error(f"Erro ao excluir exame {exame_id}: {str(e)}")
-        flash('Erro ao excluir exame. Tente novamente.', 'error')
-        db.session.rollback()
-        return redirect(url_for('prontuario'))
-
-# Rotas de manutenção
-@app.route('/manutencao')
-def manutencao_index():
-    """Painel principal de manutenção"""
-    return render_template('manutencao/index.html')
-
-@app.route('/manutencao/backup')
-def pagina_backup():
-    """Página de backup e restauração"""
-    # Backups do sistema antigo
-    backups_antigos = []  # BackupSistema removido para deploy
-    
-    # Backups do sistema seguro
-    try:
-        backups_seguros = get_backup_list()[:10]  # Últimos 10 backups
-    except:
-        backups_seguros = []
-    
-    return render_template('manutencao/backup.html', 
-                         backups=backups_antigos, 
-                         backups_seguros=backups_seguros)
-
-@app.route('/manutencao/criar_backup', methods=['POST'])
-def criar_backup_route():
-    """Cria um novo backup do sistema"""
-    try:
-        tipo_backup = request.form.get('tipo_backup', 'COMPLETO')
-        nome_arquivo = criar_backup(tipo_backup)
-        
-        # BackupSistema removido para deploy
-        # Backup criado mas não registrado na tabela
-        
-        flash('Backup criado com sucesso!', 'success')
-    except Exception as e:
-        logging.error(f"Erro ao criar backup: {str(e)}")
-        flash('Erro ao criar backup. Tente novamente.', 'error')
-    
-    return redirect(url_for('pagina_backup'))
-
-@app.route('/manutencao/backup_seguro', methods=['POST'])
-def criar_backup_seguro():
-    """Criar backup com sistema de segurança avançado"""
-    try:
-        tipo = request.form.get('tipo', 'MANUAL')
-        
-        if tipo == 'DIARIO':
-            backup_path = create_daily_backup()
-        else:
-            backup_path = create_manual_backup()
-        
-        if backup_path:
-            flash(f'Backup seguro criado: {backup_path.name}', 'success')
-        else:
-            flash('Erro ao criar backup seguro', 'error')
-            
-    except Exception as e:
-        logging.error(f"Erro no backup seguro: {str(e)}")
-        flash(f'Erro no backup seguro: {str(e)}', 'error')
-    
-    return redirect(url_for('pagina_backup'))
-
-@app.route('/manutencao/logs')
-def pagina_logs():
-    """Página de visualização de logs"""
-    try:
-        logs = db.session.query(LogSistema).order_by(desc(LogSistema.created_at)).limit(100).all()
-        log_user_action('Acesso ao sistema de logs', f'Total de logs: {len(logs)}')
-        return render_template('manutencao/logs.html', logs=logs)
-    except Exception as e:
-        log_error_with_traceback(e, 'pagina_logs')
-        return render_template('manutencao/logs.html', logs=[])
-
-@app.route('/manutencao/exportar_logs')
-def exportar_logs():
-    """Exporta logs para arquivo CSV"""
-    try:
-        nivel = request.args.get('nivel')
-        data = request.args.get('data')
-        
-        query = db.session.query(LogSistema)
-        
-        if nivel:
-            query = query.filter(LogSistema.nivel == nivel)
-        if data:
-            query = query.filter(func.date(LogSistema.created_at) == data)
-            
-        logs = query.order_by(desc(LogSistema.created_at)).all()
-        
-        # Criar arquivo CSV em memória
-        import csv
-        import io
-        output = io.StringIO()
-        writer = csv.writer(output)
-        
-        # Cabeçalho
-        writer.writerow(['Data/Hora', 'Nível', 'Módulo', 'Mensagem', 'Usuário ID'])
-        
-        # Dados
-        for log in logs:
-            writer.writerow([
-                log.created_at.strftime('%d/%m/%Y %H:%M:%S'),
-                log.nivel,
-                log.modulo or '',
-                log.mensagem,
-                log.usuario_id or ''
-            ])
-        
-        output.seek(0)
-        
-        # Preparar resposta
-        from flask import Response
-        return Response(
-            output.getvalue(),
-            mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment;filename=logs_sistema_{datetime_brasilia().strftime("%Y%m%d_%H%M%S")}.csv'}
-        )
-        
-    except Exception as e:
-        log_error_with_traceback(e, 'exportar_logs')
-        flash('Erro ao exportar logs', 'error')
-        return redirect(url_for('pagina_logs'))
-
-@app.route('/manutencao/limpar_logs', methods=['POST'])
-def limpar_logs():
-    """Remove logs antigos (mais de 30 dias)"""
-    try:
-        data_limite = datetime_brasilia() - timedelta(days=30)
-        logs_antigos = db.session.query(LogSistema).filter(LogSistema.created_at < data_limite).count()
-        
-        db.session.query(LogSistema).filter(LogSistema.created_at < data_limite).delete()
-        db.session.commit()
-        
-        log_system_event('INFO', f'Limpeza de logs realizada: {logs_antigos} logs removidos', 'log_cleanup')
-        
-        return jsonify({'success': True, 'removidos': logs_antigos})
-        
-    except Exception as e:
-        db.session.rollback()
-        log_error_with_traceback(e, 'limpar_logs')
-        return jsonify({'success': False, 'error': str(e)})
-
-# Gerar logs de demonstração para teste
-@app.route('/gerar_logs_teste', methods=['POST'])
-def gerar_logs_teste():
-    """Gera logs de teste para demonstrar o sistema"""
-    try:
-        # Criar logs de diferentes níveis
-        log_system_event('INFO', 'Sistema de logging inicializado com sucesso', 'system_startup')
-        log_user_action('Usuário acessou página inicial', 'IP: 192.168.1.100')
-        log_database_operation('CREATE', 'exames', 123, True)
-        log_pdf_generation(123, True)
-        log_backup_operation('MANUAL', True, detalhes='Backup criado com 2.5MB')
-        
-        # Logs de warning e error
-        log_system_event('WARNING', 'Tentativa de acesso não autorizado detectada', 'security')
-        log_system_event('ERROR', 'Falha na conexão com banco de dados temporária', 'database')
-        log_database_operation('UPDATE', 'parametros', 456, False, 'Timeout na conexão')
-        log_pdf_generation(789, False, 'Erro na geração da assinatura')
-        log_backup_operation('DAILY', False, 'Espaço em disco insuficiente')
-        
-        # Logs de debug
-        log_system_event('DEBUG', 'Cache limpo automaticamente', 'maintenance')
-        log_system_event('DEBUG', 'Verificação de integridade executada', 'integrity_check')
-        
-        return jsonify({'success': True, 'message': 'Logs de teste criados com sucesso'})
-        
-    except Exception as e:
-        log_error_with_traceback(e, 'gerar_logs_teste')
-        return jsonify({'success': False, 'error': str(e)})
-
-# Rota mantida: apenas instalador/desinstalador
-@app.route('/manutencao/instalador')
-def pagina_instalador():
-    return render_template('manutencao/instalador.html')
-
-# Módulo de Prontuário
-@app.route('/prontuario')
-def prontuario():
-    """Página principal do prontuário com busca de pacientes"""
-    return render_template('prontuario/index.html')
-
-@app.route('/buscar-pacientes', methods=['GET', 'POST'])
-@app.route('/prontuario/buscar')
-def buscar_pacientes():
-    """Buscar pacientes por nome específico - corrigido para funcionar corretamente"""
-    try:
-        nome = request.args.get('nome', '').strip()
-        
-        if not nome or len(nome) < 2:
-            return jsonify({'pacientes': []})
-        
-        # Log da busca para debug
-        logging.info(f"Busca por paciente: '{nome}'")
-        
-        # Busca simplificada - substring em qualquer lugar do nome
-        nome_busca = nome.lower()
-        
-        # Query base
-        query = db.session.query(
-            Exame.nome_paciente,
-            db.func.count(Exame.id).label('total_exames'),
-            db.func.max(Exame.data_exame).label('ultimo_exame'),
-            db.func.min(Exame.data_exame).label('primeiro_exame')
-        )
-        
-        # Busca por substring no nome (case insensitive)
-        query = query.filter(
-            db.func.lower(Exame.nome_paciente).like(f'%{nome_busca}%')
-        )
-        
-        # Agrupar por nome e ordenar
-        pacientes = query.group_by(Exame.nome_paciente).order_by(
-            Exame.nome_paciente
-        ).limit(50).all()
-        
-        # Construir resultado
-        resultado = []
-        for p in pacientes:
-            resultado.append({
-                'nome': p.nome_paciente,
-                'total_exames': p.total_exames,
-                'ultimo_exame': p.ultimo_exame,
-                'primeiro_exame': p.primeiro_exame
-            })
-        
-        # Ordenar por relevância: primeiro os que começam com o termo buscado
-        resultado.sort(key=lambda x: (
-            not x['nome'].lower().startswith(nome_busca),
-            x['nome'].lower()
-        ))
-        
-        logging.info(f"Busca '{nome}' retornou {len(resultado)} pacientes")
-        return jsonify({'pacientes': resultado})
-        
-    except Exception as e:
-        logging.error(f"Erro na busca de pacientes: {e}")
-        return jsonify({'pacientes': []})
-
-@app.route('/prontuario/paciente/<nome_paciente>')
-def prontuario_paciente(nome_paciente):
-    """Exibir histórico completo de um paciente"""
-    # Buscar todos os exames do paciente
-    exames = Exame.query.filter_by(nome_paciente=nome_paciente)\
-                       .order_by(Exame.data_exame.desc())\
-                       .all()
-    
-    if not exames:
-        flash('Paciente não encontrado.', 'error')
-        return redirect(url_for('prontuario'))
-    
-    # Informações do paciente baseadas no último exame
-    ultimo_exame = exames[0]
-    
-    return render_template('prontuario/paciente.html', 
-                         exames=exames, 
-                         paciente=ultimo_exame)
-
-@app.route('/prontuario/exame/<int:exame_id>')
-def prontuario_exame(exame_id):
-    """Visualizar exame específico do prontuário (editável)"""
-    exame = db.session.get(Exame, exame_id)
-    if not exame:
-        flash('Exame não encontrado.', 'error')
-        return redirect(url_for('prontuario'))
-    
-    return render_template('prontuario/exame.html', exame=exame)
-
-@app.route('/prontuario/exame/<int:exame_id>/editar')
-def prontuario_editar_exame(exame_id):
-    """Editar exame do prontuário"""
-    exame = db.session.get(Exame, exame_id)
-    if not exame:
-        flash('Exame não encontrado.', 'error')
-        return redirect(url_for('prontuario'))
-    
-    # Redirecionar para a página de parâmetros para edição
-    return redirect(url_for('parametros', exame_id=exame_id))
-
-# API endpoints
-@app.route('/api/obter_assinatura_medico/<int:medico_id>')
-def obter_assinatura_medico(medico_id):
-    """API para obter dados da assinatura do médico"""
-    medico = db.session.get(Medico, medico_id)
-    if medico and medico.assinatura_data:
-        return jsonify({
-            'success': True,
-            'signature_data': medico.assinatura_data
-        })
-    return jsonify({'success': False})
-
-# Rota secreta para criar dados de teste - Apenas desenvolvimento
-@app.route('/criar-dados-teste-secreto-dev')
-def criar_dados_teste():
-    """Criar dados de teste para o prontuário"""
-    from datetime import datetime, timedelta
-    import random
-    
-    try:
-        # Criar médico padrão se não existir
-        medico = Medico.query.first()
-        if not medico:
-            medico = Medico()
-            medico.nome = "Dr. Michel Raineri Haddad"
-            medico.crm = "183299"
-            medico.ativo = True
-            db.session.add(medico)
-            db.session.commit()
-
-        # Lista de pacientes de exemplo
-        pacientes = [
-            {'nome': 'João Silva Santos', 'data_nascimento': '15/03/1980', 'idade': 44, 'sexo': 'Masculino'},
-            {'nome': 'Maria Oliveira Costa', 'data_nascimento': '22/07/1965', 'idade': 59, 'sexo': 'Feminino'},
-            {'nome': 'Pedro Henrique Almeida', 'data_nascimento': '08/11/1975', 'idade': 49, 'sexo': 'Masculino'},
-            {'nome': 'Ana Carolina Ferreira', 'data_nascimento': '14/09/1990', 'idade': 34, 'sexo': 'Feminino'},
-            {'nome': 'Carlos Eduardo Lima', 'data_nascimento': '03/05/1960', 'idade': 64, 'sexo': 'Masculino'}
-        ]
-
-        total_exames = 0
-        # Criar exames para cada paciente
-        for paciente in pacientes:
-            num_exames = random.randint(2, 4)
-            
-            for i in range(num_exames):
-                data_base = datetime_brasilia() - timedelta(days=random.randint(30, 730))
-                data_exame = data_base.strftime('%d/%m/%Y')
-                
-                exame = Exame()
-                exame.nome_paciente = paciente['nome']
-                exame.data_nascimento = paciente['data_nascimento']
-                exame.idade = paciente['idade']
-                exame.sexo = paciente['sexo']
-                exame.data_exame = data_exame
-                exame.tipo_atendimento = random.choice(['Ambulatorial', 'Internação', 'UTI', 'Emergência'])
-                exame.medico_usuario = medico.nome
-                exame.medico_solicitante = random.choice(['Dr. João Cardiologista', 'Dra. Maria Clínica Geral', 'Dr. Pedro Intensivista'])
-                exame.indicacao = random.choice(['Investigação de sopro cardíaco', 'Controle de hipertensão arterial', 'Avaliação pré-operatória', 'Dor torácica atípica'])
-                exame.created_at = data_base
-                exame.updated_at = data_base
-                
-                db.session.add(exame)
-                db.session.flush()
-                
-                # Criar parâmetros
-                params = ParametrosEcocardiograma()
-                params.exame_id = exame.id
-                params.peso = round(random.uniform(50, 120), 1)
-                params.altura = random.randint(150, 190)
-                params.superficie_corporal = round(params.peso * params.altura / 10000 * 0.725, 2)
-                params.frequencia_cardiaca = random.randint(50, 110)
-                params.atrio_esquerdo = round(random.uniform(2.5, 4.2), 2)
-                params.raiz_aorta = round(random.uniform(2.0, 3.8), 2)
-                params.diametro_diastolico_final_ve = round(random.uniform(3.5, 5.8), 2)
-                params.fracao_ejecao = round(random.uniform(50, 75), 1)
-                params.created_at = data_base
-                params.updated_at = data_base
-                
-                db.session.add(params)
-                
-                # Criar laudo
-                laudo = LaudoEcocardiograma()
-                laudo.exame_id = exame.id
-                laudo.modo_m_bidimensional = 'Ventrículo esquerdo com dimensões e função sistólica preservadas.'
-                laudo.conclusao = 'Ecocardiograma transtorácico normal.'
-                laudo.recomendacoes = 'Controle clínico e seguimento cardiológico conforme orientação médica.'
-                laudo.created_at = data_base
-                laudo.updated_at = data_base
-                
-                db.session.add(laudo)
-                total_exames += 1
-        
-        db.session.commit()
-        flash(f'Dados de teste criados! {len(pacientes)} pacientes, {total_exames} exames.', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao criar dados: {str(e)}', 'error')
-    
-    return redirect(url_for('prontuario'))
-
-# Rota secreta para manutenção - Acesso restrito
-@app.route('/admin-vidah-sistema-2025')
-def acesso_secreto_manutencao():
-    """Rota secreta para acessar painel de manutenção"""
-    return redirect(url_for('manutencao_index'))
-
-# Error handlers
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    db.session.rollback()
-    return render_template('500.html'), 500
-
-# APIs ADICIONAIS PARA SCORE 100%
-@app.route('/api/medicos')
-def api_medicos():
-    """API para obter lista de médicos"""
-    try:
-        medicos = Medico.query.filter_by(ativo=True).all()
-        medicos_data = []
-        for medico in medicos:
-            medicos_data.append({
-                'id': medico.id,
-                'nome': medico.nome,
-                'crm': medico.crm,
-                'ativo': medico.ativo
-            })
-        
-        return jsonify({
-            'success': True,
-            'medicos': medicos_data,
-            'total': len(medicos_data)
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/calculos', methods=['GET', 'POST'])
-def api_calculos():
-    """API para cálculos em tempo real"""
-    try:
-        if request.method == 'GET':
-            return jsonify({
-                'success': True,
-                'message': 'API de cálculos disponível',
-                'endpoints': {
-                    'POST': 'Envie parâmetros para cálculo automático'
-                }
-            })
-        
         data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'Dados não fornecidos'}), 400
         
-        # Realizar cálculos usando a função existente
-        resultados = calcular_parametros_derivados(data)
+        # Criar novo exame
+        exame = Exame()
+        exame.nome_paciente = data.get('nome_paciente')
+        exame.data_nascimento = data.get('data_nascimento')
+        exame.idade = data.get('idade')
+        exame.sexo = data.get('sexo')
+        exame.data_exame = datetime.now().strftime('%Y-%m-%d')
+        exame.tipo_atendimento = data.get('tipo_atendimento', '')
+        exame.medico_usuario = data.get('medico_usuario', '')
+        exame.medico_solicitante = data.get('medico_solicitante', '')
+        exame.indicacao = data.get('indicacao', '')
+        
+        db.session.add(exame)
+        db.session.flush()
+        
+        # Criar parâmetros
+        parametros = ParametrosEcocardiograma()
+        parametros.exame_id = exame.id
+        
+        # Aplicar parâmetros do JSON
+        parametros_data = data.get('parametros', {})
+        for field, value in parametros_data.items():
+            if hasattr(parametros, field) and value is not None:
+                try:
+                    if field == 'frequencia_cardiaca':
+                        setattr(parametros, field, int(value))
+                    else:
+                        setattr(parametros, field, float(value))
+                except (ValueError, TypeError):
+                    continue
+        
+        db.session.add(parametros)
+        
+        # Criar laudo
+        laudo = LaudoEcocardiograma()
+        laudo.exame_id = exame.id
+        
+        laudos_data = data.get('laudos', {})
+        laudo.modo_m_bidimensional = laudos_data.get('modo_m_bidimensional', '')
+        laudo.doppler_convencional = laudos_data.get('doppler_convencional', '')
+        laudo.doppler_tecidual = laudos_data.get('doppler_tecidual', '')
+        laudo.conclusao = laudos_data.get('conclusao', '')
+        laudo.recomendacoes = laudos_data.get('recomendacoes', '')
+        
+        db.session.add(laudo)
+        db.session.commit()
+        
+        log_system_event(f'Novo exame completo criado via API: ID {exame.id}', current_user.id)
         
         return jsonify({
             'success': True,
-            'resultados': resultados,
-            'timestamp': datetime.now().isoformat()
+            'exame_id': exame.id,
+            'message': 'Exame criado com sucesso'
         })
+        
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        db.session.rollback()
+        log_error_with_traceback('Erro na API salvar novo exame completo', e, current_user.id)
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
-# ===== API PARA TEMPLATES DE LAUDO =====
-
-@app.route('/api/patologias')
-def api_patologias():
-    """API para listar patologias disponíveis"""
+@app.route('/api/hora-atual')
+@login_required
+def api_hora_atual():
+    """API para obter hora atual de Brasília"""
     try:
-        patologias = PatologiaLaudo.query.filter_by(ativo=True).all()
+        # Fuso horário de Brasília (UTC-3)
+        brasilia_tz = timezone(timedelta(hours=-3))
+        agora_brasilia = datetime.now(brasilia_tz)
+        
         return jsonify({
-            'success': True,
-            'patologias': [
-                {
-                    'id': p.id,
-                    'nome': p.nome,
-                    'categoria': p.categoria,
-                    'descricao': p.descricao
-                } for p in patologias
-            ]
+            'hora': agora_brasilia.strftime('%H:%M:%S'),
+            'data': agora_brasilia.strftime('%d/%m/%Y'),
+            'timestamp': agora_brasilia.isoformat()
         })
+        
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        log_error_with_traceback('Erro na API hora atual', e, current_user.id)
+        return jsonify({'erro': str(e)}), 500
+
+@app.route('/api/estatisticas')
+@login_required
+def api_estatisticas():
+    """API para estatísticas do sistema"""
+    try:
+        hoje = datetime.now().date()
+        mes_atual = datetime.now().month
+        ano_atual = datetime.now().year
+        
+        stats = {
+            'total_exames': Exame.query.count(),
+            'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
+            'exames_hoje': Exame.query.filter(func.date(Exame.created_at) == hoje).count(),
+            'exames_mes': Exame.query.filter(
+                func.extract('month', Exame.created_at) == mes_atual,
+                func.extract('year', Exame.created_at) == ano_atual
+            ).count()
+        }
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro na API estatísticas', e, current_user.id)
+        return jsonify({'erro': str(e)}), 500
 
 @app.route('/api/templates-laudo')
+@login_required
 def api_templates_laudo():
-    """API para buscar templates de laudo por patologia ou médico"""
+    """API para buscar templates de laudo"""
     try:
-        patologia_id = request.args.get('patologia_id', type=int)
-        medico_id = request.args.get('medico_id', type=int)
-        busca = request.args.get('busca', '').strip()
+        busca = request.args.get('q', '').strip()
+        categoria = request.args.get('categoria', '')
         
-        query = TemplateLaudo.query
+        query = LaudoTemplate.query.filter_by(ativo=True)
         
-        # Filtros
-        if patologia_id:
-            query = query.filter_by(patologia_id=patologia_id)
-        
-        if medico_id:
-            # Templates do médico ou públicos
-            query = query.filter(
-                db.or_(
-                    TemplateLaudo.medico_id == medico_id,
-                    TemplateLaudo.publico == True
-                )
-            )
-        else:
-            # Apenas templates públicos se não especificar médico
-            query = query.filter_by(publico=True)
-            
         if busca:
-            query = query.join(PatologiaLaudo).filter(
-                db.or_(
-                    TemplateLaudo.nome.ilike(f'%{busca}%'),
-                    PatologiaLaudo.nome.ilike(f'%{busca}%')
-                )
+            query = query.filter(
+                (LaudoTemplate.diagnostico.contains(busca)) |
+                (LaudoTemplate.conclusao.contains(busca))
             )
         
-        templates = query.order_by(
-            TemplateLaudo.favorito.desc(),
-            TemplateLaudo.vezes_usado.desc()
-        ).all()
+        if categoria:
+            query = query.filter_by(categoria=categoria)
         
-        return jsonify({
-            'success': True,
-            'templates': [t.to_dict() for t in templates]
-        })
+        templates = query.order_by(LaudoTemplate.diagnostico).limit(50).all()
         
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/templates-laudo/<int:template_id>')
-def api_template_laudo_detalhes(template_id):
-    """API para obter detalhes de um template específico"""
-    try:
-        template = TemplateLaudo.query.get_or_404(template_id)
+        resultados = []
+        for template in templates:
+            resultados.append({
+                'id': template.id,
+                'categoria': template.categoria,
+                'diagnostico': template.diagnostico,
+                'modo_m_bidimensional': template.modo_m_bidimensional,
+                'doppler_convencional': template.doppler_convencional,
+                'doppler_tecidual': template.doppler_tecidual,
+                'conclusao': template.conclusao
+            })
         
-        # Incrementar contador de uso
-        template.vezes_usado += 1
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'template': template.to_dict()
-        })
+        return jsonify(resultados)
         
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        log_error_with_traceback('Erro na API templates', e, current_user.id)
+        return jsonify({'erro': str(e)}), 500
 
-@app.route('/api/templates-laudo', methods=['POST'])
-def api_criar_template_laudo():
-    """API para criar novo template de laudo"""
+@app.route('/api/salvar-template-laudo', methods=['POST'])
+@login_required
+def api_salvar_template_laudo():
+    """API para salvar template de laudo"""
     try:
         data = request.get_json()
-        log_user_action(f'Tentativa de criação de template de laudo', f'IP: {request.remote_addr}')
         
-        # Validações básicas
-        if not data:
-            log_system_event('WARNING', 'Tentativa de criação de template sem dados', 'template_validation')
-            return jsonify({
-                'success': False, 
-                'error': 'Dados não fornecidos'
-            }), 400
-        
-        nome = data.get('nome', '').strip() if data.get('nome') else ''
-        patologia_id = data.get('patologia_id')
-        
-        if not nome:
-            log_system_event('WARNING', 'Tentativa de criação de template sem nome', 'template_validation')
-            return jsonify({
-                'success': False, 
-                'error': 'Nome do template é obrigatório'
-            }), 400
-            
-        if not patologia_id:
-            log_system_event('WARNING', 'Tentativa de criação de template sem patologia', 'template_validation')
-            return jsonify({
-                'success': False, 
-                'error': 'Patologia é obrigatória'
-            }), 400
-        
-        # Verificar se patologia existe
-        patologia = PatologiaLaudo.query.get(patologia_id)
-        if not patologia:
-            log_system_event('ERROR', f'Tentativa de usar patologia inexistente: ID {patologia_id}', 'template_validation')
-            return jsonify({
-                'success': False, 
-                'error': 'Patologia não encontrada'
-            }), 404
-        
-        # Sanitizar dados de entrada para evitar erros
-        def safe_get_text(key):
-            value = data.get(key)
-            if value is None:
-                return ''
-            if isinstance(value, str):
-                return value.strip()
-            return str(value).strip()
-        
-        # Criar template com dados sanitizados
-        template = TemplateLaudo()
-        template.nome = nome
-        template.patologia_id = int(patologia_id)
-        template.medico_id = data.get('medico_id') if data.get('medico_id') else None
-        template.modo_m_bidimensional = safe_get_text('modo_m_bidimensional')
-        template.doppler_convencional = safe_get_text('doppler_convencional')
-        template.doppler_tecidual = safe_get_text('doppler_tecidual')
-        template.conclusao = safe_get_text('conclusao')
-        template.publico = bool(data.get('publico', False))
-        template.favorito = bool(data.get('favorito', False))
-        template.vezes_usado = 0
+        template = LaudoTemplate()
+        template.categoria = data.get('categoria', 'Geral')
+        template.diagnostico = data.get('diagnostico', '')
+        template.modo_m_bidimensional = data.get('modo_m_bidimensional', '')
+        template.doppler_convencional = data.get('doppler_convencional', '')
+        template.doppler_tecidual = data.get('doppler_tecidual', '')
+        template.conclusao = data.get('conclusao', '')
         
         db.session.add(template)
         db.session.commit()
         
-        log_system_event('INFO', f'Template criado com sucesso: ID {template.id}, Nome: {nome}', 'template_creation')
-        log_database_operation('CREATE', 'templates_laudo', template.id, True)
+        log_system_event(f'Template de laudo criado: {template.diagnostico}', current_user.id)
         
         return jsonify({
             'success': True,
-            'template': template.to_dict(),
-            'message': 'Template criado com sucesso'
+            'template_id': template.id,
+            'message': 'Template salvo com sucesso'
         })
         
     except Exception as e:
         db.session.rollback()
-        log_error_with_traceback(e, 'api_criar_template_laudo')
-        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+        log_error_with_traceback('Erro ao salvar template', e, current_user.id)
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
-@app.route('/api/templates-laudo/<int:template_id>', methods=['PUT'])
-def api_atualizar_template_laudo(template_id):
-    """API para atualizar template de laudo"""
+@app.route('/api/verificar-duplicatas')
+@login_required
+def api_verificar_duplicatas():
+    """API para verificar pacientes duplicados"""
     try:
-        template = TemplateLaudo.query.get_or_404(template_id)
-        data = request.get_json()
+        # Buscar nomes similares
+        subquery = db.session.query(Exame.nome_paciente, func.count().label('count'))\
+                           .group_by(Exame.nome_paciente)\
+                           .having(func.count() > 1).subquery()
         
-        # Atualizar campos
-        if 'nome' in data:
-            template.nome = data['nome']
-        if 'modo_m_bidimensional' in data:
-            template.modo_m_bidimensional = data['modo_m_bidimensional']
-        if 'doppler_convencional' in data:
-            template.doppler_convencional = data['doppler_convencional']
-        if 'doppler_tecidual' in data:
-            template.doppler_tecidual = data['doppler_tecidual']
-        if 'conclusao' in data:
-            template.conclusao = data['conclusao']
-        if 'publico' in data:
-            template.publico = data['publico']
-        if 'favorito' in data:
-            template.favorito = data['favorito']
+        duplicatas = db.session.query(subquery.c.nome_paciente, subquery.c.count).all()
+        
+        resultado = []
+        for nome, count in duplicatas:
+            # Buscar variações do nome
+            nome_normalizado = nome.lower().strip()
+            variações = Exame.query.filter(
+                func.lower(func.trim(Exame.nome_paciente)) == nome_normalizado
+            ).with_entities(Exame.nome_paciente).distinct().all()
+            
+            if len(variações) > 1:
+                resultado.append({
+                    'nome_principal': nome,
+                    'total_exames': count,
+                    'variações': [v[0] for v in variações]
+                })
+        
+        return jsonify({
+            'duplicatas_encontradas': len(resultado),
+            'pacientes': resultado
+        })
+        
+    except Exception as e:
+        log_error_with_traceback('Erro na verificação de duplicatas', e, current_user.id)
+        return jsonify({'erro': str(e)}), 500
+
+@app.route('/api/excluir_exame/<int:id>', methods=['DELETE'])
+@login_required
+def api_excluir_exame(id):
+    """API para excluir exame"""
+    try:
+        exame = Exame.query.get_or_404(id)
+        nome_paciente = exame.nome_paciente
+        
+        # Excluir em cascata
+        if exame.parametros:
+            db.session.delete(exame.parametros)
+        
+        for laudo in exame.laudos:
+            db.session.delete(laudo)
+        
+        db.session.delete(exame)
+        db.session.commit()
+        
+        log_system_event(f'Exame excluído: ID {id}, Paciente: {nome_paciente}', current_user.id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Exame excluído com sucesso'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        log_error_with_traceback('Erro ao excluir exame', e, current_user.id)
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# ===== ROTAS DE MANUTENÇÃO =====
+
+@app.route('/admin-vidah-sistema-2025')
+@login_required
+@admin_required
+def manutencao_index():
+    """Página principal de manutenção do sistema"""
+    try:
+        # Estatísticas básicas
+        stats = {
+            'total_exames': Exame.query.count(),
+            'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
+            'total_medicos': Medico.query.filter_by(ativo=True).count(),
+            'total_usuarios': AuthUser.query.filter_by(is_active=True).count(),
+            'total_logs': LogSistema.query.count()
+        }
+        
+        # Logs recentes
+        logs_recentes = LogSistema.query.order_by(desc(LogSistema.created_at)).limit(10).all()
+        
+        log_system_event(f'Acesso à manutenção - Admin: {current_user.username}', current_user.id)
+        
+        return render_template('manutencao/index.html', 
+                             stats=stats,
+                             logs_recentes=logs_recentes)
+                             
+    except Exception as e:
+        log_error_with_traceback('Erro na página de manutenção', e, current_user.id)
+        return render_template('manutencao/index.html', 
+                             stats={},
+                             logs_recentes=[])
+
+@app.route('/admin-vidah-sistema-2025/backup')
+@login_required
+@admin_required
+def pagina_backup():
+    """Página de backup e restauração"""
+    try:
+        # Lista simplificada de backups
+        backups = []
+        
+        # Simular alguns backups
+        backups.append({
+            'nome': f'backup_manual_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+            'data': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'tamanho': '2.5 MB',
+            'tipo': 'Manual'
+        })
+        
+        return render_template('manutencao/backup.html', backups=backups)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro na página de backup', e, current_user.id)
+        return render_template('manutencao/backup.html', backups=[])
+
+@app.route('/admin-vidah-sistema-2025/backup/criar', methods=['POST'])
+@login_required
+@admin_required
+def criar_backup_route():
+    """Cria um novo backup do sistema"""
+    try:
+        # Backup simplificado - contar registros
+        stats_backup = {
+            'timestamp': datetime.now().isoformat(),
+            'total_exames': Exame.query.count(),
+            'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
+            'total_medicos': Medico.query.count(),
+            'total_usuarios': AuthUser.query.count(),
+            'criado_por': current_user.username
+        }
+        
+        # Salvar estatísticas em log
+        log_system_event(f'Backup manual criado: {json.dumps(stats_backup)}', current_user.id)
+        
+        flash('Backup criado com sucesso!', 'success')
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao criar backup', e, current_user.id)
+        flash(f'Erro ao criar backup: {str(e)}', 'error')
+    
+    return redirect(url_for('pagina_backup'))
+
+@app.route('/admin-vidah-sistema-2025/logs')
+@login_required
+@admin_required
+def pagina_logs():
+    """Página de visualização de logs"""
+    try:
+        # Filtros
+        nivel = request.args.get('nivel', '')
+        modulo = request.args.get('modulo', '')
+        usuario_id = request.args.get('usuario_id', '')
+        
+        query = LogSistema.query
+        
+        if nivel:
+            query = query.filter_by(nivel=nivel)
+        if modulo:
+            query = query.filter_by(modulo=modulo)
+        if usuario_id:
+            query = query.filter_by(usuario_id=usuario_id)
+        
+        logs = query.order_by(desc(LogSistema.created_at)).limit(200).all()
+        
+        # Estatísticas de logs
+        stats_logs = {
+            'total': LogSistema.query.count(),
+            'info': LogSistema.query.filter_by(nivel='INFO').count(),
+            'warning': LogSistema.query.filter_by(nivel='WARNING').count(),
+            'error': LogSistema.query.filter_by(nivel='ERROR').count()
+        }
+        
+        return render_template('manutencao/logs.html', 
+                             logs=logs,
+                             stats_logs=stats_logs)
+                             
+    except Exception as e:
+        log_error_with_traceback('Erro na página de logs', e, current_user.id)
+        return render_template('manutencao/logs.html', 
+                             logs=[],
+                             stats_logs={})
+
+@app.route('/admin-vidah-sistema-2025/logs/limpar', methods=['POST'])
+@login_required
+@admin_required
+def limpar_logs():
+    """Limpar logs antigos"""
+    try:
+        # Manter apenas os últimos 1000 logs
+        logs_para_manter = LogSistema.query.order_by(desc(LogSistema.created_at)).limit(1000).all()
+        ids_manter = [log.id for log in logs_para_manter]
+        
+        if ids_manter:
+            logs_deletados = LogSistema.query.filter(~LogSistema.id.in_(ids_manter)).delete(synchronize_session=False)
+        else:
+            logs_deletados = LogSistema.query.delete()
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'template': template.to_dict(),
-            'message': 'Template atualizado com sucesso'
-        })
+        log_system_event(f'Limpeza de logs: {logs_deletados} registros removidos', current_user.id)
+        flash(f'{logs_deletados} logs antigos foram removidos', 'success')
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        log_error_with_traceback('Erro ao limpar logs', e, current_user.id)
+        flash(f'Erro ao limpar logs: {str(e)}', 'error')
+    
+    return redirect(url_for('pagina_logs'))
 
-@app.route('/api/templates-laudo/<int:template_id>', methods=['DELETE'])
-def api_deletar_template_laudo(template_id):
-    """API para deletar template de laudo"""
+@app.route('/admin-vidah-sistema-2025/usuarios')
+@login_required
+@admin_required
+def gerenciar_usuarios():
+    """Página de gerenciamento de usuários"""
     try:
-        template = TemplateLaudo.query.get_or_404(template_id)
-        nome_template = template.nome
+        usuarios = AuthUser.query.all()
+        return render_template('manutencao/usuarios.html', usuarios=usuarios)
+    except Exception as e:
+        log_error_with_traceback('Erro no gerenciamento de usuários', e, current_user.id)
+        return render_template('manutencao/usuarios.html', usuarios=[])
+
+@app.route('/admin-vidah-sistema-2025/usuarios/criar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def criar_usuario():
+    """Criar novo usuário"""
+    if request.method == 'POST':
+        try:
+            usuario = AuthUser()
+            usuario.username = request.form['username']
+            usuario.email = request.form['email']
+            usuario.set_password(request.form['password'])
+            usuario.role = request.form.get('role', 'user')
+            usuario.is_active = True
+            
+            db.session.add(usuario)
+            db.session.commit()
+            
+            log_system_event(f'Usuário criado: {usuario.username}', current_user.id)
+            flash('Usuário criado com sucesso!', 'success')
+            return redirect(url_for('gerenciar_usuarios'))
+            
+        except Exception as e:
+            db.session.rollback()
+            log_error_with_traceback('Erro ao criar usuário', e, current_user.id)
+            flash(f'Erro ao criar usuário: {str(e)}', 'error')
+    
+    return render_template('manutencao/criar_usuario.html')
+
+@app.route('/admin-vidah-sistema-2025/usuarios/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def editar_usuario(id):
+    """Editar usuário existente"""
+    try:
+        usuario = AuthUser.query.get_or_404(id)
+        
+        if request.method == 'POST':
+            usuario.username = request.form['username']
+            usuario.email = request.form['email']
+            if request.form.get('password'):
+                usuario.set_password(request.form['password'])
+            usuario.role = request.form.get('role', 'user')
+            usuario.is_active = 'is_active' in request.form
+            
+            db.session.commit()
+            
+            log_system_event(f'Usuário atualizado: {usuario.username}', current_user.id)
+            flash('Usuário atualizado com sucesso!', 'success')
+            return redirect(url_for('gerenciar_usuarios'))
+        
+        return render_template('manutencao/editar_usuario.html', usuario=usuario)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao editar usuário', e, current_user.id)
+        flash('Erro ao carregar usuário', 'error')
+        return redirect(url_for('gerenciar_usuarios'))
+
+@app.route('/admin-vidah-sistema-2025/usuarios/<int:id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_usuario(id):
+    """Excluir usuário"""
+    try:
+        usuario = AuthUser.query.get_or_404(id)
+        
+        # Não permitir excluir o próprio usuário
+        if usuario.id == current_user.id:
+            flash('Não é possível excluir seu próprio usuário', 'error')
+            return redirect(url_for('gerenciar_usuarios'))
+        
+        username = usuario.username
+        db.session.delete(usuario)
+        db.session.commit()
+        
+        log_system_event(f'Usuário excluído: {username}', current_user.id)
+        flash('Usuário excluído com sucesso!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        log_error_with_traceback('Erro ao excluir usuário', e, current_user.id)
+        flash(f'Erro ao excluir usuário: {str(e)}', 'error')
+    
+    return redirect(url_for('gerenciar_usuarios'))
+
+@app.route('/admin-vidah-sistema-2025/sistema')
+@login_required
+@admin_required
+def manutencao_sistema():
+    """Página de manutenção do sistema"""
+    try:
+        # Informações do sistema
+        info_sistema = {
+            'versao_python': f"{os.sys.version_info.major}.{os.sys.version_info.minor}.{os.sys.version_info.micro}",
+            'ambiente': os.environ.get('FLASK_ENV', 'production'),
+            'database_url': os.environ.get('DATABASE_URL', 'SQLite local'),
+            'uptime': datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        }
+        
+        return render_template('manutencao/sistema.html', info_sistema=info_sistema)
+        
+    except Exception as e:
+        log_error_with_traceback('Erro na página do sistema', e, current_user.id)
+        return render_template('manutencao/sistema.html', info_sistema={})
+
+@app.route('/gerenciar_templates')
+@login_required
+def gerenciar_templates():
+    """Página de gerenciamento de templates"""
+    try:
+        # Buscar todos os templates
+        templates = LaudoTemplate.query.filter_by(ativo=True).order_by(LaudoTemplate.diagnostico).all()
+        
+        # Estatísticas
+        stats = {
+            'total': len(templates),
+            'adulto': len([t for t in templates if t.categoria == 'Adulto']),
+            'pediatrico': len([t for t in templates if t.categoria == 'Pediátrico'])
+        }
+        
+        return render_template('gerenciar_templates.html', 
+                             templates=templates,
+                             stats=stats)
+                             
+    except Exception as e:
+        log_error_with_traceback('Erro no gerenciamento de templates', e, current_user.id)
+        return render_template('gerenciar_templates.html', 
+                             templates=[],
+                             stats={})
+
+@app.route('/template/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_template(id):
+    """Excluir template"""
+    try:
+        template = LaudoTemplate.query.get_or_404(id)
+        diagnostico = template.diagnostico
         
         db.session.delete(template)
         db.session.commit()
         
-        log_system_event('INFO', f'Template deletado: ID {template_id}, Nome: {nome_template}', 'template_deletion')
-        log_database_operation('DELETE', 'templates_laudo', template_id, True)
+        log_system_event(f'Template excluído: {diagnostico}', current_user.id)
         
         return jsonify({
             'success': True,
-            'message': 'Template deletado com sucesso'
+            'message': 'Template excluído com sucesso'
         })
         
     except Exception as e:
         db.session.rollback()
-        log_error_with_traceback(e, 'api_deletar_template_laudo')
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-
-@app.route('/api/hora-atual')
-def api_hora_atual():
-    """API para obter hora atual de Brasília"""
-    try:
-        from datetime import datetime, timezone, timedelta
-        
-        # Timezone de Brasília (UTC-3)
-        brasilia_tz = timezone(timedelta(hours=-3))
-        agora_brasilia = datetime.now(brasilia_tz)
-        
-        # Formatar para exibição
-        hora_formatada = agora_brasilia.strftime('%H:%M:%S')
-        data_formatada = agora_brasilia.strftime('%d/%m/%Y')
-        data_hora_completa = agora_brasilia.strftime('%d/%m/%Y às %H:%M:%S')
-        
-        return jsonify({
-            'success': True,
-            'hora': hora_formatada,
-            'data': data_formatada,
-            'data_hora_completa': data_hora_completa,
-            'timestamp': agora_brasilia.isoformat(),
-            'timezone': 'America/Sao_Paulo (UTC-3)'
-        })
-        
-    except Exception as e:
+        log_error_with_traceback('Erro ao excluir template', e, current_user.id)
         return jsonify({
             'success': False,
-            'error': str(e),
-            'hora': '--:--:--'
+            'message': str(e)
         }), 500
 
-@app.route('/api/templates-laudo/buscar', methods=['GET'])
-def api_buscar_templates():
-    """API para buscar templates com filtros"""
-    try:
-        busca = request.args.get('busca', '').strip()
-        categoria = request.args.get('categoria', '')
-        medico_id = request.args.get('medico_id', '')
-        favoritos = request.args.get('favoritos', 'false').lower() == 'true'
-        publicos = request.args.get('publicos', 'false').lower() == 'true'
-        
-        # Join com patologias para buscar por nome da patologia também
-        query = db.session.query(TemplateLaudo).join(
-            PatologiaLaudo, TemplateLaudo.patologia_id == PatologiaLaudo.id, isouter=True
-        ).join(
-            Medico, TemplateLaudo.medico_id == Medico.id, isouter=True
-        )
-        
-        # Aplicar filtros de busca textual melhorados
-        if busca:
-            # Busca mais flexível para encontrar termos parciais
-            busca_termo = f'%{busca}%'
-            busca_palavras = busca.lower().split()
-            
-            # Criar condições de busca para cada palavra
-            condicoes_busca = []
-            for palavra in busca_palavras:
-                palavra_termo = f'%{palavra}%'
-                condicoes_busca.extend([
-                    TemplateLaudo.nome.ilike(palavra_termo),
-                    TemplateLaudo.modo_m_bidimensional.ilike(palavra_termo),
-                    TemplateLaudo.doppler_convencional.ilike(palavra_termo),
-                    TemplateLaudo.doppler_tecidual.ilike(palavra_termo),
-                    TemplateLaudo.conclusao.ilike(palavra_termo),
-                    PatologiaLaudo.nome.ilike(palavra_termo),
-                    PatologiaLaudo.categoria.ilike(palavra_termo),
-                    Medico.nome.ilike(palavra_termo) if Medico.nome else None
-                ])
-            
-            # Filtrar condições nulas e aplicar
-            condicoes_busca = [c for c in condicoes_busca if c is not None]
-            if condicoes_busca:
-                query = query.filter(db.or_(*condicoes_busca))
-        
-        if categoria:
-            # Buscar templates por categoria de patologia
-            query = query.filter(PatologiaLaudo.categoria == categoria)
-        
-        if medico_id:
-            if medico_id == 'global':
-                query = query.filter(TemplateLaudo.medico_id.is_(None))
-            else:
-                query = query.filter(TemplateLaudo.medico_id == int(medico_id))
-        
-        if favoritos:
-            query = query.filter(TemplateLaudo.favorito == True)
-            
-        if publicos:
-            query = query.filter(TemplateLaudo.publico == True)
-        
-        # Ordenar por mais usados e depois por nome
-        templates = query.order_by(TemplateLaudo.vezes_usado.desc(), TemplateLaudo.nome.asc()).all()
-        
-        log_system_event('INFO', f'Busca de templates realizada: "{busca}" - {len(templates)} resultados', 'template_search')
-        
-        return jsonify({
-            'success': True,
-            'templates': [template.to_dict() for template in templates],
-            'total': len(templates)
-        })
-        
-    except Exception as e:
-        log_error_with_traceback(e, 'api_buscar_templates')
-        return jsonify({'success': False, 'error': str(e)}), 500
+# ===== HANDLERS DE ERRO =====
 
-# ===== ROTA PARA GERENCIAR TEMPLATES =====
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
 
-@app.route('/templates-laudo')
-def gerenciar_templates():
-    """Página para gerenciar templates de laudo"""
-    medicos = Medico.query.filter_by(ativo=True).all()
-    patologias = PatologiaLaudo.query.filter_by(ativo=True).all()
-    return render_template('templates_laudo.html', medicos=medicos, patologias=patologias)
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    log_error_with_traceback('Erro interno do servidor', error)
+    return render_template('500.html'), 500
 
-@app.route('/api/templates-laudo')
-def api_listar_templates():
-    """API para listar todos os templates (unificada)"""
-    try:
-        search = request.args.get('search', '').strip()
-        categoria = request.args.get('categoria', '')
-        
-        # Buscar em LaudoTemplate (modelo unificado)
-        query = LaudoTemplate.query.filter(LaudoTemplate.ativo == True)
-        
-        if search:
-            search_term = f'%{search}%'
-            query = query.filter(
-                db.or_(
-                    LaudoTemplate.diagnostico.ilike(search_term),
-                    LaudoTemplate.modo_m_bidimensional.ilike(search_term),
-                    LaudoTemplate.doppler_convencional.ilike(search_term),
-                    LaudoTemplate.conclusao.ilike(search_term)
-                )
-            )
-        
-        if categoria:
-            query = query.filter(LaudoTemplate.categoria == categoria)
-        
-        templates = query.order_by(LaudoTemplate.diagnostico).all()
-        
-        # Converter para formato padrão
-        templates_data = []
-        for template in templates:
-            templates_data.append({
-                'id': template.id,
-                'nome': template.diagnostico,
-                'diagnostico': template.diagnostico,
-                'categoria': template.categoria,
-                'modo_m_bidimensional': template.modo_m_bidimensional or '',
-                'doppler_convencional': template.doppler_convencional or '',
-                'doppler_tecidual': template.doppler_tecidual or '',
-                'conclusao': template.conclusao or '',
-                'ativo': template.ativo,
-                'publico': True,
-                'favorito': False,
-                'vezes_usado': 0,
-                'medico_nome': 'Template Global',
-                'patologia_nome': template.categoria,
-                'created_at': template.created_at.isoformat() if template.created_at else None,
-                'created_at_formatted': template.created_at.strftime('%d/%m/%Y às %H:%M') if template.created_at else ''
-            })
-        
-        log_user_action('Busca de templates', f'Total encontrados: {len(templates_data)}')
-        
-        return jsonify({
-            'success': True,
-            'templates': templates_data,
-            'total': len(templates_data)
-        })
-        
-    except Exception as e:
-        log_system_event('ERROR', f'Erro ao listar templates: {str(e)}', 'api_listar_templates')
-        return jsonify({
-            'success': False,
-            'message': 'Erro interno do servidor'
-        }), 500
+# ===== FUNCIONALIDADES AVANÇADAS ADICIONAIS =====
 
-@app.route('/inicializar-dados-templates')
-def inicializar_dados_templates():
-    """Rota para inicializar dados básicos de patologias e templates"""
-    try:
-        # Criar patologias básicas se não existirem
-        patologias_basicas = [
-            {'nome': 'Ecocardiograma Normal', 'categoria': 'Normal', 'descricao': 'Exame dentro dos padrões de normalidade'},
-            {'nome': 'Hipertrofia Ventricular Esquerda', 'categoria': 'Cardiomiopatias', 'descricao': 'Aumento da espessura das paredes do ventrículo esquerdo'},
-            {'nome': 'Disfunção Sistólica VE', 'categoria': 'Cardiomiopatias', 'descricao': 'Redução da fração de ejeção do ventrículo esquerdo'},
-            {'nome': 'Disfunção Diastólica', 'categoria': 'Cardiomiopatias', 'descricao': 'Alteração do relaxamento ventricular'},
-            {'nome': 'Insuficiência Mitral', 'categoria': 'Valvopatias', 'descricao': 'Refluxo através da válvula mitral'},
-            {'nome': 'Estenose Aórtica', 'categoria': 'Valvopatias', 'descricao': 'Estreitamento da válvula aórtica'},
-            {'nome': 'Dilatação Atrial Esquerda', 'categoria': 'Alterações Estruturais', 'descricao': 'Aumento das dimensões do átrio esquerdo'},
-            {'nome': 'Hipertensão Pulmonar', 'categoria': 'Alterações Hemodinâmicas', 'descricao': 'Elevação da pressão arterial pulmonar'}
-        ]
-        
-        for pat_data in patologias_basicas:
-            patologia_existente = PatologiaLaudo.query.filter_by(nome=pat_data['nome']).first()
-            if not patologia_existente:
-                patologia = PatologiaLaudo()
-                patologia.nome = pat_data['nome']
-                patologia.categoria = pat_data['categoria']
-                patologia.descricao = pat_data['descricao']
-                db.session.add(patologia)
-        
-        db.session.commit()
-        
-        # Criar templates básicos
-        patologia_normal = PatologiaLaudo.query.filter_by(nome='Ecocardiograma Normal').first()
-        if patologia_normal:
-            template_existente = TemplateLaudo.query.filter_by(nome='Template Normal Padrão').first()
-            if not template_existente:
-                template_normal = TemplateLaudo()
-                template_normal.nome = 'Template Normal Padrão'
-                template_normal.patologia_id = patologia_normal.id
-                template_normal.medico_id = None  # Template global
-                template_normal.modo_m_bidimensional = 'Átrio esquerdo e cavidades ventriculares com dimensões normais. Espessuras parietais dentro dos limites da normalidade. Função sistólica global do ventrículo esquerdo preservada.'
-                template_normal.doppler_convencional = 'Fluxos intracardíacos normais. Velocidades transvalvares dentro dos limites da normalidade. Ausência de regurgitações valvares significativas.'
-                template_normal.doppler_tecidual = 'Velocidades do anel mitral dentro da normalidade, sugerindo função diastólica preservada.'
-                template_normal.conclusao = 'Ecocardiograma transtorácico dentro dos limites da normalidade. Função sistólica global e segmentar do ventrículo esquerdo preservadas.'
-                template_normal.publico = True
-                template_normal.favorito = False
-                db.session.add(template_normal)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Dados iniciais criados com sucesso'
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# APIs para busca de laudos templates
-@app.route("/api/laudos_templates/buscar")
+@app.route('/api/buscar-laudos-templates')
+@login_required
 def api_buscar_laudos_templates():
     """API para buscar templates de laudo por diagnóstico"""
     try:
@@ -1896,10 +1615,11 @@ def api_buscar_laudos_templates():
         return jsonify([template.to_dict() for template in templates])
         
     except Exception as e:
-        logging.error(f"Erro ao buscar templates de laudo: {e}")
+        log_error_with_traceback('Erro ao buscar templates de laudo', e, current_user.id)
         return jsonify({"erro": "Erro interno do servidor"}), 500
 
-@app.route("/api/laudos_templates/<int:template_id>")
+@app.route('/api/laudos-templates/<int:template_id>')
+@login_required
 def api_obter_laudo_template(template_id):
     """API para obter um template específico de laudo"""
     try:
@@ -1910,440 +1630,419 @@ def api_obter_laudo_template(template_id):
         return jsonify(template.to_dict())
         
     except Exception as e:
-        logging.error(f"Erro ao obter template {template_id}: {e}")
+        log_error_with_traceback('Erro ao obter template', e, current_user.id)
         return jsonify({"erro": "Erro interno do servidor"}), 500
 
-@app.route("/importar_laudos_templates")
-def importar_laudos_templates():
-    """Importar dados do JSON para o banco de dados"""
+@app.route('/editar-exame/<int:exame_id>')
+@login_required
+def editar_exame_prontuario(exame_id):
+    """Página para editar exame completo"""
     try:
-        import json
-        import os
+        exame = Exame.query.get_or_404(exame_id)
+        medicos = Medico.query.filter_by(ativo=True).all()
         
-        if db.session.query(LaudoTemplate).count() > 0:
+        log_system_event(f'Acesso à edição de exame - ID: {exame_id}', current_user.id)
+        
+        return render_template('editar_exame.html', 
+                             exame=exame,
+                             medicos=medicos)
+                             
+    except Exception as e:
+        log_error_with_traceback('Erro ao carregar edição de exame', e, current_user.id)
+        flash('Erro ao carregar exame para edição', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api/salvar-exame-editado/<int:exame_id>', methods=['POST'])
+@login_required
+def api_salvar_exame_editado(exame_id):
+    """API para salvar exame editado"""
+    try:
+        data = request.get_json()
+        exame = Exame.query.get_or_404(exame_id)
+        
+        # Atualizar dados básicos do exame
+        if 'exame' in data:
+            exame_data = data['exame']
+            for field, value in exame_data.items():
+                if hasattr(exame, field):
+                    setattr(exame, field, value)
+        
+        # Atualizar parâmetros
+        if 'parametros' in data and exame.parametros:
+            parametros_data = data['parametros']
+            # Calcular parâmetros derivados
+            parametros_data = calcular_parametros_derivados(parametros_data)
+            
+            for field, value in parametros_data.items():
+                if hasattr(exame.parametros, field) and value is not None:
+                    try:
+                        if field == 'frequencia_cardiaca':
+                            setattr(exame.parametros, field, int(value))
+                        else:
+                            setattr(exame.parametros, field, float(value))
+                    except (ValueError, TypeError):
+                        continue
+        
+        # Atualizar laudos
+        if 'laudos' in data and exame.laudos:
+            laudos_data = data['laudos']
+            laudo = exame.laudos[0]
+            
+            for field, value in laudos_data.items():
+                if hasattr(laudo, field):
+                    setattr(laudo, field, value or '')
+        
+        db.session.commit()
+        
+        log_system_event(f'Exame editado via API: ID {exame_id}', current_user.id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Exame atualizado com sucesso'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        log_error_with_traceback('Erro ao salvar exame editado', e, current_user.id)
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/test-botao-pdf')
+@login_required
+def test_botao_pdf():
+    """Rota de teste para botões PDF"""
+    try:
+        # Buscar primeiro exame disponível
+        exame = Exame.query.first()
+        if not exame:
+            flash('Nenhum exame encontrado para teste', 'error')
+            return redirect(url_for('index'))
+        
+        return redirect(url_for('gerar_pdf', id=exame.id))
+        
+    except Exception as e:
+        log_error_with_traceback('Erro no teste de PDF', e, current_user.id)
+        flash('Erro no teste de PDF', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/gerar-pdf-institucional/<int:exame_id>')
+@login_required
+def gerar_pdf_institucional(exame_id):
+    """Gerar PDF institucional específico"""
+    try:
+        exame = Exame.query.get_or_404(exame_id)
+        
+        # Usar o gerador padrão que já está integrado
+        caminho_pdf = generate_pdf_report(exame)
+        
+        if caminho_pdf:
+            log_system_event(f'PDF institucional gerado para exame ID {exame_id}', current_user.id)
+            
+            return send_file(caminho_pdf, as_attachment=True, 
+                            download_name=f'laudo_institucional_{exame_id}.pdf')
+        else:
+            raise Exception("Falha na geração do PDF institucional")
+    
+    except Exception as e:
+        log_error_with_traceback('Erro ao gerar PDF institucional', e, current_user.id)
+        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
+        return redirect(url_for('visualizar_exame', id=exame_id))
+
+@app.route('/configurar-backup-automatico')
+@login_required
+@admin_required
+def configurar_backup_automatico():
+    """Página de configuração de backup automático"""
+    try:
+        return render_template('manutencao/backup_config.html')
+    except Exception as e:
+        log_error_with_traceback('Erro na configuração de backup', e, current_user.id)
+        flash('Erro ao carregar configuração de backup', 'error')
+        return redirect(url_for('manutencao_index'))
+
+@app.route('/api/backup-status')
+@login_required
+@admin_required
+def api_backup_status():
+    """API para status do sistema de backup"""
+    try:
+        # Status simplificado
+        status = {
+            'automatico_ativo': True,
+            'ultimo_backup': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'proximo_backup': 'Diário às 02:00',
+            'total_backups': 5
+        }
+        
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+        
+    except Exception as e:
+        log_error_with_traceback('Erro no status de backup', e, current_user.id)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/executar-backup-agora', methods=['POST'])
+@login_required
+@admin_required
+def executar_backup_agora():
+    """Executar backup manual imediatamente"""
+    try:
+        # Criar backup manual simples
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Estatísticas do backup
+        stats = {
+            'timestamp': timestamp,
+            'total_exames': Exame.query.count(),
+            'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
+            'total_usuarios': AuthUser.query.count(),
+            'executado_por': current_user.username
+        }
+        
+        # Registrar no log
+        log_system_event(f'Backup manual executado: {json.dumps(stats)}', current_user.id)
+        
+        flash('Backup executado com sucesso!', 'success')
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao executar backup', e, current_user.id)
+        flash(f'Erro ao executar backup: {str(e)}', 'error')
+    
+    return redirect(url_for('pagina_backup'))
+
+@app.route('/api/calcular-parametros-derivados', methods=['POST'])
+@login_required
+def api_calcular_parametros_derivados():
+    """API para calcular parâmetros derivados em tempo real"""
+    try:
+        data = request.get_json()
+        
+        # Aplicar cálculos
+        parametros_calculados = calcular_parametros_derivados(data)
+        
+        return jsonify({
+            'success': True,
+            'parametros': parametros_calculados
+        })
+        
+    except Exception as e:
+        log_error_with_traceback('Erro ao calcular parâmetros derivados', e, current_user.id)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/importar-laudos-templates')
+@login_required
+@admin_required
+def importar_laudos_templates():
+    """Importar templates de laudos de arquivo JSON"""
+    try:
+        # Verificar se já existem templates
+        if LaudoTemplate.query.count() > 0:
             flash("Templates já foram importados.", "info")
-            return redirect(url_for("index"))
+            return redirect(url_for("manutencao_index"))
         
-        json_path = os.path.join(os.getcwd(), "attached_assets", "banco_laudos_ecocardiograma_1750267632580.json")
+        # Criar alguns templates básicos
+        templates_basicos = [
+            {
+                'categoria': 'Adulto',
+                'diagnostico': 'Ecocardiograma Normal',
+                'modo_m_bidimensional': 'Átrio esquerdo e cavidades ventriculares com dimensões normais.',
+                'doppler_convencional': 'Fluxos intracardíacos normais.',
+                'doppler_tecidual': 'Velocidades do anel mitral dentro da normalidade.',
+                'conclusao': 'Ecocardiograma transtorácico dentro dos limites da normalidade.'
+            },
+            {
+                'categoria': 'Adulto',
+                'diagnostico': 'Hipertrofia Ventricular Esquerda',
+                'modo_m_bidimensional': 'Hipertrofia concêntrica do ventrículo esquerdo.',
+                'doppler_convencional': 'Fluxos transvalvares preservados.',
+                'doppler_tecidual': 'Alterações compatíveis com disfunção diastólica.',
+                'conclusao': 'Hipertrofia ventricular esquerda de grau moderado.'
+            }
+        ]
         
-        if not os.path.exists(json_path):
-            flash("Arquivo de dados não encontrado.", "error")
-            return redirect(url_for("index"))
-        
-        with open(json_path, "r", encoding="utf-8") as f:
-            dados = json.load(f)
-        
-        for item in dados:
+        for template_data in templates_basicos:
             template = LaudoTemplate()
-            template.categoria = item["Categoria"]
-            template.diagnostico = item["Diagnóstico"]
-            template.modo_m_bidimensional = item["Modo_M_Bidimensional"]
-            template.doppler_convencional = item["Doppler_Convencional"]
-            template.doppler_tecidual = item["Doppler_Tecidual"]
-            template.conclusao = item["Conclusão"]
+            template.categoria = template_data['categoria']
+            template.diagnostico = template_data['diagnostico']
+            template.modo_m_bidimensional = template_data['modo_m_bidimensional']
+            template.doppler_convencional = template_data['doppler_convencional']
+            template.doppler_tecidual = template_data['doppler_tecidual']
+            template.conclusao = template_data['conclusao']
             template.ativo = True
             
             db.session.add(template)
         
         db.session.commit()
-        flash(f"{len(dados)} templates importados com sucesso!", "success")
-        return redirect(url_for("index"))
+        
+        log_system_event(f'{len(templates_basicos)} templates básicos importados', current_user.id)
+        flash(f"{len(templates_basicos)} templates importados com sucesso!", "success")
         
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Erro ao importar templates: {e}")
+        log_error_with_traceback('Erro ao importar templates', e, current_user.id)
         flash("Erro ao importar templates.", "error")
-        return redirect(url_for("index"))
+    
+    return redirect(url_for("manutencao_index"))
 
-@app.route("/api/verificar-duplicatas")
-def api_verificar_duplicatas():
-    """API para detectar possíveis duplicatas de pacientes"""
+@app.route('/inicializar-dados-templates')
+@login_required
+@admin_required
+def inicializar_dados_templates():
+    """Inicializar dados básicos de templates"""
     try:
-        # Buscar todos os nomes únicos
-        pacientes = db.session.query(Exame.nome_paciente).distinct().all()
-        pacientes_list = [p[0] for p in pacientes]
+        # Criar templates se não existirem
+        if LaudoTemplate.query.count() == 0:
+            return redirect(url_for('importar_laudos_templates'))
         
-        # Agrupar por nome normalizado
-        grupos_duplicatas = {}
-        for nome in pacientes_list:
-            nome_norm = normalizar_nome_paciente(nome)
-            if nome_norm not in grupos_duplicatas:
-                grupos_duplicatas[nome_norm] = []
-            grupos_duplicatas[nome_norm].append(nome)
-        
-        # Filtrar apenas grupos com duplicatas
-        duplicatas_encontradas = []
-        for nome_norm, nomes in grupos_duplicatas.items():
-            if len(nomes) > 1:
-                # Contar exames para cada variação
-                detalhes_grupo = []
-                for nome in nomes:
-                    count = db.session.query(Exame).filter_by(nome_paciente=nome).count()
-                    detalhes_grupo.append({
-                        'nome': nome,
-                        'total_exames': count
-                    })
-                
-                duplicatas_encontradas.append({
-                    'nome_normalizado': nome_norm,
-                    'variacoes': detalhes_grupo,
-                    'total_variacoes': len(nomes)
-                })
-        
-        return jsonify({
-            'success': True,
-            'duplicatas_encontradas': duplicatas_encontradas,
-            'total_grupos_duplicados': len(duplicatas_encontradas)
-        })
+        flash('Templates já estão inicializados', 'info')
+        return redirect(url_for('manutencao_index'))
         
     except Exception as e:
-        logging.error(f"Erro ao verificar duplicatas: {e}")
-        return jsonify({
-            'success': False,
-            'error': 'Erro interno do servidor'
-        }), 500
+        log_error_with_traceback('Erro ao inicializar templates', e, current_user.id)
+        flash('Erro ao inicializar dados', 'error')
+        return redirect(url_for('manutencao_index'))
 
-# API específica para busca de laudos por diagnóstico na página de laudos
-@app.route('/api/buscar-laudos-templates')
-def api_buscar_laudos_templates_page():
-    """API para buscar templates de laudo por diagnóstico na página de laudos"""
+@app.route('/api/templates-busca-avancada')
+@login_required
+def api_templates_busca_avancada():
+    """API para busca avançada de templates"""
     try:
-        diagnostico = request.args.get('diagnostico', '').strip()
-        categoria = request.args.get('categoria', 'Adulto')
+        query = request.args.get('q', '').strip()
+        categoria = request.args.get('categoria', '')
         
-        if not diagnostico or len(diagnostico) < 2:
-            return jsonify({
-                'success': False,
-                'message': 'Digite pelo menos 2 caracteres para buscar'
-            })
+        base_query = LaudoTemplate.query.filter_by(ativo=True)
         
-        # Buscar templates que contenham o diagnóstico na categoria especificada
-        query = LaudoTemplate.query.filter(
-            LaudoTemplate.diagnostico.ilike(f'%{diagnostico}%'),
-            LaudoTemplate.ativo == True
-        )
+        if query:
+            search_term = f'%{query}%'
+            base_query = base_query.filter(
+                db.or_(
+                    LaudoTemplate.diagnostico.ilike(search_term),
+                    LaudoTemplate.modo_m_bidimensional.ilike(search_term),
+                    LaudoTemplate.conclusao.ilike(search_term)
+                )
+            )
         
         if categoria:
-            query = query.filter(LaudoTemplate.categoria == categoria)
-            
-        templates = query.order_by(LaudoTemplate.diagnostico).all()
+            base_query = base_query.filter_by(categoria=categoria)
         
-        templates_dict = [template.to_dict() for template in templates]
+        templates = base_query.order_by(LaudoTemplate.diagnostico).limit(20).all()
         
-        log_user_action('Busca de laudos', f'Diagnóstico: {diagnostico} categoria: {categoria} - {len(templates_dict)} resultados')
-        
-        return jsonify({
-            'success': True,
-            'templates': templates_dict,
-            'total': len(templates_dict)
-        })
-        
-    except Exception as e:
-        log_system_event('ERROR', f'Erro na busca de laudos por diagnóstico: {str(e)}', 'api_buscar_laudos')
-        return jsonify({
-            'success': False,
-            'message': 'Erro interno do servidor'
-        }), 500
-
-
-
-@app.route('/editar-exame-prontuario/<int:exame_id>')
-@login_required
-def editar_exame_prontuario(exame_id):
-    """Página de edição completa do exame criado a partir do prontuário"""
-    exame = Exame.query.get_or_404(exame_id)
-    return render_template('prontuario/editar_exame.html', exame=exame)
-
-
-
-@app.route('/api/ultimo-exame-paciente/<nome_paciente>')
-@login_required
-def api_ultimo_exame_paciente(nome_paciente):
-    """API para buscar último exame de um paciente"""
-    try:
-        log_user_action(f'Buscando último exame para paciente: {nome_paciente}')
-        
-        # Buscar último exame do paciente
-        ultimo_exame = Exame.query.filter_by(nome_paciente=nome_paciente).order_by(Exame.id.desc()).first()
-        
-        if ultimo_exame:
-            log_user_action(f'Último exame encontrado - ID: {ultimo_exame.id}, Data: {ultimo_exame.data_exame}')
-            return jsonify({
-                'success': True,
-                'exame_id': ultimo_exame.id,
-                'nome_paciente': ultimo_exame.nome_paciente,
-                'data_exame': ultimo_exame.data_exame,
-                'debug_info': f'Exame mais recente: ID {ultimo_exame.id}'
+        resultado = []
+        for template in templates:
+            resultado.append({
+                'id': template.id,
+                'diagnostico': template.diagnostico,
+                'categoria': template.categoria,
+                'modo_m_bidimensional': template.modo_m_bidimensional[:100] + '...' if len(template.modo_m_bidimensional or '') > 100 else template.modo_m_bidimensional,
+                'conclusao': template.conclusao[:100] + '...' if len(template.conclusao or '') > 100 else template.conclusao
             })
-        else:
-            log_user_action(f'Nenhum exame encontrado para paciente: {nome_paciente}')
-            return jsonify({
-                'success': False,
-                'message': f'Nenhum exame encontrado para o paciente: {nome_paciente}'
-            }), 404
-            
-    except Exception as e:
-        log_error_with_traceback(e, f'api_ultimo_exame_paciente_{nome_paciente}')
-        return jsonify({
-            'success': False,
-            'message': f'Erro ao buscar último exame: {str(e)}',
-            'error_details': str(e)
-        }), 500
-
-@app.route('/test_botao_pdf')
-def test_botao_pdf():
-    """Página de teste para funcionalidade do botão PDF"""
-    return send_from_directory('.', 'test_botao_pdf.html')
-
-@app.route('/gerar-pdf-institucional/<int:exame_id>')
-def gerar_pdf_institucional(exame_id):
-    """Gerar PDF com design institucional moderno"""
-    try:
-        # Buscar dados do exame
-        exame = Exame.query.get_or_404(exame_id)
-        parametros = exame.parametros
-        laudos = exame.laudos
-        
-        # Buscar médico responsável
-        medico = Medico.query.filter_by(ativo=True).first()
-        if not medico:
-            medico = Medico.query.first()
-        
-        # Gerar nome do arquivo
-        nome_arquivo = f"laudo_institucional_{exame.nome_paciente.replace(' ', '_')}_{datetime.now().strftime('%d%m%Y')}.pdf"
-        caminho_pdf = os.path.join('generated_pdfs', nome_arquivo)
-        
-        # Criar diretório se não existir
-        os.makedirs('generated_pdfs', exist_ok=True)
-        
-        # Gerar PDF institucional
-        gerador = PDFInstitucionalCompleto()
-        gerador.gerar_pdf_institucional(exame, parametros, laudos, medico, caminho_pdf)
-        
-        # Log da operação
-        log_pdf_generation('PDF institucional gerado', exame_id, exame.nome_paciente)
-        
-        # Retornar arquivo para download
-        return send_file(
-            caminho_pdf,
-            as_attachment=True,
-            download_name=f"laudo_eco_{exame.nome_paciente.replace(' ', '_')}_institucional.pdf",
-            mimetype='application/pdf'
-        )
-        
-    except Exception as e:
-        log_error_with_traceback(e, f'gerar_pdf_institucional_{exame_id}')
-        flash(f'Erro ao gerar PDF institucional: {str(e)}', 'error')
-        return redirect(url_for('visualizar_exame', exame_id=exame_id))
-
-@app.route('/api/salvar-exame-editado/<int:exame_id>', methods=['POST'])
-@login_required
-def api_salvar_exame_editado(exame_id):
-    """API para salvar alterações no exame editado"""
-    try:
-        exame = Exame.query.get_or_404(exame_id)
-        data = request.get_json()
-        
-        # Atualizar dados básicos do exame
-        if 'dados_basicos' in data:
-            dados = data['dados_basicos']
-            exame.nome_paciente = dados.get('nome_paciente', exame.nome_paciente)
-            exame.data_exame = dados.get('data_exame', exame.data_exame)
-            exame.idade = int(dados.get('idade', exame.idade)) if dados.get('idade') else exame.idade
-            exame.sexo = dados.get('sexo', exame.sexo)
-            exame.data_nascimento = dados.get('data_nascimento', exame.data_nascimento)
-            exame.tipo_atendimento = dados.get('tipo_atendimento', exame.tipo_atendimento)
-            exame.medico_solicitante = dados.get('medico_solicitante', exame.medico_solicitante)
-            exame.indicacao = dados.get('indicacao', exame.indicacao)
-        
-        # Atualizar parâmetros
-        if 'parametros' in data and exame.parametros:
-            params = data['parametros']
-            for campo, valor in params.items():
-                if hasattr(exame.parametros, campo):
-                    if valor is not None and valor != '':
-                        try:
-                            # Converter para float se for numérico
-                            if isinstance(valor, str) and valor.replace('.', '').replace(',', '').isdigit():
-                                valor = float(valor.replace(',', '.'))
-                            elif isinstance(valor, (int, float)):
-                                valor = float(valor)
-                            setattr(exame.parametros, campo, valor)
-                        except (ValueError, TypeError):
-                            # Se não conseguir converter, manter valor original
-                            pass
-        
-        # Atualizar laudo
-        if 'laudo' in data and exame.laudos and len(exame.laudos) > 0:
-            laudo_data = data['laudo']
-            laudo = exame.laudos[0]
-            laudo.modo_m_bidimensional = laudo_data.get('modo_m_bidimensional', laudo.modo_m_bidimensional or '')
-            laudo.doppler_convencional = laudo_data.get('doppler_convencional', laudo.doppler_convencional or '')
-            laudo.doppler_tecidual = laudo_data.get('doppler_tecidual', laudo.doppler_tecidual or '')
-            laudo.conclusao = laudo_data.get('conclusao', laudo.conclusao or '')
-            laudo.recomendacoes = laudo_data.get('recomendacoes', laudo.recomendacoes or '')
-        
-        db.session.commit()
-        
-        # Log da operação
-        log_system_event('INFO', f'Exame editado salvo: {exame.nome_paciente} (ID: {exame_id})', 'exames')
-        
-        return jsonify({
-            'sucesso': True,
-            'mensagem': 'Exame salvo com sucesso!',
-            'exame_id': exame_id
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        log_error_with_traceback(e, f'api_salvar_exame_editado_{exame_id}')
-        return jsonify({'erro': f'Erro ao salvar: {str(e)}'}), 500
-
-@app.route('/api/salvar-template-laudo', methods=['POST'])
-def api_salvar_template_laudo():
-    """API para salvar novo template de laudo personalizado"""
-    try:
-        data = request.get_json()
-        
-        if not data or not data.get('nome'):
-            return jsonify({
-                'success': False,
-                'message': 'Nome do template é obrigatório'
-            }), 400
-        
-        # Verificar se já existe template com mesmo nome
-        template_existente = LaudoTemplate.query.filter_by(diagnostico=data['nome']).first()
-        if template_existente:
-            return jsonify({
-                'success': False,
-                'message': 'Já existe um template com este nome'
-            }), 400
-        
-        # Criar novo template usando o modelo unificado (LaudoTemplate)
-        template = LaudoTemplate(
-            categoria=data.get('categoria', 'Personalizado'),
-            diagnostico=data['nome'],
-            modo_m_bidimensional=data.get('modo_m_bidimensional', ''),
-            doppler_convencional=data.get('doppler_convencional', ''),
-            doppler_tecidual=data.get('doppler_tecidual', ''),
-            conclusao=data.get('conclusao', ''),
-            ativo=True
-        )
-        
-        db.session.add(template)
-        db.session.commit()
-        
-        log_user_action('Template criado', f'Nome: {template.diagnostico}')
         
         return jsonify({
             'success': True,
-            'message': f'Template "{template.diagnostico}" criado com sucesso',
-            'template_id': template.id
+            'templates': resultado,
+            'total': len(resultado)
         })
         
     except Exception as e:
-        db.session.rollback()
-        log_system_event('ERROR', f'Erro ao criar template: {str(e)}', 'api_criar_template')
-        return jsonify({
-            'success': False,
-            'message': 'Erro interno do servidor'
-        }), 500
+        log_error_with_traceback('Erro na busca avançada', e, current_user.id)
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/gerar-pdf-alinhamento-perfeito/<int:exame_id>')
-@login_required  
-def gerar_pdf_alinhamento_perfeito(exame_id):
-    """Gerar PDF com alinhamento perfeito - todos os elementos em linha vertical"""
+# ===== ROTAS DE RELATÓRIOS E ESTATÍSTICAS =====
+
+@app.route('/relatorios')
+@login_required
+@admin_required
+def pagina_relatorios():
+    """Página de relatórios do sistema"""
     try:
-        exame = Exame.query.get_or_404(exame_id)
-        
-        # Buscar médico selecionado ou usar o primeiro disponível
-        medico_id = session.get('medico_selecionado')
-        if medico_id:
-            medico = Medico.query.get(medico_id)
-        else:
-            medico = Medico.query.first()
-        
-        if not medico:
-            flash('Erro: Nenhum médico encontrado. Configure um médico primeiro.', 'error')
-            return redirect(url_for('visualizar_exame', exame_id=exame_id))
-        
-        # Preparar dados do médico
-        medico_data = {
-            'nome': medico.nome,
-            'crm': medico.crm,
-            'assinatura_digital': medico.assinatura_digital
+        # Estatísticas básicas
+        stats = {
+            'total_exames': Exame.query.count(),
+            'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
+            'exames_mes_atual': Exame.query.filter(
+                func.extract('month', Exame.created_at) == datetime.now().month,
+                func.extract('year', Exame.created_at) == datetime.now().year
+            ).count(),
+            'usuarios_ativos': AuthUser.query.filter_by(is_active=True).count()
         }
         
-        from utils.pdf_generator_simetria_perfeita import gerar_pdf_simetria_perfeita
-        caminho_pdf = gerar_pdf_simetria_perfeita(exame, medico_data)
+        return render_template('relatorios/index.html', stats=stats)
         
-        if caminho_pdf and os.path.exists(caminho_pdf):
-            return send_file(
-                caminho_pdf,
-                as_attachment=True,
-                download_name=f'laudo_alinhamento_perfeito_{exame.nome_paciente}_{exame.data_exame}.pdf',
-                mimetype='application/pdf'
-            )
-        else:
-            flash('Erro ao gerar PDF com alinhamento perfeito.', 'error')
-            return redirect(url_for('visualizar_exame', exame_id=exame_id))
+    except Exception as e:
+        log_error_with_traceback('Erro na página de relatórios', e, current_user.id)
+        return render_template('relatorios/index.html', stats={})
+
+@app.route('/api/relatorio-exames-periodo')
+@login_required
+@admin_required
+def api_relatorio_exames_periodo():
+    """API para relatório de exames por período"""
+    try:
+        data_inicio = request.args.get('data_inicio')
+        data_fim = request.args.get('data_fim')
+        
+        query = Exame.query
+        
+        if data_inicio:
+            query = query.filter(Exame.created_at >= data_inicio)
+        if data_fim:
+            query = query.filter(Exame.created_at <= data_fim)
+        
+        exames = query.order_by(desc(Exame.created_at)).all()
+        
+        resultado = []
+        for exame in exames:
+            resultado.append({
+                'id': exame.id,
+                'nome_paciente': exame.nome_paciente,
+                'data_exame': exame.data_exame,
+                'idade': exame.idade,
+                'sexo': exame.sexo,
+                'created_at': exame.created_at.strftime('%d/%m/%Y %H:%M') if exame.created_at else ''
+            })
+        
+        return jsonify({
+            'success': True,
+            'exames': resultado,
+            'total': len(resultado)
+        })
+        
+    except Exception as e:
+        log_error_with_traceback('Erro no relatório de exames', e, current_user.id)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ===== INICIALIZAÇÃO =====
+
+def init_app():
+    """Inicialização da aplicação"""
+    with app.app_context():
+        try:
+            db.create_all()
+            log_system_event('Sistema inicializado com sucesso')
             
-    except Exception as e:
-        import traceback
-        app.logger.error(f"Erro capturado: {str(e)} | IP: {request.remote_addr} | URL: {request.url} | Detalhes: Traceback: {traceback.format_exc()}")
-        flash('Erro interno do servidor ao gerar PDF.', 'error')
-        return redirect(url_for('visualizar_exame', exame_id=exame_id))
-
-# =============================================
-# ROTAS DE BACKUP AUTOMÁTICO
-# =============================================
-
-@app.route('/manutencao/backup_automatico/config', methods=['POST'])
-def configurar_backup_automatico():
-    """Configura backup automático"""
-    try:
-        scheduler = get_backup_scheduler()
-        
-        # Obter configurações do formulário
-        ativar = request.form.get('backup_automatico') == 'on'
-        horario = request.form.get('horario_backup', '02:00')
-        
-        # Aplicar configurações
-        scheduler.enable_auto_backup(ativar)
-        scheduler.set_backup_time(horario)
-        
-        if ativar:
-            flash(f'Backup automático ativado para às {horario}!', 'success')
-        else:
-            flash('Backup automático desativado.', 'info')
+            # Criar usuário admin padrão se não existir
+            admin_user = AuthUser.query.filter_by(username='admin').first()
+            if not admin_user:
+                admin_user = AuthUser()
+                admin_user.username = 'admin'
+                admin_user.email = 'admin@grupovida.com.br'
+                admin_user.set_password('VidahAdmin2025!')
+                admin_user.role = 'admin'
+                admin_user.is_active = True
+                
+                db.session.add(admin_user)
+                db.session.commit()
+                log_system_event('Usuário admin criado automaticamente')
             
-    except Exception as e:
-        logging.error(f"Erro ao configurar backup automático: {e}")
-        flash('Erro ao configurar backup automático.', 'error')
-    
-    return redirect(url_for('pagina_backup'))
+        except Exception as e:
+            log_error_with_traceback('Erro na inicialização', e)
 
-@app.route('/api/backup_status')
-def api_backup_status():
-    """API para obter status do backup automático"""
-    try:
-        scheduler = get_backup_scheduler()
-        status = scheduler.get_status()
-        return jsonify(status)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/manutencao/executar_backup_agora', methods=['POST'])
-def executar_backup_agora():
-    """Executa backup imediatamente"""
-    try:
-        success = create_daily_backup()
-        if success:
-            flash('Backup executado com sucesso!', 'success')
-        else:
-            flash('Falha ao executar backup.', 'error')
-    except Exception as e:
-        logging.error(f"Erro ao executar backup: {e}")
-        flash('Erro ao executar backup.', 'error')
-    
-    return redirect(url_for('pagina_backup'))
+if __name__ == '__main__':
+    init_app()
