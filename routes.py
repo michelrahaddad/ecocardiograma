@@ -18,6 +18,34 @@ from reportlab.lib.pagesizes import A4
 # Configurar logging básico
 logging.basicConfig(level=logging.INFO)
 
+# ===== CLASSE MOMENT PARA TEMPLATES =====
+class MomentJS:
+    """Classe para simular moment.js nos templates Jinja2"""
+    def __init__(self, timestamp=None):
+        if timestamp:
+            self.dt = timestamp
+        else:
+            # Usar fuso horário de Brasília
+            brasilia_tz = timezone(timedelta(hours=-3))
+            self.dt = datetime.now(brasilia_tz)
+    
+    def format(self, format_str):
+        """Formatar data similar ao moment.js"""
+        if format_str == 'DD/MM/YYYY':
+            return self.dt.strftime('%d/%m/%Y')
+        elif format_str == 'HH:mm:ss':
+            return self.dt.strftime('%H:%M:%S')
+        elif format_str == 'DD/MM/YYYY HH:mm':
+            return self.dt.strftime('%d/%m/%Y %H:%M')
+        else:
+            return self.dt.strftime('%d/%m/%Y')
+
+# Adicionar função moment ao contexto global dos templates
+@app.context_processor
+def inject_moment():
+    """Injetar função moment() no contexto de todos os templates"""
+    return dict(moment=lambda: MomentJS())
+
 def admin_required(f):
     """Decorator para rotas que requerem acesso administrativo"""
     @wraps(f)
@@ -1579,6 +1607,32 @@ def internal_error(error):
     log_error_with_traceback('Erro interno do servidor', error)
     return render_template('500.html'), 500
 
+# ===== INICIALIZAÇÃO =====
+
+def init_app():
+    """Inicialização da aplicação"""
+    with app.app_context():
+        try:
+            db.create_all()
+            log_system_event('Sistema inicializado com sucesso')
+            
+            # Criar usuário admin padrão se não existir
+            admin_user = AuthUser.query.filter_by(username='admin').first()
+            if not admin_user:
+                admin_user = AuthUser()
+                admin_user.username = 'admin'
+                admin_user.email = 'admin@grupovida.com.br'
+                admin_user.set_password('VidahAdmin2025!')
+                admin_user.role = 'admin'
+                admin_user.is_active = True
+                
+                db.session.add(admin_user)
+                db.session.commit()
+                log_system_event('Usuário admin criado automaticamente')
+            
+        except Exception as e:
+            log_error_with_traceback('Erro na inicialização', e)
+
 # ===== FUNCIONALIDADES AVANÇADAS ADICIONAIS =====
 
 @app.route('/api/buscar-laudos-templates')
@@ -2018,31 +2072,36 @@ def api_relatorio_exames_periodo():
         log_error_with_traceback('Erro no relatório de exames', e, current_user.id)
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ===== INICIALIZAÇÃO =====
-
-def init_app():
-    """Inicialização da aplicação"""
-    with app.app_context():
-        try:
-            db.create_all()
-            log_system_event('Sistema inicializado com sucesso')
-            
-            # Criar usuário admin padrão se não existir
-            admin_user = AuthUser.query.filter_by(username='admin').first()
-            if not admin_user:
-                admin_user = AuthUser()
-                admin_user.username = 'admin'
-                admin_user.email = 'admin@grupovida.com.br'
-                admin_user.set_password('VidahAdmin2025!')
-                admin_user.role = 'admin'
-                admin_user.is_active = True
-                
-                db.session.add(admin_user)
-                db.session.commit()
-                log_system_event('Usuário admin criado automaticamente')
-            
-        except Exception as e:
-            log_error_with_traceback('Erro na inicialização', e)
+@app.route('/inicializar_sistema')
+def inicializar_sistema():
+    """Página de inicialização do sistema"""
+    try:
+        # Verificar se já existe usuário admin
+        admin_exists = AuthUser.query.filter_by(role='admin').first()
+        
+        if admin_exists:
+            flash('Sistema já foi inicializado anteriormente.', 'info')
+            return redirect(url_for('auth_login'))
+        
+        # Criar usuário admin padrão
+        admin_user = AuthUser(
+            username='admin',
+            email='admin@grupovida.com.br',
+            password_hash=generate_password_hash('VidahAdmin2025!'),
+            role='admin',
+            is_active=True
+        )
+        
+        db.session.add(admin_user)
+        db.session.commit()
+        
+        flash('Sistema inicializado com sucesso! Use: admin / VidahAdmin2025!', 'success')
+        return redirect(url_for('auth_login'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao inicializar sistema: {str(e)}', 'error')
+        return redirect(url_for('auth_login'))
 
 if __name__ == '__main__':
     init_app()
