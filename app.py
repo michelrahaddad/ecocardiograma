@@ -1,10 +1,14 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Create database instance
 db = SQLAlchemy()
+
+# Create login manager
+login_manager = LoginManager()
 
 # Create the app
 app = Flask(__name__)
@@ -38,11 +42,26 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Initialize database
 db.init_app(app)
 
+# Initialize login manager
+login_manager.init_app(app)
+login_manager.login_view = 'auth_login'
+login_manager.login_message = 'Acesso negado. Faça login para continuar.'
+login_manager.login_message_category = 'info'
+
 with app.app_context():
     # Import models and routes
     try:
         import models
         db.create_all()
+        
+        # Configure user loader
+        @login_manager.user_loader
+        def load_user(user_id):
+            try:
+                return models.Usuario.query.get(int(user_id))
+            except:
+                return None
+                
     except ImportError:
         pass
     
