@@ -967,7 +967,8 @@ def manutencao_index():
 def pagina_backup():
     """Página de backup e restauração"""
     # Backups do sistema antigo
-backups_antigos = []  # BackupSistema removido para deploy    
+    backups_antigos = []  # BackupSistema removido para deploy
+    
     # Backups do sistema seguro
     try:
         backups_seguros = get_backup_list()[:10]  # Últimos 10 backups
@@ -984,6 +985,9 @@ def criar_backup_route():
     try:
         tipo_backup = request.form.get('tipo_backup', 'COMPLETO')
         nome_arquivo = criar_backup(tipo_backup)
+        
+        # BackupSistema removido para deploy
+        # Backup criado mas não registrado na tabela
         
         flash('Backup criado com sucesso!', 'success')
     except Exception as e:
