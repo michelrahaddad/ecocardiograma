@@ -13,7 +13,18 @@
                         <p class="text-muted">Acesse o Sistema de Ecocardiograma</p>
                     </div>
 
-                    <form method="POST" class="needs-validation" novalidate method="POST">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label for="username" class="form-label">Usuário</label>
                             <input type="text" class="form-control" id="username" name="username" required 
@@ -45,7 +56,7 @@
                     </form>
 
                     <div class="text-center mt-4">
-                        <a href="{{ url_for('auth.initialize_system') }}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{{ url_for('inicializar_sistema') }}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-cog me-1"></i>Inicializar Sistema
                         </a>
                     </div>
