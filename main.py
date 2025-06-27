@@ -1,9 +1,12 @@
-import os
-from app import app
-import routes
+"""
+Sistema de Ecocardiograma - Grupo Vidah
+Entrada principal para deploy no Render
+"""
 
-# Export app for Gunicorn
-application = app
+# Import the corrected app
+from app_render_corrigido import app
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
+    # This is used for development only
+    # In production, Gunicorn will import the app directly
+    app.run(host="0.0.0.0", port=5000, debug=False)
