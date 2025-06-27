@@ -2,7 +2,7 @@ import os
 from app import app
 import routes
 
-# Export for Gunicorn
+# Export app for Gunicorn
 application = app
 
 if __name__ == "__main__":
