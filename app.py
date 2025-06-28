@@ -58,7 +58,6 @@ def initialize_app():
             
             # Import models first
             import models
-            from auth.models import AuthUser
             
             print("📊 Criando tabelas no banco...")
             
@@ -67,18 +66,18 @@ def initialize_app():
             
             print("✅ Tabelas criadas com sucesso!")
             
-            # Configure user loader for AuthUser
+            # Configure user loader for Usuario model (unified)
             @login_manager.user_loader
             def load_user(user_id):
                 try:
-                    return AuthUser.query.get(int(user_id))
+                    return models.Usuario.query.get(int(user_id))
                 except Exception as e:
                     print(f"❌ Erro ao carregar usuário {user_id}: {e}")
                     return None
             
             # Check if system needs initialization
             try:
-                admin_count = AuthUser.query.filter_by(role='admin').count()
+                admin_count = models.Usuario.query.filter_by(role='admin').count()
                 print(f"👑 Administradores encontrados: {admin_count}")
                 
                 if admin_count == 0:
@@ -87,24 +86,20 @@ def initialize_app():
                     from werkzeug.security import generate_password_hash
                     
                     # Create admin user
-                    admin_user = AuthUser(
-                        username='admin',
-                        email='admin@grupovida.com.br',
-                        password_hash=generate_password_hash('VidahAdmin2025!'),
-                        role='admin',
-                        is_active_flag=True,
-                        is_verified=True
-                    )
+                    admin_user = models.Usuario()
+                    admin_user.username = 'admin'
+                    admin_user.email = 'admin@grupovida.com.br'
+                    admin_user.role = 'admin'
+                    admin_user.ativo = True
+                    admin_user.set_password('VidahAdmin2025!')
                     
                     # Create regular user  
-                    regular_user = AuthUser(
-                        username='usuario',
-                        email='usuario@grupovida.com.br',
-                        password_hash=generate_password_hash('Usuario123!'),
-                        role='user',
-                        is_active_flag=True,
-                        is_verified=True
-                    )
+                    regular_user = models.Usuario()
+                    regular_user.username = 'usuario'
+                    regular_user.email = 'usuario@grupovida.com.br'
+                    regular_user.role = 'user'
+                    regular_user.ativo = True
+                    regular_user.set_password('Usuario123!')
                     
                     db.session.add(admin_user)
                     db.session.add(regular_user)
