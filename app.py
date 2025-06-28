@@ -1,136 +1,103 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Create database instance
-db = SQLAlchemy()
+class Base(DeclarativeBase):
+    pass
 
-# Create login manager
-login_manager = LoginManager()
+db = SQLAlchemy(model_class=Base)
 
-# Create the app
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "vidah-echo-system-secret-key-2025")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
-# Configure the database
-database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url or "sqlite:///ecocardiograma.db"
-
-# Enhanced database configuration for production
-if database_url and database_url.startswith('postgresql'):
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 3600,
-        "pool_pre_ping": True,
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_timeout": 30,
-        "echo": False  # Disable SQL logging in production
-    }
-else:
+def create_app():
+    """Factory function para criar a aplicação Flask"""
+    app = Flask(__name__)
+    
+    # Configurações
+    app.secret_key = os.environ.get("SESSION_SECRET", "vidah-secret-key-2025")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ecocardiograma.db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
     }
-
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# Initialize database
-db.init_app(app)
-
-# Initialize login manager
-login_manager.init_app(app)
-login_manager.login_view = 'auth_login'
-login_manager.login_message = 'Acesso negado. Faça login para continuar.'
-login_manager.login_message_category = 'info'
-
-# Initialize the application with proper error handling
-def initialize_app():
-    """Initialize app with database and auth setup"""
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    # Middleware para proxy reverso
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    # Inicializar extensões
+    db.init_app(app)
+    
+    # Configurar Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
+    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+    login_manager.login_message_category = 'info'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        from models import Usuario
+        return Usuario.query.get(int(user_id))
+    
     with app.app_context():
+        # Importar modelos
+        import models
+        
+        # Criar tabelas
+        db.create_all()
+        
+        # Criar usuários padrão se não existirem
+        from models import Usuario
+        from werkzeug.security import generate_password_hash
+        
+        # Usuário admin
+        admin_user = Usuario.query.filter_by(username='admin').first()
+        if not admin_user:
+            admin_user = Usuario(
+                username='admin',
+                email='admin@grupovidah.com.br',
+                role='admin',
+                ativo=True
+            )
+            admin_user.set_password('VidahAdmin2025!')
+            db.session.add(admin_user)
+        
+        # Usuário comum
+        user = Usuario.query.filter_by(username='usuario').first()
+        if not user:
+            user = Usuario(
+                username='usuario',
+                email='usuario@grupovidah.com.br',
+                role='user',
+                ativo=True
+            )
+            user.set_password('Usuario123!')
+            db.session.add(user)
+        
+        # Médico padrão
+        from models import Medico
+        medico = Medico.query.filter_by(crm='183299').first()
+        if not medico:
+            medico = Medico(
+                nome='Dr. Michel Raineri Haddad',
+                crm='183299',
+                ativo=True
+            )
+            db.session.add(medico)
+        
         try:
-            print("🚀 Iniciando aplicação...")
-            
-            # Import models first
-            import models
-            
-            print("📊 Criando tabelas no banco...")
-            
-            # Create all tables
-            db.create_all()
-            
-            print("✅ Tabelas criadas com sucesso!")
-            
-            # Configure user loader for Usuario model (unified)
-            @login_manager.user_loader
-            def load_user(user_id):
-                try:
-                    return models.Usuario.query.get(int(user_id))
-                except Exception as e:
-                    print(f"❌ Erro ao carregar usuário {user_id}: {e}")
-                    return None
-            
-            # Check if system needs initialization
-            try:
-                admin_count = models.Usuario.query.filter_by(role='admin').count()
-                print(f"👑 Administradores encontrados: {admin_count}")
-                
-                if admin_count == 0:
-                    print("🔧 Inicializando sistema com usuários padrão...")
-                    
-                    from werkzeug.security import generate_password_hash
-                    
-                    # Create admin user
-                    admin_user = models.Usuario()
-                    admin_user.username = 'admin'
-                    admin_user.email = 'admin@grupovida.com.br'
-                    admin_user.role = 'admin'
-                    admin_user.ativo = True
-                    admin_user.set_password('VidahAdmin2025!')
-                    
-                    # Create regular user  
-                    regular_user = models.Usuario()
-                    regular_user.username = 'usuario'
-                    regular_user.email = 'usuario@grupovida.com.br'
-                    regular_user.role = 'user'
-                    regular_user.ativo = True
-                    regular_user.set_password('Usuario123!')
-                    
-                    db.session.add(admin_user)
-                    db.session.add(regular_user)
-                    db.session.commit()
-                    
-                    print("✅ Usuários padrão criados:")
-                    print("   👑 Admin: admin / VidahAdmin2025!")
-                    print("   👤 User: usuario / Usuario123!")
-                else:
-                    print("✅ Sistema já inicializado!")
-                    
-            except Exception as e:
-                print(f"⚠️  Erro ao verificar/criar usuários: {e}")
-                db.session.rollback()
-                
-            print("🎉 Aplicação inicializada com sucesso!")
-            
+            db.session.commit()
+            print("✅ Banco de dados inicializado com sucesso")
         except Exception as e:
-            print(f"❌ Erro crítico na inicialização: {e}")
-            import traceback
-            traceback.print_exc()
-            
-        try:
-            # Import routes last
-            import routes
-            print("🛣️  Rotas carregadas com sucesso!")
-            
-        except Exception as e:
-            print(f"❌ Erro ao carregar rotas: {e}")
-            import traceback
-            traceback.print_exc()
+            db.session.rollback()
+            print(f"❌ Erro ao inicializar banco: {e}")
+    
+    return app
 
-# Initialize when module is imported
-initialize_app()
+# Criar a aplicação
+app = create_app()
+
+# Importar rotas
+import routes
