@@ -619,7 +619,7 @@ def novo_exame():
             log_system_event(f'Novo exame criado: ID {exame.id}, Paciente: {exame.nome_paciente}', current_user.id)
             
             flash('Exame criado com sucesso!', 'success')
-            return redirect(url_for('visualizar_exame', id=exame.id))
+            return redirect(url_for('parametros', id=exame.id))
             
         except Exception as e:
             db.session.rollback()
@@ -863,7 +863,7 @@ def visualizar_exame(id):
 def gerar_pdf(exame_id):  
     """Gerar PDF do exame"""
     try:
-        exame = Exame.query.get_or_404(id)
+        exame = Exame.query.get_or_404(exame_id)
         
         # Gerar PDF
         caminho_pdf = generate_pdf_report(exame)
@@ -880,7 +880,7 @@ def gerar_pdf(exame_id):
     except Exception as e:
         log_error_with_traceback('Erro ao gerar PDF', e, current_user.id)
         flash(f'Erro ao gerar PDF: {str(e)}', 'error')
-        return redirect(url_for('visualizar_exame', id=id))
+        return redirect(url_for('laudo', exame_id=id))
 
 @app.route('/cadastro_medico', methods=['GET', 'POST'])
 @login_required
