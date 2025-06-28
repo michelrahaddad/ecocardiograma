@@ -1,4 +1,3 @@
-
 ```python
 """
 Sistema de Ecocardiograma - Grupo Vidah
