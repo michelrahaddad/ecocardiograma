@@ -15,17 +15,16 @@
             </div>
             <div class="col-auto">
                 <div class="btn-group">
-                    <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="btn btn-light btn-sm">
+                    <a href="{{ url_for('parametros', id=exame.id) }}" class="btn btn-light btn-sm">
                         <i class="fas fa-edit me-1"></i>Editar
                     </a>
                     <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="btn btn-warning btn-sm pdf-btn-universal" target="_blank"
                        onclick="return confirmarGeracaoPDF(this);">
                         <i class="fas fa-file-pdf me-1"></i>Gerar PDF
                     </a>
-                    <a href="{{ url_for('gerar_pdf_alinhamento_perfeito', exame_id=exame.id) }}" class="btn btn-success btn-sm pdf-btn-universal" target="_blank"
-                       onclick="return confirmarGeracaoPDF(this);">
-                        <i class="fas fa-align-left me-1"></i>PDF Alinhado
-                    </a>
+                    <button onclick="voltarPagina()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </button>
                 </div>
             </div>
         </div>
@@ -376,45 +375,3 @@
         
         {% if laudo.doppler_tecidual %}
         <div class="mb-3">
-            <h6 class="text-primary">Doppler Tecidual</h6>
-            <p class="text-justify">{{ laudo.doppler_tecidual }}</p>
-        </div>
-        {% endif %}
-        
-        {% if laudo.conclusao %}
-        <div class="mb-3">
-            <h6 class="text-primary">Conclusão</h6>
-            <div class="alert alert-info">
-                <p class="mb-0 text-justify">{{ laudo.conclusao }}</p>
-            </div>
-        </div>
-        {% endif %}
-        
-        {% if laudo.recomendacoes %}
-        <div class="mb-3">
-            <h6 class="text-primary">Recomendações</h6>
-            <div class="alert alert-warning">
-                <p class="mb-0 text-justify">{{ laudo.recomendacoes }}</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
-
-<!-- Actions -->
-<div class="d-flex justify-content-between">
-    <a href="javascript:void(0)" onclick="voltarPagina()" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Voltar
-    </a>
-    <div>
-        <a href="{{ url_for('parametros', exame_id=exame.id) }}" class="btn btn-primary">
-            <i class="fas fa-edit me-1"></i>Editar Exame
-        </a>
-        <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" class="btn btn-success pdf-btn-universal" target="_blank"
-           onclick="return confirmarGeracaoPDF(this);">
-            <i class="fas fa-file-pdf me-1"></i>Gerar PDF
-        </a>
-    </div>
-</div>
-{% endblock %}
