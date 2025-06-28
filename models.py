@@ -1,4 +1,3 @@
-python
 from datetime import datetime, timezone, timedelta
 from app import db
 from flask_login import UserMixin
@@ -233,4 +232,3 @@ class LaudoTemplate(db.Model):
             'conclusao': self.conclusao,
             'ativo': self.ativo
         }
-```
