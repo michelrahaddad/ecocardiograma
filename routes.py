@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import base64
 from datetime import datetime, timezone, timedelta
@@ -9,7 +10,7 @@ from sqlalchemy import func, desc
 from functools import wraps
 from app import app, db
 from models import Exame, ParametrosEcocardiograma, LaudoEcocardiograma, Medico, LogSistema, LaudoTemplate, datetime_brasilia
-from auth.models import AuthUser
+from models import Usuario
 import logging
 import tempfile
 from reportlab.pdfgen import canvas
@@ -51,8 +52,8 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('auth_login'))
-        if not current_user.is_admin():
+            return redirect(url_for('login'))
+        if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
             flash('Acesso negado. Você precisa ser administrador para acessar esta área.', 'error')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
@@ -405,7 +406,7 @@ def log_error_with_traceback(message, error, user_id=None):
 # ===== ROTAS DE AUTENTICAÇÃO =====
 
 @app.route('/login', methods=['GET', 'POST'])
-def auth_login():
+def login():
     """Página de login do sistema"""
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -414,8 +415,8 @@ def auth_login():
         username = request.form['username']
         password = request.form['password']
         
-        # Tentar AuthUser primeiro (novo sistema)
-        user = AuthUser.query.filter_by(username=username).first()
+        # Tentar Usuario primeiro (novo sistema)
+        user = Usuario.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
             login_user(user)
@@ -437,7 +438,7 @@ def auth_logout():
     logout_user()
     log_system_event(f'Logout realizado: {username}', user_id)
     flash('Logout realizado com sucesso', 'success')
-    return redirect(url_for('auth_login'))
+    return redirect(url_for('login'))
 
 # ===== ROTAS PRINCIPAIS =====
 
@@ -1292,7 +1293,7 @@ def manutencao_index():
             'total_exames': Exame.query.count(),
             'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
             'total_medicos': Medico.query.filter_by(ativo=True).count(),
-            'total_usuarios': AuthUser.query.filter_by(is_active=True).count(),
+            'total_usuarios': Usuario.query.filter_by(is_active=True).count(),
             'total_logs': LogSistema.query.count()
         }
         
@@ -1346,7 +1347,7 @@ def criar_backup_route():
             'total_exames': Exame.query.count(),
             'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
             'total_medicos': Medico.query.count(),
-            'total_usuarios': AuthUser.query.count(),
+            'total_usuarios': Usuario.query.count(),
             'criado_por': current_user.username
         }
         
@@ -1434,7 +1435,7 @@ def limpar_logs():
 def gerenciar_usuarios():
     """Página de gerenciamento de usuários"""
     try:
-        usuarios = AuthUser.query.all()
+        usuarios = Usuario.query.all()
         return render_template('manutencao/usuarios.html', usuarios=usuarios)
     except Exception as e:
         log_error_with_traceback('Erro no gerenciamento de usuários', e, current_user.id)
@@ -1447,7 +1448,7 @@ def criar_usuario():
     """Criar novo usuário"""
     if request.method == 'POST':
         try:
-            usuario = AuthUser()
+            usuario = Usuario()
             usuario.username = request.form['username']
             usuario.email = request.form['email']
             usuario.set_password(request.form['password'])
@@ -1474,7 +1475,7 @@ def criar_usuario():
 def editar_usuario(id):
     """Editar usuário existente"""
     try:
-        usuario = AuthUser.query.get_or_404(id)
+        usuario = Usuario.query.get_or_404(id)
         
         if request.method == 'POST':
             usuario.username = request.form['username']
@@ -1503,7 +1504,7 @@ def editar_usuario(id):
 def excluir_usuario(id):
     """Excluir usuário"""
     try:
-        usuario = AuthUser.query.get_or_404(id)
+        usuario = Usuario.query.get_or_404(id)
         
         # Não permitir excluir o próprio usuário
         if usuario.id == current_user.id:
@@ -1617,9 +1618,9 @@ def init_app():
             log_system_event('Sistema inicializado com sucesso')
             
             # Criar usuário admin padrão se não existir
-            admin_user = AuthUser.query.filter_by(username='admin').first()
+            admin_user = Usuario.query.filter_by(username='admin').first()
             if not admin_user:
-                admin_user = AuthUser()
+                admin_user = Usuario()
                 admin_user.username = 'admin'
                 admin_user.email = 'admin@grupovida.com.br'
                 admin_user.set_password('VidahAdmin2025!')
@@ -1853,7 +1854,7 @@ def executar_backup_agora():
             'timestamp': timestamp,
             'total_exames': Exame.query.count(),
             'total_pacientes': db.session.query(func.count(func.distinct(Exame.nome_paciente))).scalar(),
-            'total_usuarios': AuthUser.query.count(),
+            'total_usuarios': Usuario.query.count(),
             'executado_por': current_user.username
         }
         
@@ -2024,7 +2025,7 @@ def pagina_relatorios():
                 func.extract('month', Exame.created_at) == datetime.now().month,
                 func.extract('year', Exame.created_at) == datetime.now().year
             ).count(),
-            'usuarios_ativos': AuthUser.query.filter_by(is_active=True).count()
+            'usuarios_ativos': Usuario.query.filter_by(is_active=True).count()
         }
         
         return render_template('relatorios/index.html', stats=stats)
@@ -2077,14 +2078,14 @@ def inicializar_sistema():
     """Página de inicialização do sistema"""
     try:
         # Verificar se já existe usuário admin
-        admin_exists = AuthUser.query.filter_by(role='admin').first()
+        admin_exists = Usuario.query.filter_by(role='admin').first()
         
         if admin_exists:
             flash('Sistema já foi inicializado anteriormente.', 'info')
-            return redirect(url_for('auth_login'))
+            return redirect(url_for('login'))
         
         # Criar usuário admin padrão
-        admin_user = AuthUser(
+        admin_user = Usuario(
             username='admin',
             email='admin@grupovida.com.br',
             password_hash=generate_password_hash('VidahAdmin2025!'),
@@ -2096,12 +2097,12 @@ def inicializar_sistema():
         db.session.commit()
         
         flash('Sistema inicializado com sucesso! Use: admin / VidahAdmin2025!', 'success')
-        return redirect(url_for('auth_login'))
+        return redirect(url_for('login'))
         
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao inicializar sistema: {str(e)}', 'error')
-        return redirect(url_for('auth_login'))
+        return redirect(url_for('login'))
 
 if __name__ == '__main__':
     init_app()
