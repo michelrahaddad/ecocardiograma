@@ -1,102 +1,108 @@
-```python
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-class Base(DeclarativeBase):
-    pass
+# Create database instance
+db = SQLAlchemy()
 
-db = SQLAlchemy(model_class=Base)
+# Create login manager
+login_manager = LoginManager()
 
-def create_app():
-    """Factory function para criar a aplicação Flask"""
-    app = Flask(__name__)
-    
-    # Configurações
-    app.secret_key = os.environ.get("SESSION_SECRET", "vidah-secret-key-2025")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ecocardiograma.db")
+# Create the app
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "vidah-echo-system-secret-key")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Configure the database
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url or "sqlite:///ecocardiograma.db"
+
+# Enhanced database configuration
+if database_url and database_url.startswith('postgresql'):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 3600,
+        "pool_pre_ping": True,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_timeout": 30
+    }
+else:
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
     }
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    
-    # Middleware para proxy reverso
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-    
-    # Inicializar extensões
-    db.init_app(app)
-    
-    # Configurar Flask-Login
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = 'login'
-    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
-    login_manager.login_message_category = 'info'
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        from models import Usuario
-        return Usuario.query.get(int(user_id))
-    
-    with app.app_context():
-        # Importar modelos
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize database
+db.init_app(app)
+
+# Initialize login manager
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Acesso negado. Faça login para continuar.'
+login_manager.login_message_category = 'info'
+
+with app.app_context():
+    # Import models and routes
+    try:
         import models
+        from models import Usuario
         
-        # Criar tabelas
+        # Create all tables
         db.create_all()
         
-        # Criar usuários padrão se não existirem
-        from models import Usuario
-        from werkzeug.security import generate_password_hash
+        # Configure user loader for Usuario
+        @login_manager.user_loader
+        def load_user(user_id):
+            try:
+                return Usuario.query.get(int(user_id))
+            except:
+                return None
         
-        # Usuário admin
-        admin_user = Usuario.query.filter_by(username='admin').first()
-        if not admin_user:
-            admin_user = Usuario()
-            admin_user.username = 'admin'
-            admin_user.email = 'admin@grupovidah.com.br'
-            admin_user.role = 'admin'
-            admin_user.ativo = True
-            admin_user.set_password('VidahAdmin2025!')
-            db.session.add(admin_user)
-        
-        # Usuário comum
-        user = Usuario.query.filter_by(username='usuario').first()
-        if not user:
-            user = Usuario()
-            user.username = 'usuario'
-            user.email = 'usuario@grupovidah.com.br'
-            user.role = 'user'
-            user.ativo = True
-            user.set_password('Usuario123!')
-            db.session.add(user)
-        
-        # Médico padrão
-        from models import Medico
-        medico = Medico.query.filter_by(crm='183299').first()
-        if not medico:
-            medico = Medico()
-            medico.nome = 'Dr. Michel Raineri Haddad'
-            medico.crm = '183299'
-            medico.ativo = True
-            db.session.add(medico)
-        
+        # Initialize system with admin user if needed
         try:
-            db.session.commit()
-            print("✅ Banco de dados inicializado com sucesso")
+            admin_exists = Usuario.query.filter_by(role='admin').first()
+            if not admin_exists:
+                # Create admin user
+                admin_user = Usuario(
+                    username='admin',
+                    email='admin@grupovida.com.br',
+                    role='admin',
+                    ativo=True
+                )
+                admin_user.set_password('VidahAdmin2025!')
+                
+                # Create regular user
+                regular_user = Usuario(
+                    username='usuario',
+                    email='usuario@grupovida.com.br',
+                    role='user',
+                    ativo=True
+                )
+                regular_user.set_password('Usuario123!')
+                
+                db.session.add(admin_user)
+                db.session.add(regular_user)
+                db.session.commit()
+                
+                print("Sistema inicializado com usuários padrão:")
+                print("Admin: admin / VidahAdmin2025!")
+                print("Usuário: usuario / Usuario123!")
+                
         except Exception as e:
+            print(f"Erro ao inicializar usuários: {e}")
             db.session.rollback()
-            print(f"❌ Erro ao inicializar banco: {e}")
+                
+    except ImportError as e:
+        print(f"Erro ao importar modelos: {e}")
     
-    return app
-
-# Criar a aplicação
-app = create_app()
-
-# Importar rotas
-import routes
-```
+    try:
+        import routes
+    except ImportError as e:
+        print(f"Erro ao importar rotas: {e}")
