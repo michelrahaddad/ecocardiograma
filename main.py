@@ -1,12 +1,10 @@
 """
 Sistema de Ecocardiograma - Grupo Vidah
-Entrada principal para deploy no Render
+Entrada principal para deploy no Render - VERSÃO FINAL CORRIGIDA
+Este arquivo deve substituir o main.py no GitHub
 """
 
-# Import from the standard app.py file
-from app import app
+from app_github_final import app
 
-if __name__ == "__main__":
-    # This is used for development only
-    # In production, Gunicorn will import the app directly
-    app.run(host="0.0.0.0", port=5000, debug=False)
+if __name__ == '__main__':
+    app.run(debug=False, host='0.0.0.0', port=5000)
