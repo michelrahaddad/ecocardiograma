@@ -1,45 +1,15 @@
+```python
+from datetime import datetime, timezone, timedelta
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import pytz
+
+# Fuso horário de Brasília (UTC-3)
+BRASILIA_TZ = timezone(timedelta(hours=-3))
 
 def datetime_brasilia():
     """Retorna datetime atual no fuso horário de Brasília"""
-    brasil_tz = pytz.timezone('America/Sao_Paulo')
-    return datetime.now(brasil_tz)
-
-class Usuario(UserMixin, db.Model):
-    __tablename__ = 'usuarios'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(50), default='user')  # 'user' ou 'admin'
-    ativo = db.Column(db.Boolean, default=True)
-    
-    created_at = db.Column(db.DateTime, default=datetime_brasilia)
-    updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
-    
-    def set_password(self, password):
-        """Define a senha do usuário com hash seguro"""
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        """Verifica se a senha está correta"""
-        return check_password_hash(self.password_hash, password)
-    
-    def is_admin(self):
-        """Verifica se o usuário é administrador"""
-        return self.role == 'admin'
-    
-    def is_active(self):
-        """Necessário para Flask-Login"""
-        return self.ativo
-    
-    def __repr__(self):
-        return f'<Usuario {self.username}>'
+    return datetime.now(BRASILIA_TZ)
 
 class Exame(db.Model):
     __tablename__ = 'exames'
@@ -57,9 +27,16 @@ class Exame(db.Model):
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
     updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
     
-    # Relacionamentos
+    # Relacionamento com parâmetros
     parametros = db.relationship('ParametrosEcocardiograma', backref='exame', uselist=False, cascade='all, delete-orphan')
     laudos = db.relationship('LaudoEcocardiograma', backref='exame', cascade='all, delete-orphan')
+
+    def __init__(self, **kwargs):
+        """Constructor para Exame com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 class ParametrosEcocardiograma(db.Model):
     __tablename__ = 'parametros_ecocardiograma'
@@ -73,7 +50,7 @@ class ParametrosEcocardiograma(db.Model):
     superficie_corporal = db.Column(db.Float)
     frequencia_cardiaca = db.Column(db.Integer)
     
-    # Medidas básicas
+    # Medidas ecocardiográficas básicas
     atrio_esquerdo = db.Column(db.Float)
     raiz_aorta = db.Column(db.Float)
     relacao_atrio_esquerdo_aorta = db.Column(db.Float)
@@ -109,12 +86,19 @@ class ParametrosEcocardiograma(db.Model):
     gradiente_ve_ao = db.Column(db.Float)  # Ventrículo Esquerdo → Aorta
     gradiente_ad_vd = db.Column(db.Float)  # Átrio Direito → Ventrículo Direito
     
-    # Insuficiência tricúspide e PSAP
+    # Outras medidas
     gradiente_tricuspide = db.Column(db.Float)
     pressao_sistolica_vd = db.Column(db.Float)
     
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
     updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
+
+    def __init__(self, **kwargs):
+        """Constructor para ParametrosEcocardiograma com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 class LaudoEcocardiograma(db.Model):
     __tablename__ = 'laudos_ecocardiograma'
@@ -122,6 +106,7 @@ class LaudoEcocardiograma(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     exame_id = db.Column(db.Integer, db.ForeignKey('exames.id'), nullable=False)
     
+    # Seções do laudo
     modo_m_bidimensional = db.Column(db.Text)
     doppler_convencional = db.Column(db.Text)
     doppler_tecidual = db.Column(db.Text)
@@ -130,6 +115,13 @@ class LaudoEcocardiograma(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
     updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
+
+    def __init__(self, **kwargs):
+        """Constructor para LaudoEcocardiograma com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 class Medico(db.Model):
     __tablename__ = 'medicos'
@@ -144,6 +136,52 @@ class Medico(db.Model):
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
     updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
 
+    def __init__(self, **kwargs):
+        """Constructor para Medico com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+class Usuario(UserMixin, db.Model):
+    __tablename__ = 'usuarios'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+    role = db.Column(db.String(50), default='user')  # 'user' ou 'admin'
+    ativo = db.Column(db.Boolean, default=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime_brasilia)
+    updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
+
+    def __init__(self, **kwargs):
+        """Constructor para Usuario com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def set_password(self, password):
+        """Define a senha do usuário com hash seguro"""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Verifica se a senha está correta"""
+        return check_password_hash(self.password_hash, password)
+
+    def is_admin(self):
+        """Verifica se o usuário é administrador"""
+        return self.role == 'admin'
+
+    def is_active(self):
+        """Necessário para Flask-Login"""
+        return self.ativo
+
+    def __repr__(self):
+        return f'<Usuario {self.username}>'
+
 class LogSistema(db.Model):
     __tablename__ = 'logs_sistema'
     
@@ -154,6 +192,13 @@ class LogSistema(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
+
+    def __init__(self, **kwargs):
+        """Constructor para LogSistema com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 class LaudoTemplate(db.Model):
     __tablename__ = 'laudos_templates'
@@ -169,3 +214,23 @@ class LaudoTemplate(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime_brasilia)
     updated_at = db.Column(db.DateTime, default=datetime_brasilia, onupdate=datetime_brasilia)
+
+    def __init__(self, **kwargs):
+        """Constructor para LaudoTemplate com argumentos nomeados"""
+        super().__init__()
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'categoria': self.categoria,
+            'diagnostico': self.diagnostico,
+            'modo_m_bidimensional': self.modo_m_bidimensional,
+            'doppler_convencional': self.doppler_convencional,
+            'doppler_tecidual': self.doppler_tecidual,
+            'conclusao': self.conclusao,
+            'ativo': self.ativo
+        }
+```
