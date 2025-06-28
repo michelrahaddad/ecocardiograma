@@ -1,3 +1,6 @@
+# ARQUIVO 1: app.py (CÓDIGO COMPLETO)
+
+```python
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -55,24 +58,22 @@ def create_app():
         # Usuário admin
         admin_user = Usuario.query.filter_by(username='admin').first()
         if not admin_user:
-            admin_user = Usuario(
-                username='admin',
-                email='admin@grupovidah.com.br',
-                role='admin',
-                ativo=True
-            )
+            admin_user = Usuario()
+            admin_user.username = 'admin'
+            admin_user.email = 'admin@grupovidah.com.br'
+            admin_user.role = 'admin'
+            admin_user.ativo = True
             admin_user.set_password('VidahAdmin2025!')
             db.session.add(admin_user)
         
         # Usuário comum
         user = Usuario.query.filter_by(username='usuario').first()
         if not user:
-            user = Usuario(
-                username='usuario',
-                email='usuario@grupovidah.com.br',
-                role='user',
-                ativo=True
-            )
+            user = Usuario()
+            user.username = 'usuario'
+            user.email = 'usuario@grupovidah.com.br'
+            user.role = 'user'
+            user.ativo = True
             user.set_password('Usuario123!')
             db.session.add(user)
         
@@ -80,11 +81,10 @@ def create_app():
         from models import Medico
         medico = Medico.query.filter_by(crm='183299').first()
         if not medico:
-            medico = Medico(
-                nome='Dr. Michel Raineri Haddad',
-                crm='183299',
-                ativo=True
-            )
+            medico = Medico()
+            medico.nome = 'Dr. Michel Raineri Haddad'
+            medico.crm = '183299'
+            medico.ativo = True
             db.session.add(medico)
         
         try:
@@ -101,3 +101,4 @@ app = create_app()
 
 # Importar rotas
 import routes
+```
