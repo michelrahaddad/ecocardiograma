@@ -1,5 +1,3 @@
-# ARQUIVO 1: app.py (CÓDIGO COMPLETO)
-
 ```python
 import os
 from flask import Flask
