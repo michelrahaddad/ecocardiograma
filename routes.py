@@ -858,9 +858,9 @@ def visualizar_exame(id):
         flash('Erro ao carregar exame', 'error')
         return redirect(url_for('index'))
 
-@app.route('/gerar-pdf/<int:id>')
+@app.route('/gerar-pdf/<int:exame_id>')
 @login_required
-def gerar_pdf(id):
+def gerar_pdf(exame_id):  
     """Gerar PDF do exame"""
     try:
         exame = Exame.query.get_or_404(id)
