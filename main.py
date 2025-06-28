@@ -1,12 +1,9 @@
-```python
-"""
-Sistema de Ecocardiograma - Grupo Vidah
-Entrada principal para deploy no Render - VERSÃO FINAL CORRIGIDA
-Este arquivo deve substituir o main.py no GitHub
-"""
-
+import os
 from app import app
+import routes
 
-if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
-```
+# Export app for Gunicorn
+application = app
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
