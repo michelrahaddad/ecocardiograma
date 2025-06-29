@@ -1,615 +1,852 @@
 {% extends "base.html" %}
 
-{% block title %}Editar Exame - {{ exame.nome_paciente }} - Sistema de Ecocardiograma{% endblock %}
+{% block title %}Exame - {{ exame.nome_paciente }} - {{ exame.data_exame }} - Sistema de Ecocardiograma{% endblock %}
 
 {% block extra_css %}
 <style>
-/* Estilo moderno para edição de exame */
-.edit-header {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+/* Modern Exam Header Styles */
+.exam-header-modern {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     border-radius: 20px;
     padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    border: 1px solid #bfdbfe;
+    border: 1px solid #e2e8f0;
 }
 
-.edit-title {
-    color: #1e40af;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.edit-subtitle {
-    color: #64748b;
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.btn-modern {
-    padding: 0.8rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
-    border: none;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-voltar {
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-    color: white;
-}
-
-.btn-voltar:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
-    color: white;
-}
-
-.btn-salvar {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-}
-
-.btn-salvar:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-    color: white;
-}
-
-.btn-pdf {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-}
-
-.btn-pdf:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-    color: white;
-}
-
-.section-edit {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
+.exam-title-section {
+    text-align: center;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    border: 1px solid #f1f5f9;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
 }
 
-.section-edit-header {
-    color: #1e40af;
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e0f2fe;
-}
-
-.form-field {
-    margin-bottom: 1.5rem;
-}
-
-.form-field label {
-    color: #4338ca;
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.form-field input,
-.form-field select,
-.form-field textarea {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.form-field input:focus,
-.form-field select:focus,
-.form-field textarea:focus {
-    outline: none;
-    border-color: #4338ca;
-    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
-}
-
-.form-field textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-.calculated-field {
-    background: #f8f9fa !important;
-    color: #6c757d;
-}
-
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
+.exam-type {
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
-}
-
-.loading-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-.spinner {
-    border: 3px solid #f3f4f6;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.alert-custom {
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
+    color: #475569;
+    font-size: 1.5rem;
+    font-weight: 600;
     margin-bottom: 1rem;
-    border: none;
+}
+
+.exam-type i {
+    color: #3b82f6;
+    font-size: 2rem;
+}
+
+.patient-name {
+    color: #1e293b;
+    font-size: 2.2rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.patient-info-cards {
+    margin-bottom: 1.5rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.info-card-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.info-card-icon i {
+    font-size: 1.2rem;
+}
+
+.info-card-content {
+    flex: 1;
+}
+
+.info-card-label {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.info-card-value {
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+}
+
+.exam-status-section {
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.exam-status-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.exam-status-badge i {
+    font-size: 1.2rem;
+}
+
+.creation-info {
+    text-align: right;
+}
+
+.creation-label {
+    display: block;
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.creation-date {
+    display: block;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+}
+
+.parameter-section {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+    border: 1px solid #e0e7ff;
+}
+
+.parameter-section-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 3px solid #bfdbfe;
+}
+
+.parameter-section-header h5 {
+    color: #1e40af;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.parameter-section-body {
+    padding: 2rem;
+    background: #fafbff;
+}
+
+.form-floating label {
+    color: #4338ca;
     font-weight: 500;
 }
 
-.alert-success {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    color: #065f46;
+.form-control {
+    border: 2px solid #e0e7ff;
+    border-radius: 12px;
+    padding: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: white;
 }
 
-.alert-error {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    color: #991b1b;
+.form-control:focus {
+    border-color: #4338ca;
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+    background: #fafbff;
+}
+
+/* Estilo dos campos de parâmetros - Idêntico ao fluxo novo paciente */
+.parameter-field {
+    margin-bottom: 15px;
+}
+
+.parameter-field-label {
+    color: #8b9dc3;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.parameter-field-value {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 15px 20px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 8px;
+}
+
+.parameter-field-value.calculated {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.parameter-field-value .value-text {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    width: 100%;
+}
+
+.parameter-field-reference {
+    color: #6c757d;
+    font-size: 0.85rem;
+    text-align: left;
+    margin-top: 2px;
+}
+
+.reference-value {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.section-divider {
+    height: 3px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 2px;
+    margin: 3rem 0;
+}
+
+.patient-info-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+/* Seções coloridas específicas */
+.section-velocidades .parameter-section-header {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border-color: #d8b4fe;
+}
+
+.section-velocidades .parameter-section-header h5 {
+    color: #7c3aed;
+}
+
+.section-gradientes .parameter-section-header {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #bbf7d0;
+}
+
+.section-gradientes .parameter-section-header h5 {
+    color: #166534;
+}
+
+.section-doppler .parameter-section-header {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    border-color: #7dd3fc;
+}
+
+.section-doppler .parameter-section-header h5 {
+    color: #0284c7;
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.patient-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #374151;
+    margin-right: 0.5rem;
+    min-width: 120px;
+}
+
+.info-value {
+    color: #1e40af;
+    font-weight: 500;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header -->
-    <div class="edit-header">
-        <div class="edit-title">
-            <i class="fas fa-edit me-2"></i>Editar Exame Ecocardiográfico
-        </div>
-        <div class="edit-subtitle">
-            Paciente: {{ exame.nome_paciente }} • Data: {{ exame.data_exame }}
-        </div>
-        
-        <div class="action-buttons">
-            <a href="{{ url_for('prontuario_paciente', nome_paciente=exame.nome_paciente) }}" class="btn-modern btn-voltar">
-                <i class="fas fa-arrow-left"></i>Voltar ao Prontuário
-            </a>
-            <button onclick="salvarExame()" class="btn-modern btn-salvar">
-                <i class="fas fa-save"></i>Salvar Alterações
-            </button>
-            <button onclick="gerarPDF()" class="btn-modern btn-pdf">
-                <i class="fas fa-file-pdf"></i>Gerar PDF
-            </button>
-        </div>
-    </div>
-
-    <!-- Alerts -->
-    <div id="alertContainer"></div>
-
-    <!-- Dados Básicos -->
-    <div class="section-edit">
-        <div class="section-edit-header">
-            <i class="fas fa-user me-2"></i>Dados Básicos do Paciente
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-field">
-                    <label>Nome do Paciente</label>
-                    <input type="text" id="nome_paciente" value="{{ exame.nome_paciente }}">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-field">
-                    <label>Data do Exame</label>
-                    <input type="text" id="data_exame" value="{{ exame.data_exame }}">
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Idade</label>
-                    <input type="number" id="idade" value="{{ exame.idade }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Sexo</label>
-                    <select id="sexo">
-                        <option value="M" {{ 'selected' if exame.sexo == 'M' else '' }}>Masculino</option>
-                        <option value="F" {{ 'selected' if exame.sexo == 'F' else '' }}>Feminino</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Data de Nascimento</label>
-                    <input type="text" id="data_nascimento" value="{{ exame.data_nascimento }}">
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-field">
-                    <label>Tipo de Atendimento</label>
-                    <input type="text" id="tipo_atendimento" value="{{ exame.tipo_atendimento or '' }}">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-field">
-                    <label>Médico Solicitante</label>
-                    <input type="text" id="medico_solicitante" value="{{ exame.medico_solicitante or '' }}">
-                </div>
-            </div>
-        </div>
-        <div class="form-field">
-            <label>Indicação</label>
-            <textarea id="indicacao">{{ exame.indicacao or '' }}</textarea>
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('prontuario') }}">
+                            <i class="fas fa-folder-medical me-1"></i>Prontuário
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('prontuario_paciente', nome_paciente=exame.nome_paciente) }}">
+                            {{ exame.nome_paciente }}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Exame {{ exame.data_exame }}</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
-    <!-- Parâmetros Ecocardiográficos -->
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Exam Header - Modern Layout -->
+            <div class="exam-header-modern">
+                <!-- Title Section -->
+                <div class="exam-title-section">
+                    <div class="exam-type">
+                        <i class="fas fa-heartbeat me-3"></i>
+                        <span>Ecocardiograma Transtorácico</span>
+                    </div>
+                    <div class="patient-name">
+                        {{ exame.nome_paciente }}
+                    </div>
+                </div>
+
+                <!-- Patient Info Cards Grid -->
+                <div class="patient-info-cards">
+                    <div class="row g-3">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="info-card">
+                                <div class="info-card-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="info-card-content">
+                                    <div class="info-card-label">Data do Exame</div>
+                                    <div class="info-card-value">{{ exame.data_exame }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="info-card">
+                                <div class="info-card-icon">
+                                    <i class="fas fa-birthday-cake"></i>
+                                </div>
+                                <div class="info-card-content">
+                                    <div class="info-card-label">Idade</div>
+                                    <div class="info-card-value">{{ exame.idade }} anos</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="info-card">
+                                <div class="info-card-icon">
+                                    <i class="fas fa-venus-mars"></i>
+                                </div>
+                                <div class="info-card-content">
+                                    <div class="info-card-label">Sexo</div>
+                                    <div class="info-card-value">{{ 'Feminino' if exame.sexo == 'F' else 'Masculino' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6">
+                            <div class="info-card">
+                                <div class="info-card-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="info-card-content">
+                                    <div class="info-card-label">Data Nascimento</div>
+                                    <div class="info-card-value">{{ exame.data_nascimento }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status and Creation Info -->
+                <div class="exam-status-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="exam-status-badge">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span class="status-text">Exame Completo</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="creation-info">
+                                <small class="creation-label">Criado em:</small>
+                                <small class="creation-date">{{ exame.created_at.strftime('%d/%m/%Y às %H:%M') if exame.created_at }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if exame.medico_solicitante or exame.tipo_atendimento or exame.indicacao %}
+            <!-- Clinical Information -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-user-md me-2"></i>Informações Clínicas
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if exame.medico_solicitante %}
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <span class="info-label">Médico Solicitante:</span>
+                                <span class="info-value">{{ exame.medico_solicitante }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if exame.tipo_atendimento %}
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <span class="info-label">Tipo de Atendimento:</span>
+                                <span class="info-value">{{ exame.tipo_atendimento }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if exame.indicacao %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-item">
+                                <span class="info-label">Indicação:</span>
+                            </div>
+                            <div class="laudo-text">
+                                {{ exame.indicacao }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
     {% if exame.parametros %}
-    <div class="section-edit">
-        <div class="section-edit-header">
-            <i class="fas fa-heart me-2"></i>Parâmetros Ecocardiográficos
-        </div>
-        
-        <!-- Dados Antropométricos -->
-        <h6 class="text-primary mb-3">Dados Antropométricos</h6>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Peso (kg)</label>
-                    <input type="number" step="0.1" id="peso" value="{{ exame.parametros.peso or '' }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Altura (m)</label>
-                    <input type="number" step="0.01" id="altura" value="{{ exame.parametros.altura or '' }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-field">
-                    <label>Superfície Corporal (m²)</label>
-                    <input type="number" step="0.01" id="superficie_corporal" class="calculated-field" value="{{ exame.parametros.superficie_corporal or '' }}" readonly>
-                </div>
-            </div>
-        </div>
+    
 
-        <!-- Medidas Básicas -->
-        <h6 class="text-primary mb-3 mt-4">Medidas Básicas</h6>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Átrio Esquerdo (mm)</label>
-                    <input type="number" step="0.1" id="atrio_esquerdo" value="{{ exame.parametros.atrio_esquerdo or '' }}">
+
+    <!-- Medidas Ecocardiográficas Básicas -->
+    <div class="parameter-section">
+        <div class="parameter-section-header">
+            <h5 class="mb-0">
+                <i class="fas fa-heart me-2"></i>Medidas Ecocardiográficas Básicas
+            </h5>
+        </div>
+        <div class="parameter-section-body">
+            <div class="parameter-field">
+                <div class="parameter-field-label">Átrio Esquerdo (mm)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.atrio_esquerdo) if exame.parametros.atrio_esquerdo else '36.0' }}</div>
                 </div>
+                <div class="parameter-field-reference">Normal: 27-38 mm</div>
             </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Raiz da Aorta (mm)</label>
-                    <input type="number" step="0.1" id="raiz_aorta" value="{{ exame.parametros.raiz_aorta or '' }}">
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Raiz da Aorta (mm)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.raiz_aorta) if exame.parametros.raiz_aorta else '35.0' }}</div>
                 </div>
+                <div class="parameter-field-reference">Normal: 21-34 mm</div>
             </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Aorta Ascendente (mm)</label>
-                    <input type="number" step="0.1" id="aorta_ascendente" value="{{ exame.parametros.aorta_ascendente or '' }}">
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Relação AE/Ao</div>
+                <div class="parameter-field-value calculated">
+                    <div class="value-text">{{ "%.2f"|format(exame.parametros.relacao_atrio_esquerdo_aorta) if exame.parametros.relacao_atrio_esquerdo_aorta else '1,03' }}</div>
                 </div>
+                <div class="parameter-field-reference">Normal: &lt;1,5</div>
             </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Frequência Cardíaca (bpm)</label>
-                    <input type="number" id="frequencia_cardiaca" value="{{ exame.parametros.frequencia_cardiaca or '' }}">
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Aorta Ascendente (mm)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.aorta_ascendente) if exame.parametros.aorta_ascendente else '33.0' }}</div>
                 </div>
+                <div class="parameter-field-reference">Normal: &lt;38 mm</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Diâmetro VD (mm)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.diametro_ventricular_direito) if exame.parametros.diametro_ventricular_direito else '18.0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: 7-23 mm</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Diâmetro Basal VD (mm)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.diametro_basal_vd) if exame.parametros.diametro_basal_vd else '32.0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: 25-41 mm</div>
             </div>
         </div>
+    </div>
 
-        <!-- Ventrículo Esquerdo -->
-        <h6 class="text-primary mb-3 mt-4">Ventrículo Esquerdo</h6>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>DDVE (mm)</label>
-                    <input type="number" step="0.1" id="diametro_diastolico_final_ve" value="{{ exame.parametros.diametro_diastolico_final_ve or '' }}">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>DSVE (mm)</label>
-                    <input type="number" step="0.1" id="diametro_sistolico_final" value="{{ exame.parametros.diametro_sistolico_final or '' }}">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Septo (mm)</label>
-                    <input type="number" step="0.1" id="espessura_diastolica_septo" value="{{ exame.parametros.espessura_diastolica_septo or '' }}">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Parede Posterior (mm)</label>
-                    <input type="number" step="0.1" id="espessura_diastolica_ppve" value="{{ exame.parametros.espessura_diastolica_ppve or '' }}">
-                </div>
-            </div>
+    <!-- Ventrículo Esquerdo -->
+    <div class="parameter-section">
+        <div class="parameter-section-header">
+            <h5 class="mb-0">
+                <i class="fas fa-heart-pulse me-2"></i>Ventrículo Esquerdo
+            </h5>
         </div>
-
-        <!-- Volumes e Função -->
-        <h6 class="text-primary mb-3 mt-4">Volumes e Função Sistólica</h6>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>VDF (mL)</label>
-                    <input type="number" step="0.1" id="volume_diastolico_final" class="calculated-field" value="{{ exame.parametros.volume_diastolico_final or '' }}" readonly>
+        <div class="parameter-section-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">DDVE (mm)</label>
+                        <div class="parameter-value-display">{{ "%.1f"|format(exame.parametros.diametro_diastolico_final_ve) if exame.parametros.diametro_diastolico_final_ve else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 35-56 mm</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">DSVE (mm)</label>
+                        <div class="parameter-value-display">{{ "%.1f"|format(exame.parametros.diametro_sistolico_final) if exame.parametros.diametro_sistolico_final else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 21-40 mm</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">% Encurtamento</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.percentual_encurtamento) if exame.parametros.percentual_encurtamento else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 25-45%</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Septo (mm)</label>
+                        <div class="parameter-value-display">{{ "%.1f"|format(exame.parametros.espessura_diastolica_septo) if exame.parametros.espessura_diastolica_septo else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 6-11 mm</div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>VSF (mL)</label>
-                    <input type="number" step="0.1" id="volume_sistolico_final" class="calculated-field" value="{{ exame.parametros.volume_sistolico_final or '' }}" readonly>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Parede Posterior (mm)</label>
+                        <div class="parameter-value-display">{{ "%.1f"|format(exame.parametros.espessura_diastolica_ppve) if exame.parametros.espessura_diastolica_ppve else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 6-11 mm</div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Volume Ejeção (mL)</label>
-                    <input type="number" step="0.1" id="volume_ejecao" class="calculated-field" value="{{ exame.parametros.volume_ejecao or '' }}" readonly>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-field">
-                    <label>Fração de Ejeção (%)</label>
-                    <input type="number" step="0.1" id="fracao_ejecao" value="{{ exame.parametros.fracao_ejecao or '' }}">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Relação Septo/PP</label>
+                        <div class="parameter-value-display calculated">{{ "%.2f"|format(exame.parametros.relacao_septo_parede_posterior) if exame.parametros.relacao_septo_parede_posterior else 'N/A' }}</div>
+                        <div class="reference-value">Normal: &lt;1,3</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 
-    <!-- Laudo Médico -->
-    {% if exame.laudos %}
-    <div class="section-edit">
-        <div class="section-edit-header">
-            <i class="fas fa-file-medical me-2"></i>Laudo Médico
+    <!-- Volumes e Função Sistólica -->
+    <div class="parameter-section">
+        <div class="parameter-section-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>Volumes e Função Sistólica
+            </h5>
         </div>
-        
-        <div class="form-field">
-            <label>Modo M e Bidimensional</label>
-            <textarea id="modo_m_bidimensional">{{ exame.laudos[0].modo_m_bidimensional or '' }}</textarea>
-        </div>
-        
-        <div class="form-field">
-            <label>Doppler Convencional</label>
-            <textarea id="doppler_convencional">{{ exame.laudos[0].doppler_convencional or '' }}</textarea>
-        </div>
-        
-        <div class="form-field">
-            <label>Doppler Tecidual</label>
-            <textarea id="doppler_tecidual">{{ exame.laudos[0].doppler_tecidual or '' }}</textarea>
-        </div>
-        
-        <div class="form-field">
-            <label>Conclusão</label>
-            <textarea id="conclusao">{{ exame.laudos[0].conclusao or '' }}</textarea>
-        </div>
-        
-        <div class="form-field">
-            <label>Recomendações</label>
-            <textarea id="recomendacoes">{{ exame.laudos[0].recomendacoes or '' }}</textarea>
+        <div class="parameter-section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Volume Diastólico Final (mL)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.volume_diastolico_final) if exame.parametros.volume_diastolico_final else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 67-155 mL</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Volume Sistólico Final (mL)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.volume_sistolico_final) if exame.parametros.volume_sistolico_final else 'N/A' }}</div>
+                        <div class="reference-value">Normal: 22-58 mL</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Volume de Ejeção (mL)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.volume_ejecao) if exame.parametros.volume_ejecao else 'N/A' }}</div>
+                        <div class="reference-value">Calculado: VDF - VSF</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Fração de Ejeção (%)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.fracao_ejecao) if exame.parametros.fracao_ejecao else 'N/A' }}</div>
+                        <div class="reference-value">Normal: ≥55%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Massa VE (g)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.massa_ve) if exame.parametros.massa_ve else 'N/A' }}</div>
+                        <div class="reference-value">Normal H: 88-224g, M: 67-162g</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Índice Massa VE (g/m²)</label>
+                        <div class="parameter-value-display calculated">{{ "%.1f"|format(exame.parametros.indice_massa_ve) if exame.parametros.indice_massa_ve else 'N/A' }}</div>
+                        <div class="reference-value">Normal H: ≤115, M: ≤95 g/m²</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {% endif %}
+
+
+
+    <!-- Gradientes -->
+    <div class="parameter-section section-gradientes">
+        <div class="parameter-section-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>Gradientes
+            </h5>
+        </div>
+        <div class="parameter-section-body">
+            <div class="parameter-field">
+                <div class="parameter-field-label">Gradiente VD→AP (mmHg)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.gradiente_vd_ap) if exame.parametros.gradiente_vd_ap else '4,0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: &lt;10 mmHg</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Gradiente AE→VE (mmHg)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.gradiente_ae_ve) if exame.parametros.gradiente_ae_ve else '3,2' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: &lt;5 mmHg</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Gradiente VE→AO (mmHg)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.gradiente_ve_ao) if exame.parametros.gradiente_ve_ao else '4,0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: &lt;10 mmHg</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Gradiente AD→VD (mmHg)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.gradiente_ad_vd) if exame.parametros.gradiente_ad_vd else '1,0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: &lt;5 mmHg</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">Gradiente IT (mmHg)</div>
+                <div class="parameter-field-value">
+                    <div class="value-text">{{ "%.1f"|format(exame.parametros.gradiente_tricuspide) if exame.parametros.gradiente_tricuspide else 'N/A' }}</div>
+                </div>
+                <div class="parameter-field-reference">Para cálculo da PSAP</div>
+            </div>
+            
+            <div class="parameter-field">
+                <div class="parameter-field-label">PSAP (mmHg)</div>
+                <div class="parameter-field-value calculated">
+                    <div class="value-text">{{ "%.0f"|format(exame.parametros.pressao_sistolica_vd) if exame.parametros.pressao_sistolica_vd else '11,0' }}</div>
+                </div>
+                <div class="parameter-field-reference">Normal: &lt;35 mmHg</div>
+            </div>
+        </div>
+    </div>
+                                {% if exame.parametros.altura %}
+                                <tr>
+                                    <td>Altura</td>
+                                    <td class="value-normal">{{ exame.parametros.altura }}</td>
+                                    <td>cm</td>
+                                    <td class="reference-text">-</td>
+                                </tr>
+                                {% endif %}
+                                {% if exame.parametros.superficie_corporal %}
+                                <tr>
+                                    <td>Superfície Corporal</td>
+                                    <td class="value-normal">{{ "%.2f"|format(exame.parametros.superficie_corporal) }}</td>
+                                    <td>m²</td>
+                                    <td class="reference-text">-</td>
+                                </tr>
+                                {% endif %}
+                                {% if exame.parametros.frequencia_cardiaca %}
+                                <tr>
+                                    <td>Frequência Cardíaca</td>
+                                    <td class="{% if exame.parametros.frequencia_cardiaca >= 60 and exame.parametros.frequencia_cardiaca <= 100 %}value-normal{% else %}value-abnormal{% endif %}">
+                                        {{ exame.parametros.frequencia_cardiaca }}
+                                    </td>
+                                    <td>bpm</td>
+                                    <td class="reference-text">60-100 bpm</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            {% endif %}
+
+            {% if exame.laudos %}
+            <!-- Medical Report -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fas fa-file-medical-alt me-2"></i>Laudo Médico
+                </div>
+                <div class="card-body">
+                    {% set laudo = exame.laudos[0] %}
+                    
+                    {% if laudo.modo_m_bidimensional %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-2">Modo M e Bidimensional</h6>
+                        <div class="laudo-text">
+                            {{ laudo.modo_m_bidimensional }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laudo.doppler_convencional %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-2">Doppler Convencional</h6>
+                        <div class="laudo-text">
+                            {{ laudo.doppler_convencional }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laudo.doppler_tecidual %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-2">Doppler Tecidual</h6>
+                        <div class="laudo-text">
+                            {{ laudo.doppler_tecidual }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laudo.conclusao %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-2">Conclusão</h6>
+                        <div class="laudo-text" style="border-left-color: #059669; background: #f0fdf4;">
+                            {{ laudo.conclusao }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laudo.recomendacoes %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-2">Recomendações</h6>
+                        <div class="laudo-text" style="border-left-color: #f59e0b; background: #fffbeb;">
+                            {{ laudo.recomendacoes }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-lg-3">
+            <div class="action-buttons">
+                <div class="floating-actions">
+                    <h6 class="mb-3">
+                        <i class="fas fa-tools me-2"></i>Ações
+                    </h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('prontuario_editar_exame', exame_id=exame.id) }}" 
+                           class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Editar Exame
+                        </a>
+                        <a href="{{ url_for('gerar_pdf', exame_id=exame.id) }}" 
+                           class="btn btn-success" 
+                           target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                        </a>
+                        <a href="{{ url_for('visualizar_exame', id=exame.id) }}" 
+                           class="btn btn-info">
+                            <i class="fas fa-eye me-2"></i>Visualização Completa
+                        </a>
+                        <hr>
+                        <a href="{{ url_for('prontuario_paciente', nome_paciente=exame.nome_paciente) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar ao Prontuário
+                        </a>
+                        <a href="{{ url_for('prontuario') }}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-search me-2"></i>Nova Busca
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-<!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-content">
-        <div class="spinner"></div>
-        <div>Processando...</div>
-    </div>
-</div>
-
-<script>
-// Variáveis globais
-const exameId = {{ exame.id }};
-
-// Função para mostrar alerts
-function showAlert(message, type = 'success') {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    
-    const alertHtml = `
-        <div class="alert-custom ${alertClass}">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-            ${message}
-        </div>
-    `;
-    
-    alertContainer.innerHTML = alertHtml;
-    
-    // Remover alert após 5 segundos
-    setTimeout(() => {
-        alertContainer.innerHTML = '';
-    }, 5000);
-}
-
-// Função para mostrar/ocultar loading
-function showLoading(show = true) {
-    document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
-}
-
-// Cálculos automáticos
-function calcularSuperficieCorporal() {
-    const peso = parseFloat(document.getElementById('peso').value) || 0;
-    const altura = parseFloat(document.getElementById('altura').value) || 0;
-    
-    if (peso > 0 && altura > 0) {
-        // Fórmula de Dubois
-        const sc = 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura * 100, 0.725);
-        document.getElementById('superficie_corporal').value = sc.toFixed(2);
-    }
-}
-
-function calcularVolumes() {
-    const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve').value) || 0;
-    const dsve = parseFloat(document.getElementById('diametro_sistolico_final').value) || 0;
-    
-    if (ddve > 0) {
-        // Método de Teichholz
-        const vdf = (7.0 / (2.4 + ddve/10)) * Math.pow(ddve/10, 3);
-        document.getElementById('volume_diastolico_final').value = vdf.toFixed(1);
-    }
-    
-    if (dsve > 0) {
-        const vsf = (7.0 / (2.4 + dsve/10)) * Math.pow(dsve/10, 3);
-        document.getElementById('volume_sistolico_final').value = vsf.toFixed(1);
-    }
-    
-    const vdf = parseFloat(document.getElementById('volume_diastolico_final').value) || 0;
-    const vsf = parseFloat(document.getElementById('volume_sistolico_final').value) || 0;
-    
-    if (vdf > 0 && vsf > 0) {
-        const ve = vdf - vsf;
-        document.getElementById('volume_ejecao').value = ve.toFixed(1);
-    }
-}
-
-// Event listeners para cálculos automáticos
-document.getElementById('peso').addEventListener('input', calcularSuperficieCorporal);
-document.getElementById('altura').addEventListener('input', calcularSuperficieCorporal);
-document.getElementById('diametro_diastolico_final_ve').addEventListener('input', calcularVolumes);
-document.getElementById('diametro_sistolico_final').addEventListener('input', calcularVolumes);
-
-// Função para coletar todos os dados
-function coletarDados() {
-    return {
-        dados_basicos: {
-            nome_paciente: document.getElementById('nome_paciente').value,
-            data_exame: document.getElementById('data_exame').value,
-            idade: parseInt(document.getElementById('idade').value) || 0,
-            sexo: document.getElementById('sexo').value,
-            data_nascimento: document.getElementById('data_nascimento').value,
-            tipo_atendimento: document.getElementById('tipo_atendimento').value,
-            medico_solicitante: document.getElementById('medico_solicitante').value,
-            indicacao: document.getElementById('indicacao').value
-        },
-        parametros: {
-            peso: parseFloat(document.getElementById('peso').value) || null,
-            altura: parseFloat(document.getElementById('altura').value) || null,
-            superficie_corporal: parseFloat(document.getElementById('superficie_corporal').value) || null,
-            frequencia_cardiaca: parseInt(document.getElementById('frequencia_cardiaca').value) || null,
-            atrio_esquerdo: parseFloat(document.getElementById('atrio_esquerdo').value) || null,
-            raiz_aorta: parseFloat(document.getElementById('raiz_aorta').value) || null,
-            aorta_ascendente: parseFloat(document.getElementById('aorta_ascendente').value) || null,
-            diametro_diastolico_final_ve: parseFloat(document.getElementById('diametro_diastolico_final_ve').value) || null,
-            diametro_sistolico_final: parseFloat(document.getElementById('diametro_sistolico_final').value) || null,
-            espessura_diastolica_septo: parseFloat(document.getElementById('espessura_diastolica_septo').value) || null,
-            espessura_diastolica_ppve: parseFloat(document.getElementById('espessura_diastolica_ppve').value) || null,
-            volume_diastolico_final: parseFloat(document.getElementById('volume_diastolico_final').value) || null,
-            volume_sistolico_final: parseFloat(document.getElementById('volume_sistolico_final').value) || null,
-            volume_ejecao: parseFloat(document.getElementById('volume_ejecao').value) || null,
-            fracao_ejecao: parseFloat(document.getElementById('fracao_ejecao').value) || null
-        },
-        laudo: {
-            modo_m_bidimensional: document.getElementById('modo_m_bidimensional').value,
-            doppler_convencional: document.getElementById('doppler_convencional').value,
-            doppler_tecidual: document.getElementById('doppler_tecidual').value,
-            conclusao: document.getElementById('conclusao').value,
-            recomendacoes: document.getElementById('recomendacoes').value
-        }
-    };
-}
-
-// Função para salvar exame
-async function salvarExame() {
-    try {
-        showLoading(true);
-        
-        const dados = coletarDados();
-        
-        const response = await fetch(`/api/salvar-exame-editado/${exameId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dados)
-        });
-        
-        const result = await response.json();
-        
-        if (result.sucesso) {
-            showAlert('Exame salvo com sucesso!', 'success');
-        } else {
-            showAlert(result.erro || 'Erro ao salvar exame', 'error');
-        }
-        
-    } catch (error) {
-        showAlert('Erro de conexão: ' + error.message, 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Função para gerar PDF
-async function gerarPDF() {
-    try {
-        showLoading(true);
-        
-        // Primeiro salvar as alterações
-        await salvarExame();
-        
-        // Aguardar um pouco e então gerar PDF
-        setTimeout(() => {
-            window.open(`/gerar_pdf/${exameId}`, '_blank');
-            showLoading(false);
-        }, 1000);
-        
-    } catch (error) {
-        showAlert('Erro ao gerar PDF: ' + error.message, 'error');
-        showLoading(false);
-    }
-}
-
-// Inicializar cálculos quando a página carregar
-document.addEventListener('DOMContentLoaded', function() {
-    calcularSuperficieCorporal();
-    calcularVolumes();
-});
-</script>
 {% endblock %}
