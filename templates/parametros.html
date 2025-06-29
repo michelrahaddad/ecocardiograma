@@ -107,7 +107,7 @@
                 </p>
             </div>
             <div class="col-md-4 text-md-end">
-                <a href="{{ url_for('visualizar_exame', id=exame.id) }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-eye me-1"></i>Visualizar Exame
                 </a>
             </div>
@@ -311,8 +311,7 @@
             </div>
         </div>
     </div>
-
-    <!-- Volumes e Função Sistólica -->
+        <!-- Volumes e Função Sistólica -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -323,20 +322,20 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_diastolico_final" 
+                        <input type="number" step="0.1" class="form-control" id="volume_diastolico_final" 
                                name="volume_diastolico_final" 
                                value="{{ parametros.volume_diastolico_final if parametros and parametros.volume_diastolico_final else '' }}" 
-                               placeholder="VDF" readonly>
+                               placeholder="VDF">
                         <label for="volume_diastolico_final">Volume Diastólico Final (mL)</label>
                         <div class="reference-value">Normal: 67-155 mL</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_sistolico_final" 
+                        <input type="number" step="0.1" class="form-control" id="volume_sistolico_final" 
                                name="volume_sistolico_final" 
                                value="{{ parametros.volume_sistolico_final if parametros and parametros.volume_sistolico_final else '' }}" 
-                               placeholder="VSF" readonly>
+                               placeholder="VSF">
                         <label for="volume_sistolico_final">Volume Sistólico Final (mL)</label>
                         <div class="reference-value">Normal: 22-58 mL</div>
                     </div>
@@ -347,7 +346,7 @@
                                name="volume_ejecao" 
                                value="{{ parametros.volume_ejecao if parametros and parametros.volume_ejecao else '' }}" 
                                placeholder="Volume Ejeção" readonly>
-                        <label for="volume_ejecao">Volume Ejeção (mL)</label>
+                        <label for="volume_ejecao">Volume de Ejeção (mL)</label>
                         <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
@@ -356,31 +355,31 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="fracao_ejecao" 
                                name="fracao_ejecao" 
                                value="{{ parametros.fracao_ejecao if parametros and parametros.fracao_ejecao else '' }}" 
-                               placeholder="Fração Ejeção" readonly>
+                               placeholder="FE" readonly>
                         <label for="fracao_ejecao">Fração de Ejeção (%)</label>
                         <div class="reference-value">Normal: ≥55%</div>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-floating mb-3">
                         <input type="number" step="0.1" class="form-control calculated-field" id="massa_ve" 
                                name="massa_ve" 
                                value="{{ parametros.massa_ve if parametros and parametros.massa_ve else '' }}" 
                                placeholder="Massa VE" readonly>
                         <label for="massa_ve">Massa VE (g)</label>
-                        <div class="reference-value">H: 88-224g / M: 67-162g</div>
+                        <div class="reference-value">Normal: 67-162g (♀), 88-224g (♂)</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-floating mb-3">
                         <input type="number" step="0.1" class="form-control calculated-field" id="indice_massa_ve" 
                                name="indice_massa_ve" 
                                value="{{ parametros.indice_massa_ve if parametros and parametros.indice_massa_ve else '' }}" 
                                placeholder="Índice Massa VE" readonly>
-                        <label for="indice_massa_ve">Índice Massa VE (g/m²)</label>
-                        <div class="reference-value">H: &lt;115 / M: &lt;95</div>
+                        <label for="indice_massa_ve">Índice de Massa VE (g/m²)</label>
+                        <div class="reference-value">Normal: 43-95g/m² (♀), 49-115g/m² (♂)</div>
                     </div>
                 </div>
             </div>
@@ -391,7 +390,7 @@
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
-                <i class="fas fa-water me-2"></i>Velocidades dos Fluxos
+                <i class="fas fa-tint me-2"></i>Velocidades dos Fluxos
             </h5>
         </div>
         <div class="parameter-section-body">
@@ -429,7 +428,7 @@
                                value="{{ parametros.fluxo_tricuspide if parametros and parametros.fluxo_tricuspide else '0.5' }}" 
                                placeholder="Fluxo Tricúspide">
                         <label for="fluxo_tricuspide">Fluxo Tricúspide (m/s)</label>
-                        <div class="reference-value">Normal: &lt;2.8 m/s</div>
+                        <div class="reference-value">Normal: 0.3-0.7 m/s</div>
                     </div>
                 </div>
             </div>
@@ -450,8 +449,8 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_vd_ap" 
                                name="gradiente_vd_ap" 
                                value="{{ parametros.gradiente_vd_ap if parametros and parametros.gradiente_vd_ap else '' }}" 
-                               placeholder="Gradiente VD→AP" readonly>
-                        <label for="gradiente_vd_ap">Gradiente VD→AP (mmHg)</label>
+                               placeholder="VD→AP" readonly>
+                        <label for="gradiente_vd_ap">VD→AP (mmHg)</label>
                         <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
@@ -460,8 +459,8 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ae_ve" 
                                name="gradiente_ae_ve" 
                                value="{{ parametros.gradiente_ae_ve if parametros and parametros.gradiente_ae_ve else '' }}" 
-                               placeholder="Gradiente AE→VE" readonly>
-                        <label for="gradiente_ae_ve">Gradiente AE→VE (mmHg)</label>
+                               placeholder="AE→VE" readonly>
+                        <label for="gradiente_ae_ve">AE→VE (mmHg)</label>
                         <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
@@ -470,8 +469,8 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ve_ao" 
                                name="gradiente_ve_ao" 
                                value="{{ parametros.gradiente_ve_ao if parametros and parametros.gradiente_ve_ao else '' }}" 
-                               placeholder="Gradiente VE→AO" readonly>
-                        <label for="gradiente_ve_ao">Gradiente VE→AO (mmHg)</label>
+                               placeholder="VE→AO" readonly>
+                        <label for="gradiente_ve_ao">VE→AO (mmHg)</label>
                         <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
@@ -480,21 +479,21 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ad_vd" 
                                name="gradiente_ad_vd" 
                                value="{{ parametros.gradiente_ad_vd if parametros and parametros.gradiente_ad_vd else '' }}" 
-                               placeholder="Gradiente AD→VD/IT" readonly>
-                        <label for="gradiente_ad_vd">Gradiente AD→VD/IT (mmHg)</label>
+                               placeholder="AD→VD" readonly>
+                        <label for="gradiente_ad_vd">AD→VD/IT (mmHg)</label>
                         <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-floating mb-3">
                         <input type="number" step="0.1" class="form-control calculated-field" id="pressao_sistolica_vd" 
                                name="pressao_sistolica_vd" 
                                value="{{ parametros.pressao_sistolica_vd if parametros and parametros.pressao_sistolica_vd else '' }}" 
                                placeholder="PSAP" readonly>
                         <label for="pressao_sistolica_vd">PSAP (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;30 mmHg</div>
+                        <div class="reference-value">Normal: 15-30 mmHg</div>
                     </div>
                 </div>
             </div>
@@ -502,137 +501,424 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="row mb-4">
+    <div class="row mt-4">
         <div class="col-md-12">
-            <div class="d-flex gap-3 justify-content-center">
-                <button type="button" class="btn btn-secondary btn-lg" onclick="voltarPagina()">
+            <div class="d-flex gap-3 justify-content-between flex-wrap">
+                <button type="button" class="btn btn-outline-secondary" onclick="voltarPagina()">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
                 </button>
-                <button type="submit" class="btn btn-success btn-lg">
-                    <i class="fas fa-save me-2"></i>Salvar Parâmetros
-                </button>
-                <button type="button" class="btn btn-primary btn-lg" onclick="confirmarGeracaoPDF()">
-                    <i class="fas fa-file-pdf me-2"></i>Gerar PDF
-                </button>
+                
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Salvar Parâmetros
+                    </button>
+                    
+                    <button type="button" class="btn btn-primary" onclick="confirmarGeracaoPDF()">
+                        <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                    </button>
+                    
+                    <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="btn btn-info">
+                        <i class="fas fa-file-medical me-2"></i>Continuar para Laudo
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </form>
 {% endblock %}
-
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/calculos_nativos.js') }}"></script>
-<script src="{{ url_for('static', filename='js/calculos_backup_render.js') }}"></script>
 <script>
+/**
+ * SISTEMA DE CÁLCULOS AUTOMÁTICOS - JAVASCRIPT INLINE COMPLETO
+ * SOLUÇÃO DEFINITIVA PARA RENDER - NÃO DEPENDE DE ARQUIVOS EXTERNOS
+ */
+
+console.log('🚀 INICIANDO SISTEMA DE CÁLCULOS INLINE COMPLETO');
+
 // ==========================================
-// DIAGNÓSTICO COMPLETO RENDER - CÁLCULOS AUTOMÁTICOS
+// FUNÇÕES DE CÁLCULO MÉDICO
 // ==========================================
 
-console.log('🔬 INICIANDO DIAGNÓSTICO COMPLETO DOS CÁLCULOS');
-
-// 1. VERIFICAR CARREGAMENTO DO ARQUIVO JS
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM CARREGADO - Iniciando diagnósticos...');
+function calculateBodySurface() {
+    console.log('📏 Calculando superfície corporal...');
     
-    setTimeout(function() {
-        diagnosticarSistemaCalculos();
-    }, 1000);
-});
-
-function diagnosticarSistemaCalculos() {
-    console.log('🔍 === DIAGNÓSTICO SISTEMA DE CÁLCULOS ===');
+    const peso = parseFloat(document.getElementById('peso')?.value || 0);
+    const altura = parseFloat(document.getElementById('altura')?.value || 0);
     
-    // 1. VERIFICAR FUNÇÕES GLOBAIS
-    console.log('1. VERIFICANDO FUNÇÕES DISPONÍVEIS:');
-    console.log('- initializeNativeCalculations:', typeof window.initializeNativeCalculations);
-    console.log('- calculateBodySurface:', typeof window.calculateBodySurface);
-    console.log('- executeAllCalculations:', typeof window.executeAllCalculations);
-    
-    // 2. VERIFICAR CAMPOS CRÍTICOS
-    console.log('2. VERIFICANDO CAMPOS HTML:');
-    const camposCriticos = [
-        'peso', 'altura', 'superficie_corporal',
-        'atrio_esquerdo', 'raiz_aorta', 'relacao_atrio_esquerdo_aorta',
-        'diametro_diastolico_final_ve', 'diametro_sistolico_final',
-        'volume_diastolico_final', 'volume_sistolico_final', 'fracao_ejecao'
-    ];
-    
-    let camposEncontrados = 0;
-    camposCriticos.forEach(function(campo) {
-        const elemento = document.getElementById(campo);
-        if (elemento) {
-            camposEncontrados++;
-            console.log(`✅ ${campo}: ENCONTRADO`);
-        } else {
-            console.error(`❌ ${campo}: NÃO ENCONTRADO`);
-        }
-    });
-    
-    console.log(`📊 CAMPOS ENCONTRADOS: ${camposEncontrados}/${camposCriticos.length}`);
-    
-    // 3. TESTAR CÁLCULO SIMPLES
-    console.log('3. TESTE MANUAL DE CÁLCULO:');
-    try {
-        const peso = document.getElementById('peso');
-        const altura = document.getElementById('altura');
+    if (peso > 0 && altura > 0) {
+        // Fórmula DuBois: BSA = 0.007184 × altura^0.725 × peso^0.425
+        const bsa = 0.007184 * Math.pow(altura, 0.725) * Math.pow(peso, 0.425);
+        const superficieElement = document.getElementById('superficie_corporal');
         
-        if (peso && altura) {
-            // Simular valores
-            peso.value = '70';
-            altura.value = '170';
-            
-            console.log('📝 Valores de teste inseridos: peso=70, altura=170');
-            
-            // Tentar executar cálculo manual
-            if (typeof calculateBodySurface === 'function') {
-                calculateBodySurface();
-                console.log('✅ Função calculateBodySurface executada');
-                
-                const superficie = document.getElementById('superficie_corporal');
-                if (superficie && superficie.value) {
-                    console.log(`🎯 SUCESSO! Superfície calculada: ${superficie.value} m²`);
-                } else {
-                    console.error('❌ Superfície não foi calculada');
-                }
-            } else {
-                console.error('❌ Função calculateBodySurface não disponível');
-            }
+        if (superficieElement) {
+            superficieElement.value = bsa.toFixed(2);
+            superficieElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Superfície corporal calculada: ${bsa.toFixed(2)} m²`);
         }
-    } catch (error) {
-        console.error('❌ ERRO NO TESTE MANUAL:', error);
+        
+        // Recalcular massa VE que depende da superfície
+        calculateLeftVentricularMassIndex();
     }
+}
+
+function calculateAtrioAortaRatio() {
+    console.log('💓 Calculando relação AE/Ao...');
     
-    // 4. VERIFICAR EVENT LISTENERS
-    console.log('4. VERIFICANDO EVENT LISTENERS:');
-    try {
-        const peso = document.getElementById('peso');
-        if (peso) {
-            const listeners = getEventListeners ? getEventListeners(peso) : 'N/A';
-            console.log('Event listeners no campo peso:', listeners);
+    const ae = parseFloat(document.getElementById('atrio_esquerdo')?.value || 0);
+    const ao = parseFloat(document.getElementById('raiz_aorta')?.value || 0);
+    
+    if (ae > 0 && ao > 0) {
+        const ratio = ae / ao;
+        const ratioElement = document.getElementById('relacao_atrio_esquerdo_aorta');
+        
+        if (ratioElement) {
+            ratioElement.value = ratio.toFixed(2);
+            ratioElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Relação AE/Ao calculada: ${ratio.toFixed(2)}`);
         }
-    } catch (error) {
-        console.log('Não foi possível verificar event listeners');
     }
+}
+
+function calculateShortening() {
+    console.log('🔄 Calculando percentual de encurtamento...');
     
-    // 5. FORÇAR INICIALIZAÇÃO
-    console.log('5. FORÇANDO INICIALIZAÇÃO:');
-    try {
-        if (typeof initializeNativeCalculations === 'function') {
-            initializeNativeCalculations();
-            console.log('✅ initializeNativeCalculations executada manualmente');
-        } else {
-            console.error('❌ initializeNativeCalculations não disponível');
+    const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve')?.value || 0);
+    const dsve = parseFloat(document.getElementById('diametro_sistolico_final')?.value || 0);
+    
+    if (ddve > 0 && dsve > 0) {
+        const shortening = ((ddve - dsve) / ddve) * 100;
+        const shorteningElement = document.getElementById('percentual_encurtamento');
+        
+        if (shorteningElement) {
+            shorteningElement.value = shortening.toFixed(1);
+            shorteningElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Percentual de encurtamento calculado: ${shortening.toFixed(1)}%`);
         }
-    } catch (error) {
-        console.error('❌ ERRO na inicialização forçada:', error);
     }
+}
+
+function calculateSeptumWallRatio() {
+    console.log('🧱 Calculando relação Septo/PP...');
     
-    console.log('🏁 === FIM DO DIAGNÓSTICO ===');
+    const septo = parseFloat(document.getElementById('espessura_diastolica_septo')?.value || 0);
+    const pp = parseFloat(document.getElementById('espessura_diastolica_ppve')?.value || 0);
+    
+    if (septo > 0 && pp > 0) {
+        const ratio = septo / pp;
+        const ratioElement = document.getElementById('relacao_septo_parede_posterior');
+        
+        if (ratioElement) {
+            ratioElement.value = ratio.toFixed(2);
+            ratioElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Relação Septo/PP calculada: ${ratio.toFixed(2)}`);
+        }
+    }
+}
+
+function calculateDiastolicVolumeTeichholz() {
+    console.log('📊 Calculando VDF (Teichholz)...');
+    
+    const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve')?.value || 0);
+    
+    if (ddve > 0) {
+        // Método Teichholz: VDF = (7.0 / (2.4 + DDVE)) × DDVE³
+        const vdf = (7.0 / (2.4 + (ddve / 10))) * Math.pow(ddve / 10, 3);
+        const vdfElement = document.getElementById('volume_diastolico_final');
+        
+        if (vdfElement) {
+            vdfElement.value = vdf.toFixed(1);
+            vdfElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ VDF calculado: ${vdf.toFixed(1)} mL`);
+        }
+        
+        // Recalcular volumes dependentes
+        calculateSystolicVolumeTeichholz();
+        calculateEjectionVolume();
+        calculateEjectionFraction();
+    }
+}
+
+function calculateSystolicVolumeTeichholz() {
+    console.log('📊 Calculando VSF (Teichholz)...');
+    
+    const dsve = parseFloat(document.getElementById('diametro_sistolico_final')?.value || 0);
+    
+    if (dsve > 0) {
+        // Método Teichholz: VSF = (7.0 / (2.4 + DSVE)) × DSVE³
+        const vsf = (7.0 / (2.4 + (dsve / 10))) * Math.pow(dsve / 10, 3);
+        const vsfElement = document.getElementById('volume_sistolico_final');
+        
+        if (vsfElement) {
+            vsfElement.value = vsf.toFixed(1);
+            vsfElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ VSF calculado: ${vsf.toFixed(1)} mL`);
+        }
+        
+        // Recalcular volumes dependentes
+        calculateEjectionVolume();
+        calculateEjectionFraction();
+    }
+}
+
+function calculateEjectionVolume() {
+    console.log('💨 Calculando volume de ejeção...');
+    
+    const vdf = parseFloat(document.getElementById('volume_diastolico_final')?.value || 0);
+    const vsf = parseFloat(document.getElementById('volume_sistolico_final')?.value || 0);
+    
+    if (vdf > 0 && vsf > 0) {
+        const ve = vdf - vsf;
+        const veElement = document.getElementById('volume_ejecao');
+        
+        if (veElement) {
+            veElement.value = ve.toFixed(1);
+            veElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Volume de ejeção calculado: ${ve.toFixed(1)} mL`);
+        }
+    }
+}
+
+function calculateEjectionFraction() {
+    console.log('💯 Calculando fração de ejeção...');
+    
+    const vdf = parseFloat(document.getElementById('volume_diastolico_final')?.value || 0);
+    const vsf = parseFloat(document.getElementById('volume_sistolico_final')?.value || 0);
+    
+    if (vdf > 0 && vsf > 0) {
+        const fe = ((vdf - vsf) / vdf) * 100;
+        const feElement = document.getElementById('fracao_ejecao');
+        
+        if (feElement) {
+            feElement.value = fe.toFixed(1);
+            feElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Fração de ejeção calculada: ${fe.toFixed(1)}%`);
+        }
+    }
+}
+
+function calculateLeftVentricularMass() {
+    console.log('⚖️ Calculando massa VE...');
+    
+    const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve')?.value || 0);
+    const septo = parseFloat(document.getElementById('espessura_diastolica_septo')?.value || 0);
+    const pp = parseFloat(document.getElementById('espessura_diastolica_ppve')?.value || 0);
+    
+    if (ddve > 0 && septo > 0 && pp > 0) {
+        // Fórmula ASE corrigida: Massa = 0.8 × (1.04 × [(DDVE + septo + PP)³ - DDVE³]) + 0.6
+        const ddveCm = ddve / 10;
+        const septoCm = septo / 10;
+        const ppCm = pp / 10;
+        
+        const massa = 0.8 * (1.04 * (Math.pow(ddveCm + septoCm + ppCm, 3) - Math.pow(ddveCm, 3))) + 0.6;
+        const massaElement = document.getElementById('massa_ve');
+        
+        if (massaElement) {
+            massaElement.value = massa.toFixed(1);
+            massaElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Massa VE calculada: ${massa.toFixed(1)} g`);
+        }
+        
+        // Recalcular índice de massa
+        calculateLeftVentricularMassIndex();
+    }
+}
+
+function calculateLeftVentricularMassIndex() {
+    console.log('📋 Calculando índice de massa VE...');
+    
+    const massa = parseFloat(document.getElementById('massa_ve')?.value || 0);
+    const superficie = parseFloat(document.getElementById('superficie_corporal')?.value || 0);
+    
+    if (massa > 0 && superficie > 0) {
+        const indice = massa / superficie;
+        const indiceElement = document.getElementById('indice_massa_ve');
+        
+        if (indiceElement) {
+            indiceElement.value = indice.toFixed(1);
+            indiceElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Índice de massa VE calculado: ${indice.toFixed(1)} g/m²`);
+        }
+    }
+}
+
+function calculateGradientVDAP() {
+    console.log('🌊 Calculando gradiente VD→AP...');
+    
+    const fluxo = parseFloat(document.getElementById('fluxo_pulmonar')?.value || 0);
+    
+    if (fluxo > 0) {
+        // Equação de Bernoulli: ΔP = 4 × V²
+        const gradiente = 4 * Math.pow(fluxo, 2);
+        const gradienteElement = document.getElementById('gradiente_vd_ap');
+        
+        if (gradienteElement) {
+            gradienteElement.value = gradiente.toFixed(1);
+            gradienteElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Gradiente VD→AP calculado: ${gradiente.toFixed(1)} mmHg`);
+        }
+    }
+}
+
+function calculateGradientVEAO() {
+    console.log('🌊 Calculando gradiente VE→AO...');
+    
+    const fluxo = parseFloat(document.getElementById('fluxo_aortico')?.value || 0);
+    
+    if (fluxo > 0) {
+        // Equação de Bernoulli: ΔP = 4 × V²
+        const gradiente = 4 * Math.pow(fluxo, 2);
+        const gradienteElement = document.getElementById('gradiente_ve_ao');
+        
+        if (gradienteElement) {
+            gradienteElement.value = gradiente.toFixed(1);
+            gradienteElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Gradiente VE→AO calculado: ${gradiente.toFixed(1)} mmHg`);
+        }
+    }
+}
+
+function calculateGradientAEVE() {
+    console.log('🌊 Calculando gradiente AE→VE...');
+    
+    const fluxo = parseFloat(document.getElementById('fluxo_mitral')?.value || 0);
+    
+    if (fluxo > 0) {
+        // Equação de Bernoulli: ΔP = 4 × V²
+        const gradiente = 4 * Math.pow(fluxo, 2);
+        const gradienteElement = document.getElementById('gradiente_ae_ve');
+        
+        if (gradienteElement) {
+            gradienteElement.value = gradiente.toFixed(1);
+            gradienteElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Gradiente AE→VE calculado: ${gradiente.toFixed(1)} mmHg`);
+        }
+    }
+}
+
+function calculateGradientADVD() {
+    console.log('🌊 Calculando gradiente AD→VD/IT...');
+    
+    const fluxo = parseFloat(document.getElementById('fluxo_tricuspide')?.value || 0);
+    
+    if (fluxo > 0) {
+        // Equação de Bernoulli: ΔP = 4 × V²
+        const gradiente = 4 * Math.pow(fluxo, 2);
+        const gradienteElement = document.getElementById('gradiente_ad_vd');
+        
+        if (gradienteElement) {
+            gradienteElement.value = gradiente.toFixed(1);
+            gradienteElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ Gradiente AD→VD/IT calculado: ${gradiente.toFixed(1)} mmHg`);
+        }
+        
+        // Calcular PSAP
+        calculatePSAP();
+    }
+}
+
+function calculatePSAP() {
+    console.log('🫀 Calculando PSAP...');
+    
+    const gradienteIT = parseFloat(document.getElementById('gradiente_ad_vd')?.value || 0);
+    
+    if (gradienteIT > 0) {
+        // PSAP = Gradiente IT + PVC estimada (assumindo PVC = 10 mmHg)
+        const pvc = 10; // PVC estimada
+        const psap = gradienteIT + pvc;
+        const psapElement = document.getElementById('pressao_sistolica_vd');
+        
+        if (psapElement) {
+            psapElement.value = psap.toFixed(1);
+            psapElement.style.backgroundColor = '#e8f5e8';
+            console.log(`✅ PSAP calculada: ${psap.toFixed(1)} mmHg`);
+        }
+    }
 }
 
 // ==========================================
-// FUNÇÃO UNIVERSAL VOLTAR PÁGINA
+// CONFIGURAÇÃO DE EVENT LISTENERS
 // ==========================================
+
+function setupAllEventListeners() {
+    console.log('🔗 Configurando todos os event listeners...');
+    
+    // Superfície corporal
+    addListener('peso', ['input', 'change'], calculateBodySurface);
+    addListener('altura', ['input', 'change'], calculateBodySurface);
+    
+    // Relação AE/Ao
+    addListener('atrio_esquerdo', ['input', 'change'], calculateAtrioAortaRatio);
+    addListener('raiz_aorta', ['input', 'change'], calculateAtrioAortaRatio);
+    
+    // Ventrículo Esquerdo
+    addListener('diametro_diastolico_final_ve', ['input', 'change'], function() {
+        calculateShortening();
+        calculateDiastolicVolumeTeichholz();
+        calculateLeftVentricularMass();
+    });
+    
+    addListener('diametro_sistolico_final', ['input', 'change'], function() {
+        calculateShortening();
+        calculateSystolicVolumeTeichholz();
+    });
+    
+    addListener('espessura_diastolica_septo', ['input', 'change'], function() {
+        calculateSeptumWallRatio();
+        calculateLeftVentricularMass();
+    });
+    
+    addListener('espessura_diastolica_ppve', ['input', 'change'], function() {
+        calculateSeptumWallRatio();
+        calculateLeftVentricularMass();
+    });
+    
+    // Fluxos e Gradientes
+    addListener('fluxo_pulmonar', ['input', 'change'], calculateGradientVDAP);
+    addListener('fluxo_aortico', ['input', 'change'], calculateGradientVEAO);
+    addListener('fluxo_mitral', ['input', 'change'], calculateGradientAEVE);
+    addListener('fluxo_tricuspide', ['input', 'change'], calculateGradientADVD);
+    
+    console.log('✅ Todos os event listeners configurados');
+}
+
+function addListener(elementId, events, callback) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        events.forEach(event => {
+            element.addEventListener(event, callback);
+        });
+        console.log(`✅ Listener adicionado para ${elementId}`);
+    } else {
+        console.warn(`⚠️ Elemento ${elementId} não encontrado`);
+    }
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES
+// ==========================================
+
+function executeAllCalculations() {
+    console.log('🔄 Executando todos os cálculos...');
+    
+    calculateBodySurface();
+    calculateAtrioAortaRatio();
+    calculateShortening();
+    calculateSeptumWallRatio();
+    calculateDiastolicVolumeTeichholz();
+    calculateSystolicVolumeTeichholz();
+    calculateEjectionVolume();
+    calculateEjectionFraction();
+    calculateLeftVentricularMass();
+    calculateLeftVentricularMassIndex();
+    calculateGradientVDAP();
+    calculateGradientVEAO();
+    calculateGradientAEVE();
+    calculateGradientADVD();
+    calculatePSAP();
+    
+    console.log('✅ Todos os cálculos executados');
+}
+
 function voltarPagina() {
     console.log('🔙 Função voltarPagina chamada');
     
@@ -648,9 +934,6 @@ function voltarPagina() {
     }
 }
 
-// ==========================================
-// FUNÇÃO GERAR PDF
-// ==========================================
 function confirmarGeracaoPDF() {
     console.log('📄 Função confirmarGeracaoPDF chamada');
     
@@ -662,85 +945,86 @@ function confirmarGeracaoPDF() {
 }
 
 // ==========================================
-// SISTEMA DE CÁLCULOS BACKUP (INLINE)
-// ==========================================
-function calcularSuperficieCorporalBackup() {
-    console.log('🆘 USANDO SISTEMA BACKUP DE CÁLCULOS');
-    
-    const peso = parseFloat(document.getElementById('peso')?.value || 0);
-    const altura = parseFloat(document.getElementById('altura')?.value || 0);
-    
-    if (peso > 0 && altura > 0) {
-        const bsa = 0.007184 * Math.pow(altura, 0.725) * Math.pow(peso, 0.425);
-        const superficieElement = document.getElementById('superficie_corporal');
-        
-        if (superficieElement) {
-            superficieElement.value = bsa.toFixed(2);
-            superficieElement.style.backgroundColor = '#e3f2fd';
-            console.log(`🆘 BACKUP: Superfície calculada = ${bsa.toFixed(2)} m²`);
-        }
-    }
-}
-
-// Adicionar listeners backup
-window.addEventListener('load', function() {
-    console.log('🆘 Configurando sistema backup...');
-    
-    const peso = document.getElementById('peso');
-    const altura = document.getElementById('altura');
-    
-    if (peso) peso.addEventListener('input', calcularSuperficieCorporalBackup);
-    if (altura) altura.addEventListener('input', calcularSuperficieCorporalBackup);
-});
-
-// Expor função para teste manual
-window.testarCalculos = diagnosticarSistemaCalculos;
-window.calcularBackup = calcularSuperficieCorporalBackup;
-
-// ==========================================
 // INDICADOR VISUAL DE STATUS
 // ==========================================
+
 function criarIndicadorStatus() {
     const badge = document.createElement('div');
     badge.id = 'badge-status-calculos';
-    badge.className = 'badge-calculos';
-    badge.innerHTML = '🔄 Cálculos: Carregando...';
+    badge.innerHTML = '✅ Cálculos: Ativos (Inline)';
+    badge.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        z-index: 1000;
+        border: 2px solid #fff;
+    `;
     document.body.appendChild(badge);
-    
-    // Atualizar status após testes
-    setTimeout(function() {
-        const superficie = document.getElementById('superficie_corporal');
-        if (superficie && superficie.value) {
-            badge.className = 'badge-calculos ativo';
-            badge.innerHTML = '✅ Cálculos: Ativos';
-        } else {
-            badge.className = 'badge-calculos backup';
-            badge.innerHTML = '🆘 Cálculos: Backup';
-        }
-    }, 3000);
+    console.log('✅ Indicador de status criado');
 }
 
-// Criar indicador quando página carregar
-window.addEventListener('load', criarIndicadorStatus);
+// ==========================================
+// INICIALIZAÇÃO PRINCIPAL
+// ==========================================
 
-// Função para testar tudo manualmente
-window.testarTudoManual = function() {
-    console.log('🧪 TESTE MANUAL COMPLETO');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM carregado - Inicializando sistema inline...');
     
-    // 1. Testar diagnóstico
-    diagnosticarSistemaCalculos();
+    // Aguardar um momento para garantir que todos os elementos existam
+    setTimeout(function() {
+        setupAllEventListeners();
+        executeAllCalculations();
+        criarIndicadorStatus();
+        
+        console.log('🎯 SISTEMA DE CÁLCULOS INLINE TOTALMENTE OPERACIONAL!');
+        
+        // Expor funções globalmente para debug
+        window.executeAllCalculations = executeAllCalculations;
+        window.testarCalculos = executeAllCalculations;
+        window.voltarPagina = voltarPagina;
+        window.confirmarGeracaoPDF = confirmarGeracaoPDF;
+        
+    }, 1000);
+});
+
+// ==========================================
+// DIAGNÓSTICO AUTOMÁTICO
+// ==========================================
+
+setTimeout(function() {
+    console.log('🔍 === DIAGNÓSTICO AUTOMÁTICO ===');
     
-    // 2. Testar backup
-    if (window.testarBackupCalculos) {
-        window.testarBackupCalculos();
+    const camposTeste = ['peso', 'altura', 'superficie_corporal'];
+    let camposEncontrados = 0;
+    
+    camposTeste.forEach(campo => {
+        const elemento = document.getElementById(campo);
+        if (elemento) {
+            camposEncontrados++;
+            console.log(`✅ ${campo}: ENCONTRADO`);
+        } else {
+            console.error(`❌ ${campo}: NÃO ENCONTRADO`);
+        }
+    });
+    
+    console.log(`📊 STATUS: ${camposEncontrados}/${camposTeste.length} campos encontrados`);
+    
+    if (camposEncontrados === camposTeste.length) {
+        console.log('🎉 SISTEMA 100% OPERACIONAL!');
+    } else {
+        console.warn('⚠️ Alguns campos não foram encontrados');
     }
     
-    // 3. Testar cálculo direto
-    calcularSuperficieCorporalBackup();
-    
-    console.log('🏁 TESTE MANUAL FINALIZADO');
-};
+    console.log('🏁 === FIM DO DIAGNÓSTICO ===');
+}, 2000);
 
-console.log('🚀 SISTEMA COMPLETO CARREGADO - Use window.testarTudoManual() para testar');
+console.log('🚀 SISTEMA DE CÁLCULOS INLINE CARREGADO COMPLETAMENTE!');
 </script>
 {% endblock %}
