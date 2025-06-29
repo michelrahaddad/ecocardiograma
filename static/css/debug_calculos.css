@@ -1,0 +1,162 @@
+/* 
+ * CSS DEBUG PARA CÁLCULOS AUTOMÁTICOS
+ * Indicadores visuais para campos calculados
+ */
+
+/* Campos que devem ser calculados automaticamente */
+#superficie_corporal,
+#relacao_atrio_esquerdo_aorta,
+#percentual_encurtamento,
+#relacao_septo_parede_posterior,
+#volume_diastolico_final,
+#volume_sistolico_final,
+#volume_ejecao,
+#fracao_ejecao,
+#massa_ve,
+#indice_massa_ve,
+#gradiente_vd_ap,
+#gradiente_ve_ao,
+#gradiente_ae_ve,
+#gradiente_ad_vd,
+#pressao_sistolica_vd {
+    position: relative;
+}
+
+/* Indicador visual para campos calculados */
+#superficie_corporal::after,
+#relacao_atrio_esquerdo_aorta::after,
+#percentual_encurtamento::after,
+#relacao_septo_parede_posterior::after,
+#volume_diastolico_final::after,
+#volume_sistolico_final::after,
+#volume_ejecao::after,
+#fracao_ejecao::after,
+#massa_ve::after,
+#indice_massa_ve::after,
+#gradiente_vd_ap::after,
+#gradiente_ve_ao::after,
+#gradiente_ae_ve::after,
+#gradiente_ad_vd::after,
+#pressao_sistolica_vd::after {
+    content: "🔄";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #ffc107;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Campo com valor calculado (sucesso) */
+.campo-calculado {
+    background-color: #e8f5e8 !important;
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+.campo-calculado::after {
+    content: "✅" !important;
+    color: #28a745 !important;
+}
+
+/* Campo com erro de cálculo */
+.campo-erro-calculo {
+    background-color: #f8d7da !important;
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.campo-erro-calculo::after {
+    content: "❌" !important;
+    color: #dc3545 !important;
+}
+
+/* Campo aguardando cálculo */
+.campo-aguardando {
+    background-color: #fff3cd !important;
+    border-color: #ffc107 !important;
+    animation: pulsar 1.5s infinite;
+}
+
+.campo-aguardando::after {
+    content: "⏳" !important;
+    color: #856404 !important;
+}
+
+/* Animação de pulsar para campos aguardando */
+@keyframes pulsar {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Badge de status do sistema de cálculos */
+.badge-calculos {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #dc3545;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1050;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.badge-calculos.ativo {
+    background: #28a745;
+}
+
+.badge-calculos.backup {
+    background: #ffc107;
+    color: #212529;
+}
+
+/* Indicadores de debug no console do navegador */
+.debug-info {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 11px;
+    max-width: 300px;
+    z-index: 1049;
+    display: none;
+}
+
+.debug-info.ativo {
+    display: block;
+}
+
+/* Estilo para mostrar campos que deveriam ter valores mas estão vazios */
+input[data-calculo="automatico"]:invalid {
+    border-left: 4px solid #dc3545;
+}
+
+/* Highlight para campos recém calculados */
+.recem-calculado {
+    animation: destacar-calculo 0.5s ease-in-out;
+}
+
+@keyframes destacar-calculo {
+    0% { 
+        background-color: #fff3cd;
+        transform: scale(1);
+    }
+    50% { 
+        background-color: #e8f5e8;
+        transform: scale(1.02);
+    }
+    100% { 
+        background-color: #e8f5e8;
+        transform: scale(1);
+    }
+}
