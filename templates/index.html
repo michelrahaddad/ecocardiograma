@@ -1,169 +1,288 @@
 {% extends "base.html" %}
 
-{% block title %}Painel Principal - Sistema de Ecocardiograma{% endblock %}
+{% block title %}Grupo Vidah - Sistema de Ecocardiograma{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    border: none;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.stats-label {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.eco-action-btn {
+    border-radius: 25px;
+    padding: 1.5rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.btn-primary.eco-action-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.btn-primary.eco-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+    color: white;
+}
+
+.btn-success.eco-action-btn {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    border: none;
+    color: white;
+}
+
+.btn-success.eco-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(86,171,47,0.4);
+    color: white;
+}
+
+.btn-info.eco-action-btn {
+    background: linear-gradient(135deg, #3ca55c 0%, #b5ac49 100%);
+    border: none;
+    color: white;
+}
+
+.btn-info.eco-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(60,165,92,0.4);
+    color: white;
+}
+
+.btn-secondary.eco-action-btn {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    border: none;
+    color: white;
+}
+
+.btn-secondary.eco-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(116,185,255,0.4);
+    color: white;
+}
+
+.quick-actions {
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 2rem;
+}
+
+.section-title {
+    color: #2d3436;
+    font-weight: 700;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    text-align: center;
+    padding: 1rem;
+}
+
+.action-card i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.action-card strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.action-card small {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Hero Section - Grupo Vidah Style -->
-<section class="hero-section">
+<div class="hero-section text-center">
     <div class="container">
-        <div class="hero-content">
-            <div class="hero-title">GRUPO VIDAH</div>
-            <div class="hero-subtitle">Sistema Avançado de Ecocardiograma</div>
-            <p class="hero-description mb-4" style="font-size: 1.1rem; opacity: 0.8;">
-                Plataforma completa para gestão de exames ecocardiográficos com tecnologia de ponta
-            </p>
-            <div class="hero-actions">
-                <a href="{{ url_for('novo_exame') }}" class="btn btn-primary btn-lg me-3">
+        <h1 class="hero-title">GRUPO VIDAH</h1>
+        <p class="hero-subtitle">Sistema Avançado de Ecocardiograma</p>
+        <p class="lead">Plataforma completa para gestão de exames ecocardiográficos com tecnologia de ponta</p>
+        
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('novo_exame') }}" class="btn btn-light btn-lg eco-action-btn">
                     <i class="fas fa-plus-circle me-2"></i>Novo Paciente
                 </a>
-                <a href="{{ url_for('prontuario') }}" class="btn btn-success btn-lg me-3">
-                    <i class="fas fa-folder-medical me-2"></i>Prontuário
+            </div>
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('prontuario') }}" class="btn btn-success btn-lg eco-action-btn">
+                    <i class="fas fa-folder-open me-2"></i>Prontuário
                 </a>
-                <a href="#estatisticas" class="btn btn-secondary btn-lg">
+            </div>
+            <div class="col-md-4 mb-3">
+                <a href="{{ url_for('api_estatisticas') }}" class="btn btn-info btn-lg eco-action-btn">
                     <i class="fas fa-chart-bar me-2"></i>Ver Estatísticas
                 </a>
             </div>
         </div>
     </div>
-</section>
-
-<!-- Main Content -->
-<div class="container mt-5" id="estatisticas">
-
-<!-- Estatísticas -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card eco-stat-card text-center">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-file-medical-alt"></i>
-                </div>
-                <h3 class="stat-number">{{ total_exames }}</h3>
-                <p class="stat-label">Total de Exames</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card eco-stat-card text-center">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3 class="stat-number">{{ total_pacientes }}</h3>
-                <p class="stat-label">Pacientes</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card eco-stat-card text-center">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-day"></i>
-                </div>
-                <h3 class="stat-number">{{ exames_hoje }}</h3>
-                <p class="stat-label">Exames Hoje</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card eco-stat-card text-center">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h3 class="stat-number" id="current-time">--:--</h3>
-                <p class="stat-label">Hora Atual</p>
-            </div>
-        </div>
-    </div>
 </div>
 
-<!-- Ações Rápidas -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>Ações Rápidas
-                </h5>
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ total_exames }}</div>
+                <div class="stats-label">Total de Exames</div>
             </div>
-            <div class="card-body">
-                <div class="row justify-content-center">
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ total_pacientes }}</div>
+                <div class="stats-label">Pacientes</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ exames_hoje }}</div>
+                <div class="stats-label">Exames Hoje</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stats-card text-center">
+                <div class="stats-number" id="hora-atual">--:--:--</div>
+                <div class="stats-label">Hora Atual</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="quick-actions">
+                <h3 class="section-title">
+                    <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                </h3>
+                
+                <div class="row">
                     <div class="col-lg-4 col-md-6 mb-3">
                         <a href="{{ url_for('novo_exame') }}" class="btn btn-primary btn-lg w-100 eco-action-btn">
-                            <i class="fas fa-plus-circle me-2"></i>
-                            <div>
-                                <strong>Novo Paciente</strong>
-                                <small class="d-block">Iniciar nova avaliação</small>
+                            <div class="action-card">
+                                <i class="fas fa-heartbeat"></i>
+                                <strong>Novo Exame</strong>
+                                <small>Criar novo paciente/exame</small>
                             </div>
                         </a>
                     </div>
                     <div class="col-lg-4 col-md-6 mb-3">
                         <a href="{{ url_for('prontuario') }}" class="btn btn-success btn-lg w-100 eco-action-btn">
-                            <i class="fas fa-folder-medical me-2"></i>
-                            <div>
+                            <div class="action-card">
+                                <i class="fas fa-folder-medical"></i>
                                 <strong>Prontuário</strong>
-                                <small class="d-block">Buscar histórico de pacientes</small>
+                                <small>Buscar histórico de pacientes</small>
                             </div>
                         </a>
                     </div>
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <a href="{{ url_for('cadastro_medico') }}" class="btn btn-secondary btn-lg w-100 eco-action-btn">
-                            <i class="fas fa-user-md me-2"></i>
-                            <div>
-                                <strong>Gerenciar Médicos</strong>
-                                <small class="d-block">Cadastro e assinaturas</small>
+                        <a href="{{ url_for('templates_laudo') }}" class="btn btn-secondary btn-lg w-100 eco-action-btn">
+                            <div class="action-card">
+                                <i class="fas fa-file-medical"></i>
+                                <strong>Templates Laudo</strong>
+                                <small>Gerenciar modelos médicos</small>
                             </div>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Sistema
+                    </h5>
+                    <p class="card-text">
+                        <strong>Versão:</strong> 2.0.0<br>
+                        <strong>Usuário:</strong> {{ current_user.username if current_user.is_authenticated else 'Convidado' }}<br>
+                        <strong>Status:</strong> <span class="badge bg-success">Online</span>
+                    </p>
+                    
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <hr>
+                    <a href="/admin-vidah-sistema-2025" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-cog me-1"></i>Administração
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body">
+                    <h6 class="card-title text-success">
+                        <i class="fas fa-check-circle me-2"></i>Sistema Operacional
+                    </h6>
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>Database:</span>
+                            <span class="badge bg-success">Conectado</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span>Templates:</span>
+                            <span class="badge bg-success">{{ templates_count or 0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span>Usuários:</span>
+                            <span class="badge bg-info">{{ usuarios_count or 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-
-
-<!-- Fechar Container Principal -->
-</div>
-
-<script>
-// Atualizar hora atual de Brasília via API
-function updateCurrentTime() {
-    fetch('/api/hora-atual')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('current-time').textContent = data.hora;
-            } else {
-                // Fallback para horário local se API falhar
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit',
-                    timeZone: 'America/Sao_Paulo'
-                });
-                document.getElementById('current-time').textContent = timeString;
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao buscar hora atual:', error);
-            // Fallback para horário local
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('pt-BR', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'America/Sao_Paulo'
-            });
-            document.getElementById('current-time').textContent = timeString;
-        });
-}
-
-// Atualizar imediatamente e depois a cada segundo para precisão
-updateCurrentTime();
-setInterval(updateCurrentTime, 1000);
-</script>
-
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function atualizarHora() {
+    fetch('/api/hora-
