@@ -211,7 +211,7 @@
 <div class="quick-actions">
     <h2 class="section-title">Ações Rápidas</h2>
     <div class="row">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <div class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-user-plus"></i>
@@ -224,7 +224,7 @@
             </div>
         </div>
         
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <div class="action-card">
                 <div class="action-icon">
                     <i class="fas fa-search"></i>
@@ -233,19 +233,6 @@
                 <p class="action-description">Localizar pacientes e visualizar histórico de exames</p>
                 <a href="{{ url_for('prontuario') }}" class="btn btn-primary-custom">
                     <i class="fas fa-search me-2"></i>Buscar
-                </a>
-            </div>
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-file-medical"></i>
-                </div>
-                <h3 class="action-title">Templates</h3>
-                <p class="action-description">Gerenciar templates de laudos médicos padrão</p>
-                <a href="{{ url_for('templates_laudo') }}" class="btn btn-primary-custom">
-                    <i class="fas fa-cog me-2"></i>Gerenciar
                 </a>
             </div>
         </div>
@@ -313,6 +300,9 @@ function updateCurrentTime() {
 
 // Atualizar imediatamente e depois a cada segundo para precisão
 updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+</script>
+{% endblock %}
 setInterval(updateCurrentTime, 1000);
 </script>
 {% endblock %}
