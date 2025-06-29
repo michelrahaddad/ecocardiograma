@@ -3,7 +3,6 @@
 {% block title %}Parâmetros Ecocardiográficos - {{ exame.nome_paciente }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/debug_calculos.css') }}">
 <style>
 .parameter-section {
     border: 1px solid #dee2e6;
@@ -68,10 +67,34 @@
 .progress-step i {
     margin-right: 0.5rem;
 }
+
+/* Status Badge Inline */
+#badge-status-calculos {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    z-index: 1000;
+    border: 2px solid #fff;
+}
+
+.calculated-field-active {
+    background-color: #e8f5e8 !important;
+    border-color: #4CAF50 !important;
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Status Badge -->
+<div id="badge-status-calculos">✅ Cálculos: Ativos (Inline)</div>
+
 <!-- Progress Indicator -->
 <div class="progress-indicator">
     <div class="d-flex flex-wrap">
@@ -311,7 +334,8 @@
             </div>
         </div>
     </div>
-        <!-- Volumes e Função Sistólica -->
+
+    <!-- Volumes e Função Sistólica -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -322,20 +346,20 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="volume_diastolico_final" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_diastolico_final" 
                                name="volume_diastolico_final" 
                                value="{{ parametros.volume_diastolico_final if parametros and parametros.volume_diastolico_final else '' }}" 
-                               placeholder="VDF">
+                               placeholder="VDF" readonly>
                         <label for="volume_diastolico_final">Volume Diastólico Final (mL)</label>
                         <div class="reference-value">Normal: 67-155 mL</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="volume_sistolico_final" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_sistolico_final" 
                                name="volume_sistolico_final" 
                                value="{{ parametros.volume_sistolico_final if parametros and parametros.volume_sistolico_final else '' }}" 
-                               placeholder="VSF">
+                               placeholder="VSF" readonly>
                         <label for="volume_sistolico_final">Volume Sistólico Final (mL)</label>
                         <div class="reference-value">Normal: 22-58 mL</div>
                     </div>
@@ -526,6 +550,7 @@
     </div>
 </form>
 {% endblock %}
+
 {% block extra_js %}
 <script>
 /**
@@ -552,7 +577,7 @@ function calculateBodySurface() {
         
         if (superficieElement) {
             superficieElement.value = bsa.toFixed(2);
-            superficieElement.style.backgroundColor = '#e8f5e8';
+            superficieElement.classList.add('calculated-field-active');
             console.log(`✅ Superfície corporal calculada: ${bsa.toFixed(2)} m²`);
         }
         
@@ -573,7 +598,7 @@ function calculateAtrioAortaRatio() {
         
         if (ratioElement) {
             ratioElement.value = ratio.toFixed(2);
-            ratioElement.style.backgroundColor = '#e8f5e8';
+            ratioElement.classList.add('calculated-field-active');
             console.log(`✅ Relação AE/Ao calculada: ${ratio.toFixed(2)}`);
         }
     }
@@ -591,7 +616,7 @@ function calculateShortening() {
         
         if (shorteningElement) {
             shorteningElement.value = shortening.toFixed(1);
-            shorteningElement.style.backgroundColor = '#e8f5e8';
+            shorteningElement.classList.add('calculated-field-active');
             console.log(`✅ Percentual de encurtamento calculado: ${shortening.toFixed(1)}%`);
         }
     }
@@ -609,7 +634,7 @@ function calculateSeptumWallRatio() {
         
         if (ratioElement) {
             ratioElement.value = ratio.toFixed(2);
-            ratioElement.style.backgroundColor = '#e8f5e8';
+            ratioElement.classList.add('calculated-field-active');
             console.log(`✅ Relação Septo/PP calculada: ${ratio.toFixed(2)}`);
         }
     }
@@ -627,7 +652,7 @@ function calculateDiastolicVolumeTeichholz() {
         
         if (vdfElement) {
             vdfElement.value = vdf.toFixed(1);
-            vdfElement.style.backgroundColor = '#e8f5e8';
+            vdfElement.classList.add('calculated-field-active');
             console.log(`✅ VDF calculado: ${vdf.toFixed(1)} mL`);
         }
         
@@ -650,7 +675,7 @@ function calculateSystolicVolumeTeichholz() {
         
         if (vsfElement) {
             vsfElement.value = vsf.toFixed(1);
-            vsfElement.style.backgroundColor = '#e8f5e8';
+            vsfElement.classList.add('calculated-field-active');
             console.log(`✅ VSF calculado: ${vsf.toFixed(1)} mL`);
         }
         
@@ -672,7 +697,7 @@ function calculateEjectionVolume() {
         
         if (veElement) {
             veElement.value = ve.toFixed(1);
-            veElement.style.backgroundColor = '#e8f5e8';
+            veElement.classList.add('calculated-field-active');
             console.log(`✅ Volume de ejeção calculado: ${ve.toFixed(1)} mL`);
         }
     }
@@ -690,7 +715,7 @@ function calculateEjectionFraction() {
         
         if (feElement) {
             feElement.value = fe.toFixed(1);
-            feElement.style.backgroundColor = '#e8f5e8';
+            feElement.classList.add('calculated-field-active');
             console.log(`✅ Fração de ejeção calculada: ${fe.toFixed(1)}%`);
         }
     }
@@ -714,7 +739,7 @@ function calculateLeftVentricularMass() {
         
         if (massaElement) {
             massaElement.value = massa.toFixed(1);
-            massaElement.style.backgroundColor = '#e8f5e8';
+            massaElement.classList.add('calculated-field-active');
             console.log(`✅ Massa VE calculada: ${massa.toFixed(1)} g`);
         }
         
@@ -735,7 +760,7 @@ function calculateLeftVentricularMassIndex() {
         
         if (indiceElement) {
             indiceElement.value = indice.toFixed(1);
-            indiceElement.style.backgroundColor = '#e8f5e8';
+            indiceElement.classList.add('calculated-field-active');
             console.log(`✅ Índice de massa VE calculado: ${indice.toFixed(1)} g/m²`);
         }
     }
@@ -753,7 +778,7 @@ function calculateGradientVDAP() {
         
         if (gradienteElement) {
             gradienteElement.value = gradiente.toFixed(1);
-            gradienteElement.style.backgroundColor = '#e8f5e8';
+            gradienteElement.classList.add('calculated-field-active');
             console.log(`✅ Gradiente VD→AP calculado: ${gradiente.toFixed(1)} mmHg`);
         }
     }
@@ -771,7 +796,7 @@ function calculateGradientVEAO() {
         
         if (gradienteElement) {
             gradienteElement.value = gradiente.toFixed(1);
-            gradienteElement.style.backgroundColor = '#e8f5e8';
+            gradienteElement.classList.add('calculated-field-active');
             console.log(`✅ Gradiente VE→AO calculado: ${gradiente.toFixed(1)} mmHg`);
         }
     }
@@ -789,7 +814,7 @@ function calculateGradientAEVE() {
         
         if (gradienteElement) {
             gradienteElement.value = gradiente.toFixed(1);
-            gradienteElement.style.backgroundColor = '#e8f5e8';
+            gradienteElement.classList.add('calculated-field-active');
             console.log(`✅ Gradiente AE→VE calculado: ${gradiente.toFixed(1)} mmHg`);
         }
     }
@@ -807,7 +832,7 @@ function calculateGradientADVD() {
         
         if (gradienteElement) {
             gradienteElement.value = gradiente.toFixed(1);
-            gradienteElement.style.backgroundColor = '#e8f5e8';
+            gradienteElement.classList.add('calculated-field-active');
             console.log(`✅ Gradiente AD→VD/IT calculado: ${gradiente.toFixed(1)} mmHg`);
         }
         
@@ -829,7 +854,7 @@ function calculatePSAP() {
         
         if (psapElement) {
             psapElement.value = psap.toFixed(1);
-            psapElement.style.backgroundColor = '#e8f5e8';
+            psapElement.classList.add('calculated-field-active');
             console.log(`✅ PSAP calculada: ${psap.toFixed(1)} mmHg`);
         }
     }
@@ -945,85 +970,27 @@ function confirmarGeracaoPDF() {
 }
 
 // ==========================================
-// INDICADOR VISUAL DE STATUS
-// ==========================================
-
-function criarIndicadorStatus() {
-    const badge = document.createElement('div');
-    badge.id = 'badge-status-calculos';
-    badge.innerHTML = '✅ Cálculos: Ativos (Inline)';
-    badge.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        z-index: 1000;
-        border: 2px solid #fff;
-    `;
-    document.body.appendChild(badge);
-    console.log('✅ Indicador de status criado');
-}
-
-// ==========================================
 // INICIALIZAÇÃO PRINCIPAL
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM carregado - Inicializando sistema inline...');
+    console.log('📋 DOM carregado, iniciando sistema...');
     
-    // Aguardar um momento para garantir que todos os elementos existam
-    setTimeout(function() {
-        setupAllEventListeners();
+    // Configurar todos os listeners
+    setupAllEventListeners();
+    
+    // Executar cálculos iniciais
+    executeAllCalculations();
+    
+    // Expor funções globalmente para testes
+    window.executeAllCalculations = executeAllCalculations;
+    window.testarCalculos = function() {
+        console.log('🧪 Teste manual dos cálculos...');
         executeAllCalculations();
-        criarIndicadorStatus();
-        
-        console.log('🎯 SISTEMA DE CÁLCULOS INLINE TOTALMENTE OPERACIONAL!');
-        
-        // Expor funções globalmente para debug
-        window.executeAllCalculations = executeAllCalculations;
-        window.testarCalculos = executeAllCalculations;
-        window.voltarPagina = voltarPagina;
-        window.confirmarGeracaoPDF = confirmarGeracaoPDF;
-        
-    }, 1000);
+    };
+    
+    console.log('🎉 SISTEMA DE CÁLCULOS INLINE ATIVO E FUNCIONANDO!');
 });
-
-// ==========================================
-// DIAGNÓSTICO AUTOMÁTICO
-// ==========================================
-
-setTimeout(function() {
-    console.log('🔍 === DIAGNÓSTICO AUTOMÁTICO ===');
-    
-    const camposTeste = ['peso', 'altura', 'superficie_corporal'];
-    let camposEncontrados = 0;
-    
-    camposTeste.forEach(campo => {
-        const elemento = document.getElementById(campo);
-        if (elemento) {
-            camposEncontrados++;
-            console.log(`✅ ${campo}: ENCONTRADO`);
-        } else {
-            console.error(`❌ ${campo}: NÃO ENCONTRADO`);
-        }
-    });
-    
-    console.log(`📊 STATUS: ${camposEncontrados}/${camposTeste.length} campos encontrados`);
-    
-    if (camposEncontrados === camposTeste.length) {
-        console.log('🎉 SISTEMA 100% OPERACIONAL!');
-    } else {
-        console.warn('⚠️ Alguns campos não foram encontrados');
-    }
-    
-    console.log('🏁 === FIM DO DIAGNÓSTICO ===');
-}, 2000);
 
 console.log('🚀 SISTEMA DE CÁLCULOS INLINE CARREGADO COMPLETAMENTE!');
 </script>
