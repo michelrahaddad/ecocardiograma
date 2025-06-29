@@ -3,6 +3,7 @@
 {% block title %}Parâmetros Ecocardiográficos - {{ exame.nome_paciente }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/debug_calculos.css') }}">
 <style>
 .parameter-section {
     border: 1px solid #dee2e6;
@@ -322,20 +323,20 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="volume_diastolico_final" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_diastolico_final" 
                                name="volume_diastolico_final" 
                                value="{{ parametros.volume_diastolico_final if parametros and parametros.volume_diastolico_final else '' }}" 
-                               placeholder="VDF">
+                               placeholder="VDF" readonly>
                         <label for="volume_diastolico_final">Volume Diastólico Final (mL)</label>
                         <div class="reference-value">Normal: 67-155 mL</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="volume_sistolico_final" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="volume_sistolico_final" 
                                name="volume_sistolico_final" 
                                value="{{ parametros.volume_sistolico_final if parametros and parametros.volume_sistolico_final else '' }}" 
-                               placeholder="VSF">
+                               placeholder="VSF" readonly>
                         <label for="volume_sistolico_final">Volume Sistólico Final (mL)</label>
                         <div class="reference-value">Normal: 22-58 mL</div>
                     </div>
@@ -345,9 +346,9 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="volume_ejecao" 
                                name="volume_ejecao" 
                                value="{{ parametros.volume_ejecao if parametros and parametros.volume_ejecao else '' }}" 
-                               placeholder="Volume de Ejeção" readonly>
-                        <label for="volume_ejecao">Volume de Ejeção (mL)</label>
-                        <div class="reference-value">Calculado: VDF - VSF</div>
+                               placeholder="Volume Ejeção" readonly>
+                        <label for="volume_ejecao">Volume Ejeção (mL)</label>
+                        <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -355,30 +356,31 @@
                         <input type="number" step="0.1" class="form-control calculated-field" id="fracao_ejecao" 
                                name="fracao_ejecao" 
                                value="{{ parametros.fracao_ejecao if parametros and parametros.fracao_ejecao else '' }}" 
-                               placeholder="Fração de Ejeção" readonly>
+                               placeholder="Fração Ejeção" readonly>
                         <label for="fracao_ejecao">Fração de Ejeção (%)</label>
                         <div class="reference-value">Normal: ≥55%</div>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="massa_ve" name="massa_ve" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="massa_ve" 
+                               name="massa_ve" 
                                value="{{ parametros.massa_ve if parametros and parametros.massa_ve else '' }}" 
-                               placeholder="Massa VE">
+                               placeholder="Massa VE" readonly>
                         <label for="massa_ve">Massa VE (g)</label>
-                        <div class="reference-value">Normal H: 88-224g, M: 67-162g</div>
+                        <div class="reference-value">H: 88-224g / M: 67-162g</div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-floating mb-3">
                         <input type="number" step="0.1" class="form-control calculated-field" id="indice_massa_ve" 
                                name="indice_massa_ve" 
                                value="{{ parametros.indice_massa_ve if parametros and parametros.indice_massa_ve else '' }}" 
                                placeholder="Índice Massa VE" readonly>
                         <label for="indice_massa_ve">Índice Massa VE (g/m²)</label>
-                        <div class="reference-value">Normal H: ≤115, M: ≤95 g/m²</div>
+                        <div class="reference-value">H: &lt;115 / M: &lt;95</div>
                     </div>
                 </div>
             </div>
@@ -389,50 +391,48 @@
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
-                <i class="fas fa-wave-square me-2"></i>Velocidades dos Fluxos
+                <i class="fas fa-water me-2"></i>Velocidades dos Fluxos
             </h5>
         </div>
         <div class="parameter-section-body">
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" id="fluxo_pulmonar" name="fluxo_pulmonar" 
+                        <input type="number" step="0.1" class="form-control" id="fluxo_pulmonar" name="fluxo_pulmonar" 
                                value="{{ parametros.fluxo_pulmonar if parametros and parametros.fluxo_pulmonar else '1.0' }}" 
                                placeholder="Fluxo Pulmonar">
                         <label for="fluxo_pulmonar">Fluxo Pulmonar (m/s)</label>
-                        <div class="reference-value">Normal: 0,6-0,9 m/s</div>
+                        <div class="reference-value">Normal: 0.6-0.9 m/s</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" id="fluxo_mitral" name="fluxo_mitral" 
+                        <input type="number" step="0.1" class="form-control" id="fluxo_mitral" name="fluxo_mitral" 
                                value="{{ parametros.fluxo_mitral if parametros and parametros.fluxo_mitral else '0.9' }}" 
                                placeholder="Fluxo Mitral">
                         <label for="fluxo_mitral">Fluxo Mitral (m/s)</label>
-                        <div class="reference-value">Normal: 0,6-1,3 m/s</div>
+                        <div class="reference-value">Normal: 0.6-1.3 m/s</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" id="fluxo_aortico" name="fluxo_aortico" 
+                        <input type="number" step="0.1" class="form-control" id="fluxo_aortico" name="fluxo_aortico" 
                                value="{{ parametros.fluxo_aortico if parametros and parametros.fluxo_aortico else '1.0' }}" 
                                placeholder="Fluxo Aórtico">
                         <label for="fluxo_aortico">Fluxo Aórtico (m/s)</label>
-                        <div class="reference-value">Normal: 1,0-1,7 m/s</div>
+                        <div class="reference-value">Normal: 1.0-1.7 m/s</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.01" class="form-control" id="fluxo_tricuspide" name="fluxo_tricuspide" 
+                        <input type="number" step="0.1" class="form-control" id="fluxo_tricuspide" name="fluxo_tricuspide" 
                                value="{{ parametros.fluxo_tricuspide if parametros and parametros.fluxo_tricuspide else '0.5' }}" 
                                placeholder="Fluxo Tricúspide">
                         <label for="fluxo_tricuspide">Fluxo Tricúspide (m/s)</label>
-                        <div class="reference-value">Normal: 0,3-0,7 m/s</div>
+                        <div class="reference-value">Normal: &lt;2.8 m/s</div>
                     </div>
                 </div>
             </div>
-
-
         </div>
     </div>
 
@@ -447,87 +447,74 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="gradiente_vd_ap" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_vd_ap" 
                                name="gradiente_vd_ap" 
                                value="{{ parametros.gradiente_vd_ap if parametros and parametros.gradiente_vd_ap else '' }}" 
-                               placeholder="Gradiente VD→AP">
+                               placeholder="Gradiente VD→AP" readonly>
                         <label for="gradiente_vd_ap">Gradiente VD→AP (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;10 mmHg</div>
+                        <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="gradiente_ae_ve" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ae_ve" 
                                name="gradiente_ae_ve" 
                                value="{{ parametros.gradiente_ae_ve if parametros and parametros.gradiente_ae_ve else '' }}" 
-                               placeholder="Gradiente AE→VE">
+                               placeholder="Gradiente AE→VE" readonly>
                         <label for="gradiente_ae_ve">Gradiente AE→VE (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;5 mmHg</div>
+                        <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="gradiente_ve_ao" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ve_ao" 
                                name="gradiente_ve_ao" 
                                value="{{ parametros.gradiente_ve_ao if parametros and parametros.gradiente_ve_ao else '' }}" 
-                               placeholder="Gradiente VE→AO">
+                               placeholder="Gradiente VE→AO" readonly>
                         <label for="gradiente_ve_ao">Gradiente VE→AO (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;10 mmHg</div>
+                        <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="gradiente_ad_vd" 
+                        <input type="number" step="0.1" class="form-control calculated-field" id="gradiente_ad_vd" 
                                name="gradiente_ad_vd" 
                                value="{{ parametros.gradiente_ad_vd if parametros and parametros.gradiente_ad_vd else '' }}" 
-                               placeholder="Gradiente AD→VD">
-                        <label for="gradiente_ad_vd">Gradiente AD→VD (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;5 mmHg</div>
+                               placeholder="Gradiente AD→VD/IT" readonly>
+                        <label for="gradiente_ad_vd">Gradiente AD→VD/IT (mmHg)</label>
+                        <div class="reference-value">Calculado automaticamente</div>
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="form-floating mb-3">
-                        <input type="number" step="0.1" class="form-control" id="gradiente_tricuspide" 
-                               name="gradiente_tricuspide" 
-                               value="{{ parametros.gradiente_tricuspide if parametros and parametros.gradiente_tricuspide else '' }}" 
-                               placeholder="Gradiente IT">
-                        <label for="gradiente_tricuspide">Gradiente IT (mmHg)</label>
-                        <div class="reference-value">Para cálculo da PSAP</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-4">
                     <div class="form-floating mb-3">
                         <input type="number" step="0.1" class="form-control calculated-field" id="pressao_sistolica_vd" 
                                name="pressao_sistolica_vd" 
                                value="{{ parametros.pressao_sistolica_vd if parametros and parametros.pressao_sistolica_vd else '' }}" 
                                placeholder="PSAP" readonly>
                         <label for="pressao_sistolica_vd">PSAP (mmHg)</label>
-                        <div class="reference-value">Normal: &lt;35 mmHg</div>
+                        <div class="reference-value">Normal: &lt;30 mmHg</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-
-
-
-    <!-- Buttons -->
-    <div class="d-flex justify-content-between mt-4">
-        <div>
-            <a href="javascript:void(0)" onclick="voltarPagina(); return false;" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Voltar
-            </a>
-        </div>
-        <div class="btn-group">
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-save me-1"></i>Salvar Parâmetros
-            </button>
-            <button type="submit" name="continuar_laudo" value="1" class="btn btn-primary">
-                <i class="fas fa-arrow-right me-1"></i>Continuar para Laudo
-            </button>
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex gap-3 justify-content-center">
+                <button type="button" class="btn btn-secondary btn-lg" onclick="voltarPagina()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i>Salvar Parâmetros
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="confirmarGeracaoPDF()">
+                    <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                </button>
+            </div>
         </div>
     </div>
 </form>
@@ -535,7 +522,114 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/calculos_nativos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculos_backup_render.js') }}"></script>
 <script>
+// ==========================================
+// DIAGNÓSTICO COMPLETO RENDER - CÁLCULOS AUTOMÁTICOS
+// ==========================================
+
+console.log('🔬 INICIANDO DIAGNÓSTICO COMPLETO DOS CÁLCULOS');
+
+// 1. VERIFICAR CARREGAMENTO DO ARQUIVO JS
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM CARREGADO - Iniciando diagnósticos...');
+    
+    setTimeout(function() {
+        diagnosticarSistemaCalculos();
+    }, 1000);
+});
+
+function diagnosticarSistemaCalculos() {
+    console.log('🔍 === DIAGNÓSTICO SISTEMA DE CÁLCULOS ===');
+    
+    // 1. VERIFICAR FUNÇÕES GLOBAIS
+    console.log('1. VERIFICANDO FUNÇÕES DISPONÍVEIS:');
+    console.log('- initializeNativeCalculations:', typeof window.initializeNativeCalculations);
+    console.log('- calculateBodySurface:', typeof window.calculateBodySurface);
+    console.log('- executeAllCalculations:', typeof window.executeAllCalculations);
+    
+    // 2. VERIFICAR CAMPOS CRÍTICOS
+    console.log('2. VERIFICANDO CAMPOS HTML:');
+    const camposCriticos = [
+        'peso', 'altura', 'superficie_corporal',
+        'atrio_esquerdo', 'raiz_aorta', 'relacao_atrio_esquerdo_aorta',
+        'diametro_diastolico_final_ve', 'diametro_sistolico_final',
+        'volume_diastolico_final', 'volume_sistolico_final', 'fracao_ejecao'
+    ];
+    
+    let camposEncontrados = 0;
+    camposCriticos.forEach(function(campo) {
+        const elemento = document.getElementById(campo);
+        if (elemento) {
+            camposEncontrados++;
+            console.log(`✅ ${campo}: ENCONTRADO`);
+        } else {
+            console.error(`❌ ${campo}: NÃO ENCONTRADO`);
+        }
+    });
+    
+    console.log(`📊 CAMPOS ENCONTRADOS: ${camposEncontrados}/${camposCriticos.length}`);
+    
+    // 3. TESTAR CÁLCULO SIMPLES
+    console.log('3. TESTE MANUAL DE CÁLCULO:');
+    try {
+        const peso = document.getElementById('peso');
+        const altura = document.getElementById('altura');
+        
+        if (peso && altura) {
+            // Simular valores
+            peso.value = '70';
+            altura.value = '170';
+            
+            console.log('📝 Valores de teste inseridos: peso=70, altura=170');
+            
+            // Tentar executar cálculo manual
+            if (typeof calculateBodySurface === 'function') {
+                calculateBodySurface();
+                console.log('✅ Função calculateBodySurface executada');
+                
+                const superficie = document.getElementById('superficie_corporal');
+                if (superficie && superficie.value) {
+                    console.log(`🎯 SUCESSO! Superfície calculada: ${superficie.value} m²`);
+                } else {
+                    console.error('❌ Superfície não foi calculada');
+                }
+            } else {
+                console.error('❌ Função calculateBodySurface não disponível');
+            }
+        }
+    } catch (error) {
+        console.error('❌ ERRO NO TESTE MANUAL:', error);
+    }
+    
+    // 4. VERIFICAR EVENT LISTENERS
+    console.log('4. VERIFICANDO EVENT LISTENERS:');
+    try {
+        const peso = document.getElementById('peso');
+        if (peso) {
+            const listeners = getEventListeners ? getEventListeners(peso) : 'N/A';
+            console.log('Event listeners no campo peso:', listeners);
+        }
+    } catch (error) {
+        console.log('Não foi possível verificar event listeners');
+    }
+    
+    // 5. FORÇAR INICIALIZAÇÃO
+    console.log('5. FORÇANDO INICIALIZAÇÃO:');
+    try {
+        if (typeof initializeNativeCalculations === 'function') {
+            initializeNativeCalculations();
+            console.log('✅ initializeNativeCalculations executada manualmente');
+        } else {
+            console.error('❌ initializeNativeCalculations não disponível');
+        }
+    } catch (error) {
+        console.error('❌ ERRO na inicialização forçada:', error);
+    }
+    
+    console.log('🏁 === FIM DO DIAGNÓSTICO ===');
+}
+
 // ==========================================
 // FUNÇÃO UNIVERSAL VOLTAR PÁGINA
 // ==========================================
@@ -543,43 +637,110 @@ function voltarPagina() {
     console.log('🔙 Função voltarPagina chamada');
     
     try {
-        // Verificar se há histórico disponível
         if (window.history.length > 1) {
-            console.log('📚 Usando window.history.back()');
             window.history.back();
         } else {
-            console.log('🏠 Redirecionando para página inicial (sem histórico)');
             window.location.href = '/';
         }
     } catch (error) {
         console.error('❌ Erro na função voltarPagina:', error);
-        // Fallback absoluto
         window.location.href = '/';
     }
 }
 
 // ==========================================
-// VERIFICAÇÃO DE CARREGAMENTO
+// FUNÇÃO GERAR PDF
 // ==========================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ JavaScript carregado - função voltarPagina disponível');
-    console.log('🔍 Verificando botão Voltar...');
+function confirmarGeracaoPDF() {
+    console.log('📄 Função confirmarGeracaoPDF chamada');
     
-    const botaoVoltar = document.querySelector('[onclick*="voltarPagina"]');
-    if (botaoVoltar) {
-        console.log('✅ Botão Voltar encontrado:', botaoVoltar);
-    } else {
-        console.warn('⚠️ Botão Voltar não encontrado');
+    const exameId = {{ exame.id }};
+    
+    if (confirm('Gerar PDF do exame? Certifique-se de que os dados estão salvos.')) {
+        window.open(`/gerar-pdf/${exameId}`, '_blank');
     }
+}
+
+// ==========================================
+// SISTEMA DE CÁLCULOS BACKUP (INLINE)
+// ==========================================
+function calcularSuperficieCorporalBackup() {
+    console.log('🆘 USANDO SISTEMA BACKUP DE CÁLCULOS');
+    
+    const peso = parseFloat(document.getElementById('peso')?.value || 0);
+    const altura = parseFloat(document.getElementById('altura')?.value || 0);
+    
+    if (peso > 0 && altura > 0) {
+        const bsa = 0.007184 * Math.pow(altura, 0.725) * Math.pow(peso, 0.425);
+        const superficieElement = document.getElementById('superficie_corporal');
+        
+        if (superficieElement) {
+            superficieElement.value = bsa.toFixed(2);
+            superficieElement.style.backgroundColor = '#e3f2fd';
+            console.log(`🆘 BACKUP: Superfície calculada = ${bsa.toFixed(2)} m²`);
+        }
+    }
+}
+
+// Adicionar listeners backup
+window.addEventListener('load', function() {
+    console.log('🆘 Configurando sistema backup...');
+    
+    const peso = document.getElementById('peso');
+    const altura = document.getElementById('altura');
+    
+    if (peso) peso.addEventListener('input', calcularSuperficieCorporalBackup);
+    if (altura) altura.addEventListener('input', calcularSuperficieCorporalBackup);
 });
 
+// Expor função para teste manual
+window.testarCalculos = diagnosticarSistemaCalculos;
+window.calcularBackup = calcularSuperficieCorporalBackup;
+
 // ==========================================
-// TESTE DA FUNÇÃO (para debug)
+// INDICADOR VISUAL DE STATUS
 // ==========================================
-window.testarVoltarPagina = function() {
-    console.log('🧪 Teste da função voltarPagina');
-    voltarPagina();
+function criarIndicadorStatus() {
+    const badge = document.createElement('div');
+    badge.id = 'badge-status-calculos';
+    badge.className = 'badge-calculos';
+    badge.innerHTML = '🔄 Cálculos: Carregando...';
+    document.body.appendChild(badge);
+    
+    // Atualizar status após testes
+    setTimeout(function() {
+        const superficie = document.getElementById('superficie_corporal');
+        if (superficie && superficie.value) {
+            badge.className = 'badge-calculos ativo';
+            badge.innerHTML = '✅ Cálculos: Ativos';
+        } else {
+            badge.className = 'badge-calculos backup';
+            badge.innerHTML = '🆘 Cálculos: Backup';
+        }
+    }, 3000);
+}
+
+// Criar indicador quando página carregar
+window.addEventListener('load', criarIndicadorStatus);
+
+// Função para testar tudo manualmente
+window.testarTudoManual = function() {
+    console.log('🧪 TESTE MANUAL COMPLETO');
+    
+    // 1. Testar diagnóstico
+    diagnosticarSistemaCalculos();
+    
+    // 2. Testar backup
+    if (window.testarBackupCalculos) {
+        window.testarBackupCalculos();
+    }
+    
+    // 3. Testar cálculo direto
+    calcularSuperficieCorporalBackup();
+    
+    console.log('🏁 TESTE MANUAL FINALIZADO');
 };
+
+console.log('🚀 SISTEMA COMPLETO CARREGADO - Use window.testarTudoManual() para testar');
 </script>
 {% endblock %}
-
