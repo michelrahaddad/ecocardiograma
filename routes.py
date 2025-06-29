@@ -782,6 +782,10 @@ def salvar_parametros(id):
         log_system_event(f'Parâmetros atualizados para exame ID {id}', current_user.id)
         flash('Parâmetros salvos com sucesso!', 'success')
         
+        # Verificar se deve continuar para laudo
+        if 'continuar_laudo' in request.form:
+            return redirect(url_for('laudo', id=id))
+        
     except Exception as e:
         db.session.rollback()
         log_error_with_traceback('Erro ao salvar parâmetros', e, current_user.id)
