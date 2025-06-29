@@ -52,7 +52,7 @@ with app.app_context():
                 username='admin',
                 email='admin@grupovidah.com.br',
                 password_hash=generate_password_hash('VidahAdmin2025!'),
-                is_admin=True
+                role='admin'
             )
             db.session.add(admin_user)
             logging.info("Usuário admin criado")
@@ -64,7 +64,7 @@ with app.app_context():
                 username='usuario',
                 email='usuario@grupovidah.com.br',
                 password_hash=generate_password_hash('Usuario123!'),
-                is_admin=False
+                role='user'
             )
             db.session.add(user_default)
             logging.info("Usuário padrão criado")
@@ -76,8 +76,6 @@ with app.app_context():
             medico_default = Medico(
                 nome='Michel Raineri Haddad',
                 crm='CRM-SP 183299',
-                especialidade='Cardiologia',
-                email='michel@grupovidah.com.br',
                 ativo=True
             )
             db.session.add(medico_default)
