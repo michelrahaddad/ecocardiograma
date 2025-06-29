@@ -163,7 +163,7 @@
                 <td>{{ exame.idade }} anos</td>
                 <td>{{ exame.medico_usuario or 'Não definido' }}</td>
                 <td>
-                    <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" 
+                    <a href="{{ url_for('visualizar_exame', id=exame.id) }}" 
                        class="btn-futuristic btn-secondary-futuristic" 
                        style="padding: 0.5rem 1rem; font-size: 0.8rem;">
                         <i class="fas fa-eye"></i>
