@@ -8,276 +8,297 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-align: center;
-    padding: 80px 0;
-    margin-bottom: 40px;
+    padding: 4rem 0;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 20px;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .hero-subtitle {
-    font-size: 1.4rem;
-    font-weight: 300;
-    margin-bottom: 15px;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
     opacity: 0.9;
 }
 
-.hero-description {
-    font-size: 1.1rem;
-    margin-bottom: 40px;
-    opacity: 0.85;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.hero-buttons .btn {
-    margin: 0 10px 10px 0;
-    padding: 12px 30px;
-    font-size: 1.1rem;
-    border-radius: 25px;
-}
-
-.btn-hero-primary {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    backdrop-filter: blur(10px);
-}
-
-.btn-hero-primary:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-}
-
-.btn-hero-secondary {
-    background: #28a745;
-    border: 2px solid #28a745;
-    color: white;
-}
-
-.btn-hero-outline {
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    color: white;
-}
-
-.dashboard-section {
-    margin-bottom: 40px;
-}
-
-.dashboard-card {
+.quick-actions {
     background: white;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border: 2px solid #e3f2fd;
-    transition: transform 0.3s ease;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
 }
 
-.dashboard-card:hover {
+.action-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.action-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.card-number {
+.action-icon {
     font-size: 3rem;
-    font-weight: bold;
-    color: #2563eb;
-    margin-bottom: 10px;
+    color: #1e40af;
+    margin-bottom: 1rem;
 }
 
-.card-label {
+.action-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.action-description {
     color: #6b7280;
     font-size: 0.9rem;
-    margin: 0;
+    margin-bottom: 1rem;
 }
 
-.quick-actions-section {
-    margin-bottom: 40px;
-}
-
-.actions-card {
+.stats-section {
     background: white;
     border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.time-display {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.current-time {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.current-date {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.btn-primary-custom {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 64, 175, 0.4);
+    color: white;
+}
+
+.btn-outline-custom {
+    border: 2px solid #1e40af;
+    color: #1e40af;
+    background: transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-outline-custom:hover {
+    background: #1e40af;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 64, 175, 0.4);
 }
 
 .section-title {
-    color: #374151;
-    margin-bottom: 25px;
-    font-weight: 600;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
-.action-button {
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    color: #374151;
-}
-
-.action-button:hover {
-    border-color: #3b82f6;
-    background: #f8fafc;
-    color: #1e40af;
-    text-decoration: none;
-}
-
-.action-primary {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-    color: white !important;
-    border-color: #3b82f6;
-}
-
-.action-primary:hover {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white !important;
-}
-
-.action-secondary {
-    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-    color: white !important;
-    border-color: #10b981;
-}
-
-.action-secondary:hover {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white !important;
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .action-card {
+        margin-bottom: 1rem;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section - Grupo Vidah Design -->
-<section class="hero-section">
+<!-- Hero Section -->
+<div class="hero-section">
     <div class="container">
-        <div class="row justify-content-center text-center">
-            <div class="col-lg-8">
-                <h1 class="hero-title">GRUPO VIDAH</h1>
-                <p class="hero-subtitle">Sistema Avançado de Ecocardiograma</p>
-                <p class="hero-description">
-                    Plataforma completa para gestão de exames ecocardiográficos com tecnologia de ponta
-                </p>
-                
-                <div class="hero-buttons">
-                    <a href="/novo_exame" class="btn btn-hero-primary">
-                        <i class="fas fa-plus-circle me-2"></i>Novo Paciente
-                    </a>
-                    <a href="/prontuario" class="btn btn-hero-secondary">
-                        <i class="fas fa-folder-medical me-2"></i>Prontuário
-                    </a>
-                    <a href="/estatisticas" class="btn btn-hero-outline">
-                        <i class="fas fa-chart-bar me-2"></i>Ver Estatísticas
-                    </a>
-                </div>
+        <h1 class="hero-title">Sistema Ecocardiograma</h1>
+        <p class="hero-subtitle">Gestão Completa de Exames Ecocardiográficos - Grupo Vidah</p>
+        <div class="row justify-content-center">
+            <div class="col-md-3 mb-3">
+                <a href="{{ url_for('novo_exame') }}" class="btn btn-primary-custom w-100">
+                    <i class="fas fa-plus-circle me-2"></i>Novo Paciente
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{{ url_for('prontuario') }}" class="btn btn-outline-custom w-100">
+                    <i class="fas fa-search me-2"></i>Prontuário
+                </a>
             </div>
         </div>
     </div>
-</section>
+</div>
 
-<!-- Dashboard Cards -->
-<section class="dashboard-section">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body text-center">
-                        <h3 class="card-number">{{ estatisticas.total_exames }}</h3>
-                        <p class="card-label">Total de Exames</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body text-center">
-                        <h3 class="card-number">{{ estatisticas.total_pacientes }}</h3>
-                        <p class="card-label">Pacientes</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body text-center">
-                        <h3 class="card-number">{{ estatisticas.exames_hoje }}</h3>
-                        <p class="card-label">Exames Hoje</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="dashboard-card">
-                    <div class="card-body text-center">
-                        <h3 class="card-number hora-atual" id="current-time"></h3>
-                        <p class="card-label">Hora Atual</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- Time Display -->
+<div class="time-display">
+    <div class="current-time" id="current-time">--:--:--</div>
+    <div class="current-date" id="current-date">Carregando...</div>
+</div>
 
 <!-- Quick Actions -->
-<section class="quick-actions-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <div class="actions-card">
-                    <h4 class="section-title">Ações Rápidas</h4>
-                    <div class="row g-3">
-                        <div class="col-lg-4">
-                            <a href="/novo_exame" class="action-button action-primary">
-                                <i class="fas fa-plus-circle me-2"></i>
-                                <div>
-                                    <strong>Novo Paciente</strong><br>
-                                    <small>Iniciar nova avaliação</small>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-lg-4">
-                            <a href="/prontuario" class="action-button action-secondary">
-                                <i class="fas fa-search me-2"></i>
-                                <div>
-                                    <strong>Prontuário</strong><br>
-                                    <small>Buscar histórico de pacientes</small>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-lg-4">
-                            <a href="/cadastro_medico" class="action-button action-outline">
-                                <i class="fas fa-user-md me-2"></i>
-                                <div>
-                                    <strong>Gerenciar Médicos</strong><br>
-                                    <small>Cadastro e assinaturas</small>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
+<div class="quick-actions">
+    <h2 class="section-title">Ações Rápidas</h2>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-user-plus"></i>
                 </div>
+                <h3 class="action-title">Novo Paciente</h3>
+                <p class="action-description">Cadastrar novo paciente e iniciar exame ecocardiográfico</p>
+                <a href="{{ url_for('novo_exame') }}" class="btn btn-primary-custom">
+                    <i class="fas fa-plus me-2"></i>Criar Exame
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="action-title">Buscar Paciente</h3>
+                <p class="action-description">Localizar pacientes e visualizar histórico de exames</p>
+                <a href="{{ url_for('prontuario') }}" class="btn btn-primary-custom">
+                    <i class="fas fa-search me-2"></i>Buscar
+                </a>
             </div>
         </div>
     </div>
-</section>
+</div>
 
+<!-- Statistics -->
+<div class="stats-section">
+    <h2 class="section-title">Estatísticas do Sistema</h2>
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number" id="total-exames">{{ stats.total_exames or 0 }}</div>
+                <div class="stat-label">Total de Exames</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number" id="exames-mes">{{ stats.exames_mes or 0 }}</div>
+                <div class="stat-label">Exames Este Mês</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number" id="templates-ativos">{{ stats.templates_ativos or 0 }}</div>
+                <div class="stat-label">Templates Ativos</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number" id="usuarios-sistema">{{ stats.usuarios_sistema or 0 }}</div>
+                <div class="stat-label">Usuários do Sistema</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// Atualizar hora em tempo real
-function atualizarHora() {
-    const agora = new Date();
-    const horaFormatada = agora.toLocaleTimeString('pt-BR');
-    const elementoHora = document.getElementById('current-time');
-    if (elementoHora) {
-        elementoHora.textContent = horaFormatada;
-    }
+function updateCurrentTime() {
+    fetch('/api/hora-atual')
+        .then(response => response.json())
+        .then(data => {
+            if (data.time && data.date) {
+                document.getElementById('current-time').textContent = data.time;
+                document.getElementById('current-date').textContent = data.date;
+            }
+        })
+        .catch(error => {
+            console.log('Erro ao carregar horário:', error);
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('pt-BR');
+            document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR');
+        });
 }
 
+// Atualizar hora inicial
+updateCurrentTime();
+
 // Atualizar a cada segundo
-setInterval(atualizarHora, 1000);
-atualizarHora(); // Executar imediatamente
+setInterval(updateCurrentTime, 1000);
 </script>
 {% endblock %}
+<!-- Deploy: 2025-06-29 18:25 - Force Update -->
