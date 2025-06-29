@@ -458,10 +458,35 @@ def index():
         hoje = datetime.now().date()
         exames_hoje = Exame.query.filter(func.date(Exame.created_at) == hoje).count()
         
+        # Exames este mês
+        inicio_mes = hoje.replace(day=1)
+        exames_mes = Exame.query.filter(func.date(Exame.created_at) >= inicio_mes).count()
+        
+        # Templates ativos
+        try:
+            templates_ativos = LaudoTemplate.query.filter_by(ativo=True).count()
+        except:
+            templates_ativos = 0
+        
+        # Usuários do sistema
+        try:
+            usuarios_sistema = Usuario.query.count()
+        except:
+            usuarios_sistema = 1
+        
+        # Criar objeto stats para o template
+        stats = {
+            'total_exames': total_exames,
+            'exames_mes': exames_mes,
+            'templates_ativos': templates_ativos,
+            'usuarios_sistema': usuarios_sistema
+        }
+        
         # Log de acesso
         log_system_event(f'Acesso à página inicial - Usuário: {current_user.username}', current_user.id)
         
         return render_template('index.html', 
+                             stats=stats,
                              total_exames=total_exames,
                              total_pacientes=total_pacientes,
                              exames_recentes=exames_recentes,
@@ -470,7 +495,17 @@ def index():
     except Exception as e:
         log_error_with_traceback('Erro na página inicial', e, current_user.id)
         flash('Erro ao carregar página inicial', 'error')
+        
+        # Stats padrão em caso de erro
+        stats = {
+            'total_exames': 0,
+            'exames_mes': 0,
+            'templates_ativos': 0,
+            'usuarios_sistema': 1
+        }
+        
         return render_template('index.html', 
+                             stats=stats,
                              total_exames=0,
                              total_pacientes=0,
                              exames_recentes=[],
