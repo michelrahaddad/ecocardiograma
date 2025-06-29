@@ -68,7 +68,6 @@
     margin-right: 0.5rem;
 }
 
-/* Status Badge Inline */
 #badge-status-calculos {
     position: fixed;
     top: 20px;
@@ -92,10 +91,8 @@
 {% endblock %}
 
 {% block content %}
-<!-- Status Badge -->
 <div id="badge-status-calculos">✅ Cálculos: Ativos (Inline)</div>
 
-<!-- Progress Indicator -->
 <div class="progress-indicator">
     <div class="d-flex flex-wrap">
         <div class="progress-step completed">
@@ -117,7 +114,6 @@
     </div>
 </div>
 
-<!-- Patient Info -->
 <div class="card mb-4">
     <div class="card-body">
         <div class="row">
@@ -139,7 +135,6 @@
 </div>
 
 <form method="POST" id="parametros-form" action="{{ url_for('salvar_parametros', id=exame.id) }}">
-    <!-- Dados Antropométricos -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -189,7 +184,6 @@
         </div>
     </div>
 
-    <!-- Medidas Ecocardiográficas Básicas -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -260,7 +254,6 @@
         </div>
     </div>
 
-    <!-- Ventrículo Esquerdo -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -335,7 +328,6 @@
         </div>
     </div>
 
-    <!-- Volumes e Função Sistólica -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -410,7 +402,6 @@
         </div>
     </div>
 
-    <!-- Velocidades dos Fluxos -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -459,7 +450,6 @@
         </div>
     </div>
 
-    <!-- Gradientes -->
     <div class="parameter-section">
         <div class="parameter-section-header">
             <h5 class="mb-0">
@@ -524,7 +514,6 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="row mt-4">
         <div class="col-md-12">
             <div class="d-flex gap-3 justify-content-between flex-wrap">
@@ -541,7 +530,7 @@
                         <i class="fas fa-file-pdf me-2"></i>Gerar PDF
                     </button>
                     
-                    <a href="{{ url_for('laudo', exame_id=exame.id) }}" class="btn btn-info">
+                    <a href="{{ url_for('laudo', id=exame.id) }}" class="btn btn-info">
                         <i class="fas fa-file-medical me-2"></i>Continuar para Laudo
                     </a>
                 </div>
@@ -553,16 +542,7 @@
 
 {% block extra_js %}
 <script>
-/**
- * SISTEMA DE CÁLCULOS AUTOMÁTICOS - JAVASCRIPT INLINE COMPLETO
- * SOLUÇÃO DEFINITIVA PARA RENDER - NÃO DEPENDE DE ARQUIVOS EXTERNOS
- */
-
 console.log('🚀 INICIANDO SISTEMA DE CÁLCULOS INLINE COMPLETO');
-
-// ==========================================
-// FUNÇÕES DE CÁLCULO MÉDICO
-// ==========================================
 
 function calculateBodySurface() {
     console.log('📏 Calculando superfície corporal...');
@@ -571,7 +551,6 @@ function calculateBodySurface() {
     const altura = parseFloat(document.getElementById('altura')?.value || 0);
     
     if (peso > 0 && altura > 0) {
-        // Fórmula DuBois: BSA = 0.007184 × altura^0.725 × peso^0.425
         const bsa = 0.007184 * Math.pow(altura, 0.725) * Math.pow(peso, 0.425);
         const superficieElement = document.getElementById('superficie_corporal');
         
@@ -581,7 +560,6 @@ function calculateBodySurface() {
             console.log(`✅ Superfície corporal calculada: ${bsa.toFixed(2)} m²`);
         }
         
-        // Recalcular massa VE que depende da superfície
         calculateLeftVentricularMassIndex();
     }
 }
@@ -646,7 +624,6 @@ function calculateDiastolicVolumeTeichholz() {
     const ddve = parseFloat(document.getElementById('diametro_diastolico_final_ve')?.value || 0);
     
     if (ddve > 0) {
-        // Método Teichholz: VDF = (7.0 / (2.4 + DDVE)) × DDVE³
         const vdf = (7.0 / (2.4 + (ddve / 10))) * Math.pow(ddve / 10, 3);
         const vdfElement = document.getElementById('volume_diastolico_final');
         
@@ -656,7 +633,6 @@ function calculateDiastolicVolumeTeichholz() {
             console.log(`✅ VDF calculado: ${vdf.toFixed(1)} mL`);
         }
         
-        // Recalcular volumes dependentes
         calculateSystolicVolumeTeichholz();
         calculateEjectionVolume();
         calculateEjectionFraction();
@@ -669,7 +645,6 @@ function calculateSystolicVolumeTeichholz() {
     const dsve = parseFloat(document.getElementById('diametro_sistolico_final')?.value || 0);
     
     if (dsve > 0) {
-        // Método Teichholz: VSF = (7.0 / (2.4 + DSVE)) × DSVE³
         const vsf = (7.0 / (2.4 + (dsve / 10))) * Math.pow(dsve / 10, 3);
         const vsfElement = document.getElementById('volume_sistolico_final');
         
@@ -679,7 +654,6 @@ function calculateSystolicVolumeTeichholz() {
             console.log(`✅ VSF calculado: ${vsf.toFixed(1)} mL`);
         }
         
-        // Recalcular volumes dependentes
         calculateEjectionVolume();
         calculateEjectionFraction();
     }
@@ -729,7 +703,6 @@ function calculateLeftVentricularMass() {
     const pp = parseFloat(document.getElementById('espessura_diastolica_ppve')?.value || 0);
     
     if (ddve > 0 && septo > 0 && pp > 0) {
-        // Fórmula ASE corrigida: Massa = 0.8 × (1.04 × [(DDVE + septo + PP)³ - DDVE³]) + 0.6
         const ddveCm = ddve / 10;
         const septoCm = septo / 10;
         const ppCm = pp / 10;
@@ -743,7 +716,6 @@ function calculateLeftVentricularMass() {
             console.log(`✅ Massa VE calculada: ${massa.toFixed(1)} g`);
         }
         
-        // Recalcular índice de massa
         calculateLeftVentricularMassIndex();
     }
 }
@@ -772,7 +744,6 @@ function calculateGradientVDAP() {
     const fluxo = parseFloat(document.getElementById('fluxo_pulmonar')?.value || 0);
     
     if (fluxo > 0) {
-        // Equação de Bernoulli: ΔP = 4 × V²
         const gradiente = 4 * Math.pow(fluxo, 2);
         const gradienteElement = document.getElementById('gradiente_vd_ap');
         
@@ -790,7 +761,6 @@ function calculateGradientVEAO() {
     const fluxo = parseFloat(document.getElementById('fluxo_aortico')?.value || 0);
     
     if (fluxo > 0) {
-        // Equação de Bernoulli: ΔP = 4 × V²
         const gradiente = 4 * Math.pow(fluxo, 2);
         const gradienteElement = document.getElementById('gradiente_ve_ao');
         
@@ -808,7 +778,6 @@ function calculateGradientAEVE() {
     const fluxo = parseFloat(document.getElementById('fluxo_mitral')?.value || 0);
     
     if (fluxo > 0) {
-        // Equação de Bernoulli: ΔP = 4 × V²
         const gradiente = 4 * Math.pow(fluxo, 2);
         const gradienteElement = document.getElementById('gradiente_ae_ve');
         
@@ -826,7 +795,6 @@ function calculateGradientADVD() {
     const fluxo = parseFloat(document.getElementById('fluxo_tricuspide')?.value || 0);
     
     if (fluxo > 0) {
-        // Equação de Bernoulli: ΔP = 4 × V²
         const gradiente = 4 * Math.pow(fluxo, 2);
         const gradienteElement = document.getElementById('gradiente_ad_vd');
         
@@ -836,7 +804,6 @@ function calculateGradientADVD() {
             console.log(`✅ Gradiente AD→VD/IT calculado: ${gradiente.toFixed(1)} mmHg`);
         }
         
-        // Calcular PSAP
         calculatePSAP();
     }
 }
@@ -847,8 +814,7 @@ function calculatePSAP() {
     const gradienteIT = parseFloat(document.getElementById('gradiente_ad_vd')?.value || 0);
     
     if (gradienteIT > 0) {
-        // PSAP = Gradiente IT + PVC estimada (assumindo PVC = 10 mmHg)
-        const pvc = 10; // PVC estimada
+        const pvc = 10;
         const psap = gradienteIT + pvc;
         const psapElement = document.getElementById('pressao_sistolica_vd');
         
@@ -860,22 +826,14 @@ function calculatePSAP() {
     }
 }
 
-// ==========================================
-// CONFIGURAÇÃO DE EVENT LISTENERS
-// ==========================================
-
 function setupAllEventListeners() {
     console.log('🔗 Configurando todos os event listeners...');
     
-    // Superfície corporal
     addListener('peso', ['input', 'change'], calculateBodySurface);
     addListener('altura', ['input', 'change'], calculateBodySurface);
-    
-    // Relação AE/Ao
     addListener('atrio_esquerdo', ['input', 'change'], calculateAtrioAortaRatio);
     addListener('raiz_aorta', ['input', 'change'], calculateAtrioAortaRatio);
     
-    // Ventrículo Esquerdo
     addListener('diametro_diastolico_final_ve', ['input', 'change'], function() {
         calculateShortening();
         calculateDiastolicVolumeTeichholz();
@@ -897,7 +855,6 @@ function setupAllEventListeners() {
         calculateLeftVentricularMass();
     });
     
-    // Fluxos e Gradientes
     addListener('fluxo_pulmonar', ['input', 'change'], calculateGradientVDAP);
     addListener('fluxo_aortico', ['input', 'change'], calculateGradientVEAO);
     addListener('fluxo_mitral', ['input', 'change'], calculateGradientAEVE);
@@ -917,10 +874,6 @@ function addListener(elementId, events, callback) {
         console.warn(`⚠️ Elemento ${elementId} não encontrado`);
     }
 }
-
-// ==========================================
-// FUNÇÕES AUXILIARES
-// ==========================================
 
 function executeAllCalculations() {
     console.log('🔄 Executando todos os cálculos...');
@@ -969,20 +922,12 @@ function confirmarGeracaoPDF() {
     }
 }
 
-// ==========================================
-// INICIALIZAÇÃO PRINCIPAL
-// ==========================================
-
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📋 DOM carregado, iniciando sistema...');
     
-    // Configurar todos os listeners
     setupAllEventListeners();
-    
-    // Executar cálculos iniciais
     executeAllCalculations();
     
-    // Expor funções globalmente para testes
     window.executeAllCalculations = executeAllCalculations;
     window.testarCalculos = function() {
         console.log('🧪 Teste manual dos cálculos...');
