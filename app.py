@@ -2,6 +2,7 @@ import os
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -18,6 +19,13 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "vidah-sistema-2025-secreto")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Configurar Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+login_manager.login_message_category = 'info'
+
 # Configurar banco de dados
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
@@ -32,6 +40,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Inicializar extensões
 db.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Carrega usuário para Flask-Login"""
+    from models import Usuario
+    return Usuario.query.get(int(user_id))
 
 with app.app_context():
     try:
