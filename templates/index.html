@@ -272,6 +272,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -280,26 +281,23 @@ function updateCurrentTime() {
     fetch('/api/hora-atual')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('current-time').textContent = data.hora;
-            document.getElementById('current-date').textContent = data.data_completa;
+            if (data.time && data.date) {
+                document.getElementById('current-time').textContent = data.time;
+                document.getElementById('current-date').textContent = data.date;
+            }
         })
         .catch(error => {
-            console.log('Usando horário local:', error);
+            console.log('Erro ao carregar horário:', error);
             const now = new Date();
-            const timeString = now.toLocaleTimeString('pt-BR');
-            const dateString = now.toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            document.getElementById('current-time').textContent = timeString;
-            document.getElementById('current-date').textContent = dateString;
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('pt-BR');
+            document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR');
         });
 }
 
-// Atualizar imediatamente e depois a cada segundo para precisão
+// Atualizar hora inicial
 updateCurrentTime();
+
+// Atualizar a cada segundo
 setInterval(updateCurrentTime, 1000);
 </script>
 {% endblock %}
