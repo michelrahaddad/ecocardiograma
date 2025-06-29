@@ -106,7 +106,7 @@
                 </p>
             </div>
             <div class="col-md-4 text-md-end">
-                <a href="{{ url_for('visualizar_exame', exame_id=exame.id) }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('visualizar_exame', id=exame.id) }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-eye me-1"></i>Visualizar Exame
                 </a>
             </div>
@@ -582,3 +582,4 @@ window.testarVoltarPagina = function() {
 };
 </script>
 {% endblock %}
+
