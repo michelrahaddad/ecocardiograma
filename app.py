@@ -44,7 +44,7 @@ db.init_app(app)
 
 # Initialize login manager
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'auth_login'
 login_manager.login_message = 'Acesso negado. Faça login para continuar.'
 login_manager.login_message_category = 'info'
 
@@ -52,40 +52,42 @@ with app.app_context():
     # Import models and routes
     try:
         import models
-        from models import Usuario
+        from auth.models import AuthUser
         
         # Create all tables
         db.create_all()
         
-        # Configure user loader for Usuario
+        # Configure user loader for AuthUser
         @login_manager.user_loader
         def load_user(user_id):
             try:
-                return Usuario.query.get(int(user_id))
+                return AuthUser.query.get(int(user_id))
             except:
                 return None
         
         # Initialize system with admin user if needed
         try:
-            admin_exists = Usuario.query.filter_by(role='admin').first()
+            admin_exists = AuthUser.query.filter_by(role='admin').first()
             if not admin_exists:
+                from werkzeug.security import generate_password_hash
+                
                 # Create admin user
-                admin_user = Usuario(
+                admin_user = AuthUser(
                     username='admin',
                     email='admin@grupovida.com.br',
+                    password_hash=generate_password_hash('VidahAdmin2025!'),
                     role='admin',
-                    ativo=True
+                    is_active_flag=True
                 )
-                admin_user.set_password('VidahAdmin2025!')
                 
                 # Create regular user
-                regular_user = Usuario(
+                regular_user = AuthUser(
                     username='usuario',
-                    email='usuario@grupovida.com.br',
+                    email='usuario@grupovida.com.br', 
+                    password_hash=generate_password_hash('Usuario123!'),
                     role='user',
-                    ativo=True
+                    is_active_flag=True
                 )
-                regular_user.set_password('Usuario123!')
                 
                 db.session.add(admin_user)
                 db.session.add(regular_user)
@@ -104,5 +106,4 @@ with app.app_context():
     
     try:
         import routes
-    except ImportError as e:
-        print(f"Erro ao importar rotas: {e}")
+    except Import
