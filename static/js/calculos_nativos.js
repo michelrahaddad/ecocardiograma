@@ -1,6 +1,7 @@
 /**
  * Sistema de Cálculos Automáticos - JavaScript Nativo
  * Substituição completa do jQuery para cálculos de ecocardiograma
+ * VERSÃO COMPLETA PARA RENDER
  */
 
 document.addEventListener('DOMContentLoaded', function() {
